@@ -69,6 +69,7 @@
 }
 
 *,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
 body{
   margin:0; background:var(--void); color:var(--ink);
   font-family:var(--font-ui); font-size:15px; line-height:1.5;
@@ -633,6 +634,267 @@ h1.title b{font-weight:800;display:block}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* ═══ STATES ═══════════════════════════════════════════════════
+   Everything below is the expansion of direction A into its real
+   states: empty, offline, installing, running, failing, conflicting.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── demo switcher (prototype control, not product UI) ──────── */
+.demo{
+  position:fixed;right:16px;bottom:16px;z-index:70;width:min(300px,calc(100vw - 32px));
+  border:1px solid var(--line);border-radius:var(--r-4);overflow:hidden;
+  background:rgba(14,15,22,.92);backdrop-filter:blur(18px) saturate(1.1);
+  box-shadow:0 26px 70px rgba(0,0,0,.72),0 0 0 1px rgba(255,255,255,.04);
+}
+.demo-h{display:flex;align-items:center;gap:10px;padding:11px 13px;cursor:pointer;width:100%;text-align:left}
+.demo-h .bul{width:7px;height:7px;border-radius:50%;background:var(--hot-2);box-shadow:0 0 10px var(--hot-2);flex:0 0 auto}
+.demo-h .t{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);flex:1}
+.demo-h .c{font-family:var(--font-mono);font-size:10px;color:var(--ink-4)}
+.demo-h .ch{width:13px;height:13px;color:var(--ink-4);transition:transform .3s var(--ease)}
+.demo.open .demo-h .ch{transform:rotate(180deg)}
+.demo-b{max-height:0;overflow:hidden;transition:max-height .4s var(--ease-out)}
+.demo.open .demo-b{max-height:min(62vh,520px);overflow:auto}
+.demo-g{padding:3px 7px 5px}
+.demo-g .gl{
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink-4);padding:9px 6px 5px;position:sticky;top:0;background:rgba(14,15,22,.96);
+}
+.demo-i{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  padding:7px 8px;border-radius:8px;transition:background .18s;
+}
+.demo-i:hover{background:rgba(255,255,255,.055)}
+.demo-i[aria-pressed="true"]{background:rgb(var(--glow-hot)/.13)}
+.demo-i[aria-pressed="true"] .n{color:var(--hot-2)}
+.demo-i .k{width:5px;height:5px;border-radius:50%;flex:0 0 auto;background:var(--ink-4)}
+.demo-i .n{font-size:12.5px;line-height:1.3;min-width:0}
+.demo-i .d{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-4);margin-top:2px}
+.demo-i .tx{min-width:0;flex:1;display:flex;flex-direction:column}
+.demo-f{padding:8px 13px;border-top:1px solid var(--line-soft);font-family:var(--font-mono);font-size:9.5px;color:var(--ink-4)}
+@media(max-width:760px){.demo{right:10px;bottom:70px}}
+
+/* ── empty library — a first run, not an apology ────────────── */
+.empty{
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:20px;padding:clamp(28px,7vh,70px) var(--pad);min-height:78%;
+}
+.screen.is-empty .empty{display:flex}
+.screen.is-empty .hero,.screen.is-empty .sec{display:none}
+.empty-mk{position:relative;width:104px;height:104px;display:grid;place-items:center}
+.empty-mk svg{width:64px;height:64px;filter:drop-shadow(0 0 26px rgb(var(--glow-hot)/.6))}
+.empty-mk::before{
+  content:"";position:absolute;inset:-14%;border-radius:50%;
+  background:radial-gradient(circle,rgb(var(--glow-hot)/.22),transparent 68%);
+  animation:breathe 4.2s ease-in-out infinite;
+}
+.empty h2{
+  margin:0;font-family:var(--font-dsp);font-weight:300;
+  font-size:clamp(24px,4vw,40px);letter-spacing:-.025em;line-height:1.02;text-wrap:balance;
+}
+.empty h2 b{font-weight:800}
+.empty p{color:var(--ink-2);max-width:48ch;margin:0;font-size:14.5px}
+.empty .acts{display:flex;gap:11px;flex-wrap:wrap;justify-content:center;margin-top:2px}
+.drop{
+  width:min(680px,100%);border:1px dashed var(--line);border-radius:var(--r-4);
+  padding:22px;margin-top:6px;display:flex;align-items:center;gap:14px;justify-content:center;
+  color:var(--ink-3);font-family:var(--font-mono);font-size:11.5px;letter-spacing:.06em;
+  transition:.26s var(--ease);
+}
+.drop svg{width:17px;height:17px;opacity:.7}
+.drop:hover{border-color:rgb(var(--glow-hot)/.5);color:var(--ink-2);background:rgb(var(--glow-hot)/.05)}
+.empty-hints{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);margin-top:4px}
+.empty-hints span{display:flex;align-items:center;gap:7px}
+.empty-hints em{font-style:normal;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--ink-3)}
+
+/* ── skeleton — 300 ms while the catalogue is read ──────────── */
+.skel{display:none;padding:var(--pad)}
+.screen.is-skel .skel{display:block}
+.screen.is-skel .hero,.screen.is-skel .sec,.screen.is-skel .empty{display:none}
+.sk{border-radius:var(--r-3);background:var(--raised);position:relative;overflow:hidden}
+.sk::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.055) 45%,transparent 70%);
+  animation:shimmer 1.5s linear infinite;
+}
+@keyframes shimmer{to{transform:translateX(160%)}}
+.sk-hero{height:clamp(300px,46vh,460px);border-radius:var(--r-5)}
+.sk-row{display:flex;gap:16px;margin-top:30px}
+.sk-card{width:178px;flex:0 0 auto}
+.sk-card .a{aspect-ratio:3/4;border-radius:var(--r-3)}
+.sk-card .b{height:11px;border-radius:5px;margin-top:11px;width:78%}
+.sk-card .c{height:8px;border-radius:4px;margin-top:7px;width:48%}
+
+/* ── hero CTA variants ──────────────────────────────────────── */
+.cta-note{
+  display:flex;align-items:center;gap:9px;font-family:var(--font-mono);font-size:11px;
+  color:var(--ink-3);padding:0 2px;
+}
+.cta-note svg{width:14px;height:14px;flex:0 0 auto}
+.cta-note.warn{color:var(--warn)}
+.cta-note.bad{color:var(--bad)}
+.cta-note.cool{color:var(--cool)}
+
+/* install / verify progress, sitting where PLAY was */
+.instal{
+  display:flex;flex-direction:column;gap:9px;
+  width:min(420px,100%);padding:14px 16px;border-radius:var(--r-3);
+  border:1px solid var(--line);background:rgba(10,11,17,.72);backdrop-filter:blur(10px);
+}
+.instal .top{display:flex;align-items:baseline;gap:10px}
+.instal .lb{font-size:13px;font-weight:500}
+.instal .pc{margin-left:auto;font-family:var(--font-mono);font-size:13px;color:var(--hot-2);font-variant-numeric:tabular-nums}
+.instal .sub{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4)}
+.instal .row{display:flex;gap:8px;margin-top:3px}
+.mini{
+  display:flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:99px;
+  border:1px solid var(--line);color:var(--ink-3);font-size:12px;transition:.22s var(--ease);
+}
+.mini:hover{color:var(--ink);border-color:var(--ink-4);background:rgba(255,255,255,.05)}
+.mini svg{width:13px;height:13px}
+.mini.bad:hover{color:var(--bad);border-color:rgb(255 77 94/.5)}
+
+/* game is running */
+.running{
+  display:flex;align-items:center;gap:13px;height:56px;padding:0 24px 0 20px;border-radius:99px;
+  border:1px solid rgb(59 227 155/.45);color:var(--ok);
+  background:linear-gradient(115deg,rgb(59 227 155/.14),rgb(59 227 155/.05));
+  box-shadow:0 0 30px rgb(59 227 155/.18),inset 0 1px 0 rgba(255,255,255,.14);
+  font-weight:500;font-size:15px;
+}
+.running .pip{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 12px var(--ok);animation:pulse 1.5s infinite}
+.running .tm{font-family:var(--font-mono);font-size:13px;opacity:.75;font-variant-numeric:tabular-nums}
+
+/* ── download failure states ────────────────────────────────── */
+.tor{position:relative}
+.tor.st-err{border-color:rgb(255 77 94/.32);background:linear-gradient(180deg,rgb(255 77 94/.055),rgba(255,255,255,.004))}
+.tor.st-warn{border-color:rgb(255 194 77/.3);background:linear-gradient(180deg,rgb(255 194 77/.05),rgba(255,255,255,.004))}
+.tor.st-arc{border-color:rgb(166 107 255/.32);background:linear-gradient(180deg,rgb(166 107 255/.05),rgba(255,255,255,.004))}
+.tor.st-idle{border-color:var(--line-soft);opacity:.86}
+.tor[class*="st-"]::before{
+  content:"";position:absolute;left:0;top:14px;bottom:14px;width:2px;border-radius:0 2px 2px 0;
+}
+.tor.st-err::before{background:var(--bad);box-shadow:0 0 12px var(--bad)}
+.tor.st-warn::before{background:var(--warn);box-shadow:0 0 12px var(--warn)}
+.tor.st-arc::before{background:var(--arc);box-shadow:0 0 12px var(--arc)}
+.tor.st-idle::before{background:var(--ink-4)}
+.alert{
+  display:flex;align-items:flex-start;gap:11px;padding:11px 13px;border-radius:var(--r-2);
+  background:rgba(255,255,255,.035);border:1px solid var(--line-soft);
+}
+.alert .ai{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:0 0 auto;border:1px solid var(--line)}
+.alert .ai svg{width:14px;height:14px}
+.alert.err .ai{color:var(--bad);border-color:rgb(255 77 94/.4);background:rgb(255 77 94/.1)}
+.alert.warn .ai{color:var(--warn);border-color:rgb(255 194 77/.4);background:rgb(255 194 77/.1)}
+.alert.arc .ai{color:var(--arc);border-color:rgb(166 107 255/.4);background:rgb(166 107 255/.1)}
+.alert.idle .ai{color:var(--ink-3)}
+.alert .at{flex:1;min-width:0;display:flex;flex-direction:column}
+.alert .at .h{font-size:13px;font-weight:500}
+.alert .at .d{font-size:12px;color:var(--ink-3);margin-top:3px;line-height:1.45}
+.alert .aa{display:flex;gap:7px;flex:0 0 auto;align-self:center;flex-wrap:wrap}
+@media(max-width:620px){.alert{flex-wrap:wrap}.alert .aa{align-self:flex-start;width:100%}}
+.bar i.stall{background:linear-gradient(90deg,#4a3410,var(--warn));box-shadow:none;opacity:.7}
+.bar i.dead{background:linear-gradient(90deg,#4a1218,var(--bad));box-shadow:none;opacity:.75}
+.bar i.arc{background:linear-gradient(90deg,#3a1e63,var(--arc));box-shadow:0 0 12px rgb(166 107 255/.45)}
+
+/* empty section placeholder, used by downloads + saves */
+.nothing{
+  display:flex;flex-direction:column;align-items:center;gap:11px;text-align:center;
+  padding:42px 20px;border:1px dashed var(--line-soft);border-radius:var(--r-4);color:var(--ink-3);
+}
+.nothing svg{width:24px;height:24px;color:var(--ink-4)}
+.nothing .h{font-size:14px;color:var(--ink-2)}
+.nothing .d{font-family:var(--font-mono);font-size:11px;color:var(--ink-4);max-width:44ch}
+
+/* ── save conflict — a choice, not an error ─────────────────── */
+.conflict{
+  border:1px solid rgb(255 194 77/.34);border-radius:var(--r-4);overflow:hidden;
+  background:linear-gradient(180deg,rgb(255 194 77/.06),rgba(255,255,255,.005));
+}
+.conflict-h{display:flex;align-items:center;gap:11px;padding:14px 16px;border-bottom:1px solid var(--line-soft)}
+.conflict-h .ai{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;
+  color:var(--warn);border:1px solid rgb(255 194 77/.4);background:rgb(255 194 77/.1)}
+.conflict-h .ai svg{width:15px;height:15px}
+.conflict-h .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.conflict-h .tx .h{font-size:14px;font-weight:500}
+.conflict-h .tx .d{font-size:12px;color:var(--ink-3);margin-top:3px}
+.vs{display:grid;grid-template-columns:1fr 34px 1fr;align-items:stretch}
+@media(max-width:700px){.vs{grid-template-columns:1fr}.vs .mid{display:none}}
+.vs .mid{display:grid;place-items:center;position:relative}
+.vs .mid::before{content:"";position:absolute;top:16px;bottom:16px;width:1px;background:var(--line-soft)}
+.vs .mid span{position:relative;font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;
+  color:var(--ink-4);background:var(--surface);padding:5px 0;border-radius:4px}
+.side{padding:16px}
+.side.pick{background:rgb(var(--glow-hot)/.05)}
+.side .dv{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3)}
+.side .dv svg{width:13px;height:13px}
+.side .when{font-family:var(--font-dsp);font-weight:300;font-size:22px;letter-spacing:-.02em;margin-top:9px}
+.side .when u{text-decoration:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-4);margin-left:8px}
+.side .facts{display:grid;grid-template-columns:1fr 1fr;gap:9px 14px;margin-top:13px}
+.fact .k{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4)}
+.fact .v{font-size:13px;margin-top:3px;font-variant-numeric:tabular-nums}
+.side .keep{margin-top:15px;width:100%;justify-content:center}
+.keep{
+  display:flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:99px;
+  border:1px solid var(--line);color:var(--ink-2);font-size:13px;transition:.24s var(--ease);
+}
+.keep:hover{border-color:rgb(var(--glow-hot)/.5);color:var(--hot-2);box-shadow:0 0 22px rgb(var(--glow-hot)/.22)}
+.keep svg{width:13px;height:13px}
+.conflict-f{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--line-soft)}
+.conflict-f .sp{flex:1}
+.conflict-f .note{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4)}
+
+/* ── in-game overlay ────────────────────────────────────────── */
+.ovl{
+  position:fixed;inset:0;z-index:80;display:grid;grid-template-rows:auto 1fr auto;
+  opacity:0;visibility:hidden;transition:opacity .28s var(--ease),visibility .28s;
+}
+.ovl.on{opacity:1;visibility:visible}
+.ovl-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(22px) saturate(1.15);transform:scale(1.1)}
+.ovl-veil{position:absolute;inset:0;background:radial-gradient(75% 75% at 50% 45%,rgba(6,6,10,.74),rgba(3,3,6,.95))}
+.ovl-top,.ovl-bot{position:relative;z-index:2;display:flex;align-items:center;gap:14px;padding:16px var(--pad)}
+.ovl-top{border-bottom:1px solid rgba(255,255,255,.07)}
+.ovl-bot{border-top:1px solid rgba(255,255,255,.07);flex-wrap:wrap}
+.ovl-ttl{font-family:var(--font-dsp);font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.ovl-sp{flex:1}
+.ovl-body{
+  position:relative;z-index:2;display:grid;gap:14px;padding:0 var(--pad);align-content:center;
+  grid-template-columns:repeat(auto-fit,minmax(255px,1fr));
+}
+.ovl-card{
+  border:1px solid rgba(255,255,255,.1);border-radius:var(--r-4);padding:17px;
+  background:rgba(14,15,22,.62);backdrop-filter:blur(20px) saturate(1.1);
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.ovl-card .p-lab{margin-bottom:9px}
+.fps{display:flex;align-items:baseline;gap:12px}
+.fps .v{font-family:var(--font-dsp);font-weight:300;font-size:42px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.fps .u{font-family:var(--font-mono);font-size:11px;color:var(--ink-4)}
+.fps .d{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--ok)}
+.qa{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.qbtn{
+  display:flex;align-items:center;gap:9px;padding:11px 12px;border-radius:var(--r-2);
+  border:1px solid var(--line);color:var(--ink-2);font-size:12.5px;text-align:left;
+  background:rgba(255,255,255,.025);transition:.22s var(--ease);
+}
+.qbtn:hover{color:var(--ink);border-color:rgb(var(--glow-hot)/.45);background:rgb(var(--glow-hot)/.08)}
+.qbtn svg{width:15px;height:15px;flex:0 0 auto}
+.qbtn em{font-style:normal;margin-left:auto;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-4)}
+.ovl-hint{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);display:flex;align-items:center;gap:7px}
+.ovl-hint em{font-style:normal;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--ink-3)}
+.danger{
+  display:flex;align-items:center;gap:9px;height:40px;padding:0 18px;border-radius:99px;
+  border:1px solid rgb(255 77 94/.4);color:var(--bad);font-size:13px;transition:.24s var(--ease);
+}
+.danger:hover{background:rgb(255 77 94/.1);box-shadow:0 0 22px rgb(255 77 94/.22)}
+.danger svg{width:14px;height:14px}
+
+/* ── degraded connectivity ──────────────────────────────────── */
+.pill.off{color:var(--warn);border-color:rgb(255 194 77/.38);background:rgb(255 194 77/.07)}
+.pill.off .dot{background:var(--warn);box-shadow:0 0 9px var(--warn);animation:none}
+.pill.dead{color:var(--bad);border-color:rgb(255 77 94/.38);background:rgb(255 77 94/.07)}
+.pill.dead .dot{background:var(--bad);box-shadow:0 0 9px var(--bad);animation:none}
+
 </style>
 
 <!-- ── SVG defs: filters + the icon system ─────────────────────── -->
@@ -683,6 +945,20 @@ h1.title b{font-weight:800;display:block}
     <symbol id="i-lap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4.5" y="5" width="15" height="10" rx="1.6"/><path d="M2 18.5h20"/></symbol>
     <symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 18.5a4 4 0 0 1-.5-7.97 5.2 5.2 0 0 1 10.05-1.2A3.9 3.9 0 0 1 17.6 18.5H7Z"/></symbol>
     <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3.2 6.4A1.8 1.8 0 0 1 5 4.6h3.6l1.8 2.2H19a1.8 1.8 0 0 1 1.8 1.8v8.8a1.8 1.8 0 0 1-1.8 1.8H5a1.8 1.8 0 0 1-1.8-1.8V6.4Z"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4.4 21 19.6H3L12 4.4Z" stroke-linejoin="round"/><path d="M12 10.2v4M12 17.1v.3"/></symbol>
+    <symbol id="i-drive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2.8" y="12.4" width="18.4" height="7.4" rx="2"/><path d="M5.4 4.4h13.2l2.6 8H2.8l2.6-8Z" stroke-linejoin="round"/><path d="M6.4 16.2h.3M9.6 16.2h.3"/></symbol>
+    <symbol id="i-wifi-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 3.6 21 20.4"/><path d="M2.4 8.6a15 15 0 0 1 5.2-3.1M13 4.6a15 15 0 0 1 8.6 4"/><path d="M5.8 12.2a10.5 10.5 0 0 1 3-1.8M15.6 10.8a10.5 10.5 0 0 1 2.6 1.4"/><path d="M9.2 15.7a5.6 5.6 0 0 1 4.6.3"/><path d="M12 19.3v.3"/></symbol>
+    <symbol id="i-merge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.6v5.2c0 2.6 2 4.4 5.5 4.4s5.5 1.8 5.5 4.4v2.8"/><path d="m3.6 6.4 2.9-2.9 2.9 2.9"/><path d="m14.6 17.6 2.9 2.9 2.9-2.9"/><path d="M17.5 3.6v4.8"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 8.4a1.8 1.8 0 0 1 1.8-1.8h2.4l1.4-2.2h6.8l1.4 2.2h2.4A1.8 1.8 0 0 1 21 8.4v9.4a1.8 1.8 0 0 1-1.8 1.8H4.8A1.8 1.8 0 0 1 3 17.8V8.4Z"/><circle cx="12" cy="12.8" r="3.6"/></symbol>
+    <symbol id="i-rec" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.6" y="6.4" width="13.4" height="11.2" rx="2.2"/><path d="m16 11.4 5.4-3.1v7.4L16 12.6" stroke-linejoin="round"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.6h14v14.8H5V4.6Z"/><path d="M8.4 9h7.2M8.4 12.6h7.2M8.4 16.2h4"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 3.4v8"/><path d="M7.2 6.6a7.6 7.6 0 1 0 9.6 0"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5.4v13.2M5.4 12h13.2"/></symbol>
+    <symbol id="i-magnet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5.4 4.2v7.6a6.6 6.6 0 0 0 13.2 0V4.2h-4.4v7.6a2.2 2.2 0 0 1-4.4 0V4.2H5.4Z" stroke-linejoin="round"/><path d="M5.4 8.6h4.4M14.2 8.6h4.4"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9.5 6 6 6-6"/></symbol>
+    <symbol id="i-retry" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.4 3.6v4.8h-4.8"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.6 4.6L19 6.8"/></symbol>
+
   </defs>
 </svg>
 
@@ -725,6 +1001,41 @@ h1.title b{font-weight:800;display:block}
     <div class="screens">
       <!-- ══ LIBRARY ══════════════════════════════════════════ -->
       <section class="screen on" id="sc-library">
+
+        <!-- пусто · первый запуск -->
+        <div class="empty">
+          <div class="empty-mk">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M24 42c-7.2 0-12-4.3-12-10.3 0-5.3 3.8-8.9 7.2-13.4C22.1 14 24 9.4 24 5.8c0 3.6 1.9 8.2 4.8 12.5 3.4 4.5 7.2 8.1 7.2 13.4 0 6-4.8 10.3-12 10.3Z" fill="url(#gMark)"/>
+              <path d="M24 36.6c-3 0-5-1.8-5-4.4 0-2.7 2.2-4.1 3.6-6.5.8-1.5 1.4-3.2 1.4-4.8 0 1.6.6 3.3 1.4 4.8 1.4 2.4 3.6 3.8 3.6 6.5 0 2.6-2 4.4-5 4.4Z" fill="#fff" opacity=".94"/>
+            </svg>
+          </div>
+          <h2>Ни одной игры<b>пока что</b></h2>
+          <p>Evaporate ищет игры двумя путями: подхватывает уже установленные с диска или скачивает новые через встроенный движок. Начните с любого.</p>
+          <div class="acts">
+            <button class="play" style="height:52px"><svg><use href="#i-folder"/></svg><span>Просканировать диск</span></button>
+            <button class="ghost" style="height:52px"><svg><use href="#i-magnet"/></svg>Вставить magnet-ссылку</button>
+          </div>
+          <div class="drop"><svg><use href="#i-plus"/></svg>Перетащите сюда .torrent или папку с игрой</div>
+          <div class="empty-hints">
+            <span><em>Ctrl+O</em>Открыть файл</span>
+            <span><em>Ctrl+V</em>Вставить ссылку</span>
+            <span><em>/</em>Поиск по каталогу</span>
+          </div>
+        </div>
+
+        <!-- скелетон · первые 300 мс, пока читается каталог -->
+        <div class="skel" aria-hidden="true">
+          <div class="sk sk-hero"></div>
+          <div class="sk-row">
+            <div class="sk-card"><div class="sk a"></div><div class="sk b"></div><div class="sk c"></div></div>
+            <div class="sk-card"><div class="sk a"></div><div class="sk b"></div><div class="sk c"></div></div>
+            <div class="sk-card"><div class="sk a"></div><div class="sk b"></div><div class="sk c"></div></div>
+            <div class="sk-card"><div class="sk a"></div><div class="sk b"></div><div class="sk c"></div></div>
+            <div class="sk-card"><div class="sk a"></div><div class="sk b"></div><div class="sk c"></div></div>
+            <div class="sk-card"><div class="sk a"></div><div class="sk b"></div><div class="sk c"></div></div>
+          </div>
+        </div>
         <div class="hero" id="hero">
           <div class="hl sky" data-d="5"></div>
           <div class="hl mid" data-d="14"></div>
@@ -842,6 +1153,49 @@ h1.title b{font-weight:800;display:block}
               <div class="opt"><svg style="width:18px;height:18px;color:var(--ink-3)"><use href="#i-pc"/></svg><div class="txt"><div class="n">ПК · КУЗНЯ</div><div class="d">Windows 11 · этот компьютер</div></div><span class="dev sync">в сети</span></div>
               <div class="opt"><svg style="width:18px;height:18px;color:var(--ink-3)"><use href="#i-lap"/></svg><div class="txt"><div class="n">Ноутбук · ДОРОГА</div><div class="d">Linux · 2 часа назад</div></div><span class="dev">офлайн</span></div>
               <div class="opt"><svg style="width:18px;height:18px;color:var(--ink-3)"><use href="#i-cloud"/></svg><div class="txt"><div class="n">Хранилище</div><div class="d">Шифрование на устройстве · AES-256</div></div><span class="dev sync">активно</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec" id="conflictSec" hidden>
+          <div class="sec-h"><h2>Требует решения</h2><span class="count">1 конфликт</span><span class="rule"></span></div>
+          <div class="conflict">
+            <div class="conflict-h">
+              <span class="ai"><svg><use href="#i-merge"/></svg></span>
+              <span class="tx">
+                <span class="h">Глубина 9 — два расхождения сохранения</span>
+                <span class="d">Игра шла на двух устройствах без синхронизации между ними. Слить автоматически нельзя: прогресс разошёлся на уровне 5.</span>
+              </span>
+            </div>
+            <div class="vs">
+              <div class="side pick">
+                <span class="dv"><svg><use href="#i-pc"/></svg>ПК · КУЗНЯ · это устройство</span>
+                <div class="when">Сегодня, 02:14<u>6 мин назад</u></div>
+                <div class="facts">
+                  <div class="fact"><div class="k">Прогресс</div><div class="v">Уровень 6 · 62 %</div></div>
+                  <div class="fact"><div class="k">В игре</div><div class="v">6 ч 12 мин</div></div>
+                  <div class="fact"><div class="k">Кислород</div><div class="v">41 %</div></div>
+                  <div class="fact"><div class="k">Размер</div><div class="v">148 МБ</div></div>
+                </div>
+                <button class="keep"><svg><use href="#i-check"/></svg>Оставить эту</button>
+              </div>
+              <div class="mid"><span>ПРОТИВ</span></div>
+              <div class="side">
+                <span class="dv"><svg><use href="#i-lap"/></svg>Ноутбук · ДОРОГА</span>
+                <div class="when">Вчера, 23:41<u>2 ч 33 мин назад</u></div>
+                <div class="facts">
+                  <div class="fact"><div class="k">Прогресс</div><div class="v">Уровень 5 · 88 %</div></div>
+                  <div class="fact"><div class="k">В игре</div><div class="v">5 ч 47 мин</div></div>
+                  <div class="fact"><div class="k">Кислород</div><div class="v">73 %</div></div>
+                  <div class="fact"><div class="k">Размер</div><div class="v">141 МБ</div></div>
+                </div>
+                <button class="keep"><svg><use href="#i-check"/></svg>Оставить эту</button>
+              </div>
+            </div>
+            <div class="conflict-f">
+              <button class="mini"><svg><use href="#i-save"/></svg>Сохранить обе копии</button>
+              <span class="sp"></span>
+              <span class="note">Отклонённая версия уйдёт в корзину и будет храниться 30 дней</span>
             </div>
           </div>
         </div>
@@ -1006,6 +1360,80 @@ h1.title b{font-weight:800;display:block}
     <div class="l-log" id="lLog">монтирование тома…</div>
   </div>
 </div>
+<!-- ── оверлей в игре ───────────────────────────────────────── -->
+<div class="ovl" id="ovl" role="dialog" aria-modal="true" aria-label="Оверлей в игре">
+  <div class="ovl-bg" id="ovlBg"></div><div class="ovl-veil"></div>
+  <div class="ovl-top">
+    <span class="ovl-ttl" id="ovlTtl">Пепельный Предел</span>
+    <span class="pill"><span class="dot"></span>Сессия 1 ч 04 мин</span>
+    <span class="ovl-sp"></span>
+    <span class="pill">Глава 5 · Кузня Сумерек</span>
+    <span class="ovl-hint"><em>Shift+Tab</em>закрыть оверлей</span>
+  </div>
+
+  <div class="ovl-body">
+    <div class="ovl-card">
+      <div class="p-lab">Производительность</div>
+      <div class="fps"><span class="v" id="ovlFps">144</span><span class="u">кадров/с</span><span class="d" id="ovlFrame">6.9 мс</span></div>
+      <svg id="ovlSpark" viewBox="0 0 300 56" preserveAspectRatio="none" style="width:100%;height:56px;margin-top:10px" aria-label="Кадры в секунду за последнюю минуту"></svg>
+      <div class="kpis" style="margin-top:14px">
+        <div class="kpi"><div class="p-lab">1 % редких</div><div class="v">108</div></div>
+        <div class="kpi"><div class="p-lab">Видеопамять</div><div class="v c">9.4 ГБ</div></div>
+        <div class="kpi"><div class="p-lab">Температура GPU</div><div class="v">71 °C</div></div>
+        <div class="kpi"><div class="p-lab">Загрузка CPU</div><div class="v">38 %</div></div>
+      </div>
+    </div>
+
+    <div class="ovl-card">
+      <div class="p-lab">Быстрые действия</div>
+      <div class="qa">
+        <button class="qbtn"><svg><use href="#i-camera"/></svg>Скриншот<em>F12</em></button>
+        <button class="qbtn"><svg><use href="#i-rec"/></svg>Записать 30 с<em>F10</em></button>
+        <button class="qbtn"><svg><use href="#i-note"/></svg>Заметка<em>F9</em></button>
+        <button class="qbtn"><svg><use href="#i-cloud"/></svg>Сохранить в облако<em>F5</em></button>
+      </div>
+      <div class="p-lab" style="margin-top:17px">Достижения в этой сессии</div>
+      <div class="ach got" style="padding-top:9px"><span class="ic"><svg><use href="#i-trophy"/></svg></span>
+        <span class="tx"><span class="n">Тихий шаг</span><span class="d">Получено 22 минуты назад</span></span></div>
+      <div class="ach"><span class="ic"><svg><use href="#i-trophy"/></svg></span>
+        <span class="tx"><span class="n">Собиратель · 37 из 60</span><span class="d">Осталось 23 реликвии</span></span></div>
+    </div>
+
+    <div class="ovl-card">
+      <div class="p-lab">Друзья · 4 в сети</div>
+      <div style="margin-top:9px">
+        <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--hot-2),var(--hot-1))">АК</span><span class="fn">Антон К.</span><span class="fs">та же глава</span></div>
+        <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--cool),#1b6f8a)">МС</span><span class="fn">Мира С.</span><span class="fs">Красный Меридиан</span></div>
+        <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--arc),#5a2fa8)">ДР</span><span class="fn">Дан Р.</span><span class="fs">в сети</span></div>
+        <div class="frow"><span class="av" style="background:linear-gradient(140deg,#3be39b,#146c48)">ЛП</span><span class="fn">Лена П.</span><span class="fs">Волчья Тропа</span></div>
+      </div>
+      <div class="p-lab" style="margin-top:17px">Фоном</div>
+      <div class="tor-f" style="margin-top:9px"><span>orbita-7 · 592 КБ/с</span><span class="pc">41 %</span></div>
+      <div class="bar" style="margin-top:8px"><i style="width:41%"></i></div>
+      <div class="cta-note cool" style="margin-top:10px"><svg><use href="#i-speed"/></svg>Загрузка ограничена до 1 МБ/с, пока игра запущена</div>
+    </div>
+  </div>
+
+  <div class="ovl-bot">
+    <button class="play" style="height:44px" id="ovlBack"><svg><use href="#i-play"/></svg><span>Вернуться в игру</span><span class="hold">ESC</span></button>
+    <button class="ghost" style="height:44px"><svg><use href="#i-set"/></svg>Настройки игры</button>
+    <span class="ovl-sp"></span>
+    <button class="danger" id="ovlQuit"><svg><use href="#i-power"/></svg>Завершить игру</button>
+  </div>
+</div>
+
+<!-- ── прототипный переключатель состояний ──────────────────── -->
+<div class="demo" id="demo">
+  <button class="demo-h" id="demoH" aria-expanded="false">
+    <span class="bul"></span>
+    <span class="t">Состояния</span>
+    <span class="c" id="demoC"></span>
+    <svg class="ch"><use href="#i-chev"/></svg>
+  </button>
+  <div class="demo-b"><div class="demo-g" id="demoList"></div></div>
+  <div class="demo-f">Панель прототипа · клавиша S</div>
+</div>
+
 <div class="flash" id="flash" aria-hidden="true"></div>
 
 <script>
@@ -1677,6 +2105,422 @@ addEventListener("keydown",e=>{
   if(e.ctrlKey&&e.key==="Tab"){e.preventDefault();
     go(ORDER[(ORDER.indexOf(cur)+(e.shiftKey?-1:1)+ORDER.length)%ORDER.length]);return}
   if(e.key>="1"&&e.key<="4"){go(ORDER[+e.key-1])}
+});
+
+
+/* ═══════════════════════════════════════════════════════════════
+   STATES — direction A, expanded.
+   Everything the launcher can be: empty, reading, installing,
+   running, offline, stalled, out of disk, corrupted, conflicted.
+   ═══════════════════════════════════════════════════════════════ */
+
+const scLib = $("#sc-library"), scDl = $("#sc-downloads"), scSv = $("#sc-saves");
+const heroBody = $(".hero-body", hero);
+const heroCta  = $(".hero-cta", hero);
+const ghostBtn = $(".ghost", heroCta);
+const pills    = $$(".topbar .pill");
+
+/* alternate CTA block — the hold-to-play button stays in the DOM so its
+   handlers survive; states swap which of the two is visible */
+const ctaAlt = document.createElement("div");
+ctaAlt.id = "ctaAlt"; ctaAlt.hidden = true;
+ctaAlt.style.cssText = "display:flex;flex-wrap:wrap;gap:12px;align-items:center";
+heroCta.appendChild(ctaAlt);
+
+const ctaNote = document.createElement("div");
+ctaNote.id = "ctaNote"; ctaNote.hidden = true;
+heroBody.appendChild(ctaNote);
+
+function setHero(c){
+  $(".eyebrow", heroBody).textContent = c.eyebrow;
+  $("h1.title", heroBody).innerHTML   = c.title;
+  $(".blurb", heroBody).textContent   = c.blurb;
+  $(".meta", heroBody).innerHTML      = c.chips
+    .map(([t, hot]) => `<span class="chip${hot ? " hot" : ""}">${t}</span>`).join("");
+  const showPlay = c.cta === "play";
+  playWrap.hidden = !showPlay;
+  ghostBtn.hidden = !showPlay;
+  ctaAlt.hidden   = showPlay;
+  if(!showPlay) ctaAlt.innerHTML = c.cta;
+}
+function setNote(html){
+  ctaNote.hidden = !html;
+  ctaNote.innerHTML = html || "";
+}
+
+const HERO = {
+  ready: {
+    eyebrow:"Продолжить · сыграно 24 ч 10 мин",
+    title:"Пепельный<b>Предел</b>",
+    blurb:"Пятая глава разблокирована. Ваш отряд ждёт у Кузни Сумерек — последнее сохранение синхронизировано 6 минут назад.",
+    chips:[["Установлена",1],["v2.4.1"],["68.4 ГБ"],["Action-RPG"],["Одиночная"]],
+    cta:"play"
+  },
+  notinst: {
+    eyebrow:"В библиотеке · на диске нет",
+    title:"Пепельный<b>Предел</b>",
+    blurb:"Игра куплена и привязана к аккаунту, но файлов на этом компьютере нет. Установка займёт около 40 минут на текущей скорости.",
+    chips:[["Не установлена",1],["v2.4.1"],["68.4 ГБ"],["Свободно 214 ГБ"]],
+    cta:`<button class="play" style="height:56px" data-act="install"><svg><use href="#i-dl"/></svg><span>Установить</span><span class="hold">68.4 ГБ</span></button>
+         <button class="ghost" style="height:56px"><svg><use href="#i-folder"/></svg>Указать папку вручную</button>`,
+    note:`<div class="cta-note"><svg><use href="#i-drive"/></svg>D:\\Игры · свободно 214 ГБ · после установки останется 146 ГБ</div>`
+  },
+  update: {
+    eyebrow:"Установлена · доступно обновление",
+    title:"Пепельный<b>Предел</b>",
+    blurb:"Патч 2.4.2 чинит вылет на Кузне Сумерек и добавляет русскую озвучку. Сетевая игра со старой версией недоступна.",
+    chips:[["Обновление 2.4.2",1],["1.8 ГБ"],["установлена 2.4.1"],["Action-RPG"]],
+    cta:`<button class="play" style="height:56px" data-act="install"><svg><use href="#i-dl"/></svg><span>Обновить и играть</span><span class="hold">1.8 ГБ · ~4 МИН</span></button>
+         <button class="ghost" style="height:56px" data-act="ritual"><svg><use href="#i-play"/></svg>Играть без обновления</button>`,
+    note:`<div class="cta-note warn"><svg><use href="#i-alert"/></svg>Со старой версией не работает совместное прохождение</div>`
+  },
+  installing: {
+    eyebrow:"Установка · осталось 12 мин",
+    title:"Пепельный<b>Предел</b>",
+    blurb:"Файлы распаковываются на диск. Можно свернуть окно — установка продолжится в фоне.",
+    chips:[["Устанавливается",1],["v2.4.1"],["68.4 ГБ"]],
+    cta:`<div class="instal">
+           <div class="top"><span class="lb">Распаковка и проверка</span><span class="pc">41 %</span></div>
+           <div class="bar"><i style="width:41%"></i></div>
+           <div class="sub">28.0 ГБ из 68.4 ГБ · 84 МБ/с на диск · осталось 12 мин</div>
+           <div class="row">
+             <button class="mini"><svg><use href="#i-pause"/></svg>Пауза</button>
+             <button class="mini bad"><svg><use href="#i-x"/></svg>Отменить</button>
+           </div>
+         </div>`
+  },
+  running: {
+    eyebrow:"Идёт игра · запущена 1 ч 04 мин назад",
+    title:"Пепельный<b>Предел</b>",
+    blurb:"Глава 5, Кузня Сумерек. Сохранение выгружается в облако каждые пять минут, загрузки ограничены до 1 МБ/с.",
+    chips:[["Идёт игра",1],["v2.4.1"],["PID 8842"],["144 к/с"]],
+    cta:`<span class="running"><span class="pip"></span>Идёт игра<span class="tm">01:04:12</span></span>
+         <button class="ghost" style="height:56px" data-act="ovl"><svg><use href="#i-lib"/></svg>Оверлей</button>
+         <button class="ghost" style="height:56px" data-act="quit"><svg><use href="#i-power"/></svg>Завершить</button>`
+  },
+  offline: {
+    eyebrow:"Нет сети · играть можно",
+    title:"Пепельный<b>Предел</b>",
+    blurb:"Одиночное прохождение не требует сети. Сохранения копятся локально и уйдут в облако, как только связь вернётся.",
+    chips:[["Установлена",1],["v2.4.1"],["68.4 ГБ"],["Офлайн"]],
+    cta:"play",
+    note:`<div class="cta-note warn"><svg><use href="#i-wifi-off"/></svg>Загрузки на паузе · 2 сохранения ждут выгрузки · достижения не засчитаются</div>`
+  }
+};
+
+/* ── downloads ─────────────────────────────────────────────── */
+function torRow(t){
+  const bar = t.barClass ? ` class="${t.barClass}"` : "";
+  const alert = t.alert ? `
+    <div class="alert ${t.alert.kind}">
+      <span class="ai"><svg><use href="#i-${t.alert.icon}"/></svg></span>
+      <span class="at"><span class="h">${t.alert.h}</span><span class="d">${t.alert.d}</span></span>
+      <span class="aa">${t.alert.acts.map(a =>
+        `<button class="${a.primary ? "keep" : "mini"}"><svg><use href="#i-${a.icon}"/></svg>${a.label}</button>`).join("")}</span>
+    </div>` : "";
+  return `<div class="tor${t.state ? " st-" + t.state : ""}">
+    <div class="tor-t">
+      <span style="width:40px;height:52px;border-radius:8px;background:var(--raised) center/cover;background-image:url(${byId(t.g).cover});border:1px solid var(--line);flex:0 0 auto"></span>
+      <span class="nm"><span class="n">${t.name}</span><span class="path">${t.path}</span></span>
+      <span class="tor-act">
+        <button class="ico" aria-label="Пауза"><svg><use href="#i-${t.paused ? "play" : "pause"}"/></svg></button>
+        <button class="ico go" aria-label="Открыть папку"><svg><use href="#i-folder"/></svg></button>
+        <button class="ico stop" aria-label="Отменить"><svg><use href="#i-x"/></svg></button>
+      </span>
+    </div>
+    ${alert}
+    <div class="stats">
+      <span class="st"><svg><use href="#i-speed"/></svg>приём<b>${t.dn}</b></span>
+      <span class="st"><svg><use href="#i-seed"/></svg>отдача<b>${t.up}</b></span>
+      <span class="st"><svg><use href="#i-disk"/></svg>пик<b>${t.peak}</b></span>
+      <span class="st"><svg><use href="#i-peers"/></svg>сиды<b>${t.seeds}</b> · пиры<b>${t.peers}</b></span>
+    </div>
+    <div class="bar${t.cool ? " c" : ""}"><i${bar} style="width:${t.pct}%"></i></div>
+    <div class="tor-f"><span>${t.size} · ${t.eta}</span><span class="pc">${t.pct}%</span></div>
+  </div>`;
+}
+const BASE_A = {g:"orbita", name:"orbita-7 · Полное издание [RU+ENG] (2026) v5.2 + 3 DLC",
+  path:"D:\\Игры\\Orbita7\\ · 24 файла · rutracker-6904761",
+  pct:41, size:"11.5 ГБ / 28.8 ГБ", dn:"592 КБ/с", up:"1.6 МБ/с", peak:"7.0 МБ/с",
+  seeds:27, peers:31, eta:"осталось 4 ч 12 мин"};
+const BASE_B = {g:"halc2", name:"neon-halcyon-echo · дополнение «Эхо» v1.0",
+  path:"D:\\Игры\\NeonHalcyon\\dlc · 6 файлов · rutracker-6913022",
+  pct:66, size:"6.2 ГБ / 9.4 ГБ", dn:"1.03 МБ/с", up:"340 КБ/с", peak:"11.0 МБ/с",
+  seeds:81, peers:82, eta:"осталось 51 мин", cool:true};
+const mix = (b, o) => Object.assign({}, b, o);
+
+const DL = {
+  default: [BASE_A, BASE_B],
+  noseeds: [
+    mix(BASE_A, {state:"warn", barClass:"stall", dn:"0 Б/с", up:"12 КБ/с", seeds:0, peers:4,
+      eta:"время не определено", paused:false,
+      alert:{kind:"warn", icon:"seed", h:"Ждём раздающих",
+        d:"Ни один из 27 известных сидов не в сети последние 18 минут. Загрузка продолжится сама, как только кто-то появится.",
+        acts:[{label:"Искать источники", icon:"search", primary:1},{label:"В очередь", icon:"pause"}]}}),
+    BASE_B],
+  nospace: [
+    mix(BASE_A, {state:"err", barClass:"dead", dn:"0 Б/с", up:"0 Б/с", eta:"остановлено",
+      paused:true,
+      alert:{kind:"err", icon:"drive", h:"На диске D: не хватает 6.2 ГБ",
+        d:"Для распаковки нужно 28.8 ГБ, свободно 22.6 ГБ. Освободите место или перенесите загрузку на другой диск — скачанное сохранится.",
+        acts:[{label:"Выбрать диск", icon:"drive", primary:1},{label:"Что удалить", icon:"info"}]}}),
+    BASE_B],
+  hash: [
+    mix(BASE_A, {state:"arc", barClass:"arc", pct:38, dn:"1.2 МБ/с", eta:"перепроверка 38 %",
+      alert:{kind:"arc", icon:"verified", h:"12 частей не прошли проверку",
+        d:"Данные от одного из пиров пришли повреждёнными. Повреждённые части помечены и качаются заново, остальное трогать не нужно.",
+        acts:[{label:"Перекачать", icon:"retry", primary:1},{label:"Журнал", icon:"info"}]}}),
+    BASE_B],
+  offline: [
+    mix(BASE_A, {state:"idle", barClass:"stall", dn:"—", up:"—", seeds:0, peers:0,
+      paused:true, eta:"пауза",
+      alert:{kind:"idle", icon:"wifi-off", h:"Нет сети · пауза",
+        d:"Соединение пропало 2 минуты назад. Продолжим автоматически через 0:24 — отменять и перезапускать не нужно.",
+        acts:[{label:"Повторить сейчас", icon:"retry"}]}}),
+    mix(BASE_B, {state:"idle", barClass:"stall", dn:"—", up:"—", seeds:0, peers:0,
+      paused:true, eta:"пауза", cool:false})],
+  empty: []
+};
+function renderDL(list){
+  $("#torrents").innerHTML = list.length ? list.map(torRow).join("")
+    : `<div class="nothing"><svg><use href="#i-dl"/></svg>
+         <span class="h">Ничего не качается</span>
+         <span class="d">Перетащите .torrent в окно или вставьте magnet-ссылку — движок подхватит её сам</span>
+         <button class="mini" style="margin-top:4px"><svg><use href="#i-magnet"/></svg>Вставить ссылку</button>
+       </div>`;
+}
+
+/* ── saves ─────────────────────────────────────────────────── */
+const svTimeline = $("#timeline");
+const svTimelineHTML = svTimeline.innerHTML;
+const conflictSec = $("#conflictSec");
+const conflictHTML = conflictSec.innerHTML;
+
+/* ── in-game overlay ───────────────────────────────────────── */
+const ovl = $("#ovl");
+$("#ovlBg").style.backgroundImage = `url(${makeArt(760, 440, GAMES[0].pal, GAMES[0].seed + 5, {ridges:2})})`;
+(() => {
+  const svg = $("#ovlSpark"), W = 300, H = 56, N = 64;
+  const d = Array.from({length:N}, (_, i) => 138 + Math.sin(i / 4) * 6 + Math.random() * 9);
+  const ns = "http://www.w3.org/2000/svg";
+  const grid = document.createElementNS(ns, "path");
+  grid.setAttribute("stroke", "var(--line-soft)"); grid.setAttribute("fill", "none");
+  grid.setAttribute("d", `M0 ${H * .33}H${W}M0 ${H * .66}H${W}`);
+  const area = document.createElementNS(ns, "path"), line = document.createElementNS(ns, "path");
+  const defs = document.createElementNS(ns, "defs");
+  defs.innerHTML = `<linearGradient id="og" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="var(--ok)" stop-opacity=".34"/>
+    <stop offset="1" stop-color="var(--ok)" stop-opacity="0"/></linearGradient>`;
+  area.setAttribute("fill", "url(#og)");
+  line.setAttribute("fill", "none"); line.setAttribute("stroke", "var(--ok)");
+  line.setAttribute("stroke-width", "1.6"); line.setAttribute("vector-effect", "non-scaling-stroke");
+  line.setAttribute("style", "filter:drop-shadow(0 0 5px rgb(59 227 155/.7))");
+  svg.append(defs, grid, area, line);
+  function draw(){
+    const lo = 96, hi = 168;
+    let p = "";
+    d.forEach((v, i) => {
+      const x = i / (N - 1) * W, y = H - 2 - (clamp(v, lo, hi) - lo) / (hi - lo) * (H - 6);
+      p += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1);
+    });
+    line.setAttribute("d", p); area.setAttribute("d", p + `L${W} ${H}L0 ${H}Z`);
+    const f = Math.round(d[N - 1]);
+    $("#ovlFps").textContent = f;
+    $("#ovlFrame").textContent = (1000 / f).toFixed(1) + " мс";
+  }
+  draw();
+  if(!RM) setInterval(() => {
+    if(!ovl.classList.contains("on")) return;
+    d.push(clamp(d[N - 1] + (Math.random() - .5) * 11, 102, 162)); d.shift(); draw();
+  }, 900);
+})();
+function openOvl(){ ovl.classList.add("on"); }
+function closeOvl(){ ovl.classList.remove("on"); }
+$("#ovlBack").onclick = closeOvl;
+$("#ovlQuit").onclick = () => { closeOvl(); applyState("lib-default"); };
+
+/* ── the state machine ─────────────────────────────────────── */
+function resetAll(){
+  scLib.classList.remove("is-empty", "is-skel");
+  conflictSec.hidden = true;
+  conflictSec.innerHTML = conflictHTML;
+  svTimeline.innerHTML = svTimelineHTML;
+  svTimeline.parentElement.hidden = false;
+  pills[0].className = "pill"; pills[0].innerHTML = `<span class="dot busy"></span><span id="netRate">1.6 МБ/с</span>`;
+  pills[1].className = "pill"; pills[1].innerHTML = `<span class="dot"></span>Движок готов`;
+  renderDL(DL.default);
+  setNote(null);
+  closeOvl();
+}
+function applyState(id){
+  resetAll();
+  const [scope] = id.split("-");
+  switch(id){
+    case "lib-default":  setHero(HERO.ready); break;
+    case "lib-empty":
+      scLib.classList.add("is-empty");
+      pills[1].innerHTML = `<span class="dot"></span>Каталог пуст`;
+      break;
+    case "lib-skel":
+      scLib.classList.add("is-skel");
+      pills[1].innerHTML = `<span class="dot busy"></span>Читаем каталог`;
+      break;
+    case "lib-notinst":  setHero(HERO.notinst); setNote(HERO.notinst.note); break;
+    case "lib-update":   setHero(HERO.update);  setNote(HERO.update.note);  break;
+    case "lib-install":  setHero(HERO.installing); break;
+    case "lib-running":
+      setHero(HERO.running);
+      pills[1].innerHTML = `<span class="dot"></span>Игра запущена`;
+      pills[0].innerHTML = `<span class="dot busy"></span>1.0 МБ/с · лимит`;
+      break;
+    case "lib-offline":
+      setHero(HERO.offline); setNote(HERO.offline.note);
+      pills[0].className = "pill off"; pills[0].innerHTML = `<span class="dot"></span>Нет сети`;
+      pills[1].className = "pill off"; pills[1].innerHTML = `<span class="dot"></span>Движок на паузе`;
+      renderDL(DL.offline);
+      break;
+
+    case "dl-default":   setHero(HERO.ready); break;
+    case "dl-noseeds":
+      setHero(HERO.ready); renderDL(DL.noseeds);
+      pills[0].className = "pill off"; pills[0].innerHTML = `<span class="dot"></span>0 Б/с · нет сидов`;
+      break;
+    case "dl-nospace":
+      setHero(HERO.ready); renderDL(DL.nospace);
+      pills[1].className = "pill dead"; pills[1].innerHTML = `<span class="dot"></span>Диск переполнен`;
+      break;
+    case "dl-hash":
+      setHero(HERO.ready); renderDL(DL.hash);
+      pills[1].innerHTML = `<span class="dot busy"></span>Перепроверка`;
+      break;
+    case "dl-offline":
+      setHero(HERO.offline); renderDL(DL.offline);
+      pills[0].className = "pill off"; pills[0].innerHTML = `<span class="dot"></span>Нет сети`;
+      pills[1].className = "pill off"; pills[1].innerHTML = `<span class="dot"></span>Движок на паузе`;
+      break;
+    case "dl-empty":
+      setHero(HERO.ready); renderDL(DL.empty);
+      pills[0].innerHTML = `<span class="dot"></span>0 Б/с`;
+      pills[1].innerHTML = `<span class="dot"></span>Движок простаивает`;
+      break;
+
+    case "sv-default":   setHero(HERO.ready); break;
+    case "sv-conflict":
+      setHero(HERO.ready);
+      conflictSec.hidden = false;
+      pills[1].className = "pill off"; pills[1].innerHTML = `<span class="dot"></span>1 конфликт`;
+      break;
+    case "sv-uploading":
+      setHero(HERO.ready);
+      pills[1].innerHTML = `<span class="dot busy"></span>Выгрузка 3 из 5`;
+      svTimeline.innerHTML =
+        `<div class="ev now"><div class="ev-h"><span class="n">Пепельный Предел · Глава 5 «Кузня Сумерек»</span><span class="t">выгружается</span></div>
+           <div class="bar c" style="margin-top:10px;max-width:420px"><i style="width:62%"></i></div>
+           <div class="ev-d"><span class="dev"><svg><use href="#i-cloud"/></svg>62 % · 92 МБ из 148 МБ</span></div></div>`
+        + svTimelineHTML;
+      break;
+    case "sv-nocloud":
+      setHero(HERO.ready);
+      pills[1].className = "pill off"; pills[1].innerHTML = `<span class="dot"></span>Облако недоступно`;
+      svTimeline.parentElement.hidden = true;
+      conflictSec.hidden = false;
+      conflictSec.innerHTML =
+        `<div class="sec-h"><h2>Облако</h2><span class="count">недоступно</span><span class="rule"></span></div>
+         <div class="nothing"><svg><use href="#i-wifi-off"/></svg>
+           <span class="h">Хранилище не отвечает</span>
+           <span class="d">Пять сохранений ждут очереди и уйдут в облако автоматически. Играть можно — локальные копии в порядке.</span>
+           <button class="mini" style="margin-top:4px"><svg><use href="#i-retry"/></svg>Проверить связь</button>
+         </div>`;
+      break;
+
+    case "ovl":
+      setHero(HERO.running);
+      pills[1].innerHTML = `<span class="dot"></span>Игра запущена`;
+      openOvl();
+      break;
+    case "ritual":
+      setHero(HERO.ready);
+      launch(GAMES[0]);
+      setTimeout(() => { if(cur === "library") applyState("lib-running"); }, 4200);
+      break;
+  }
+  const target = scope === "dl" ? "downloads" : scope === "sv" ? "saves" : "library";
+  if(id !== "ovl") go(target);
+  $$(".demo-i").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.st === id)));
+  $("#demoC").textContent = STATES.find(s => s.id === id)?.n ?? "";
+  curState = id;
+}
+let curState = "lib-default";
+
+/* clicks inside the hero CTA that states install */
+heroCta.addEventListener("click", e => {
+  const a = e.target.closest("[data-act]");
+  if(!a) return;
+  if(a.dataset.act === "ovl") openOvl();
+  if(a.dataset.act === "quit") applyState("lib-default");
+  if(a.dataset.act === "install") applyState("lib-install");
+  if(a.dataset.act === "ritual") applyState("ritual");
+});
+
+/* ── demo panel ────────────────────────────────────────────── */
+const STATES = [
+  {g:"Библиотека", id:"lib-default", n:"Обычное состояние",    d:"установлена, можно играть"},
+  {g:"Библиотека", id:"lib-empty",   n:"Пусто · первый запуск", d:"ни одной игры на диске"},
+  {g:"Библиотека", id:"lib-skel",    n:"Чтение каталога",       d:"скелетон, первые 300 мс"},
+  {g:"Библиотека", id:"lib-notinst", n:"Не установлена",        d:"есть в аккаунте, нет на диске"},
+  {g:"Библиотека", id:"lib-update",  n:"Есть обновление",       d:"патч 2.4.2 · 1.8 ГБ"},
+  {g:"Библиотека", id:"lib-install", n:"Идёт установка",        d:"распаковка 41 %"},
+  {g:"Библиотека", id:"lib-running", n:"Игра запущена",         d:"кнопка стала статусом"},
+  {g:"Библиотека", id:"lib-offline", n:"Нет сети",              d:"локальное живёт, сетевое нет"},
+  {g:"Загрузки",   id:"dl-default",  n:"Две активные",          d:"нормальный ход"},
+  {g:"Загрузки",   id:"dl-noseeds",  n:"Нет раздающих",         d:"0 сидов, ждём"},
+  {g:"Загрузки",   id:"dl-nospace",  n:"Нет места на диске",    d:"не хватает 6.2 ГБ"},
+  {g:"Загрузки",   id:"dl-hash",     n:"Ошибка проверки",       d:"12 частей повреждены"},
+  {g:"Загрузки",   id:"dl-offline",  n:"Сеть пропала",          d:"авто-пауза с отсчётом"},
+  {g:"Загрузки",   id:"dl-empty",    n:"Очередь пуста",         d:"нечего качать"},
+  {g:"Сохранения", id:"sv-default",  n:"Всё синхронизировано",  d:"обычная лента"},
+  {g:"Сохранения", id:"sv-conflict", n:"Конфликт версий",       d:"две ветки, нужен выбор"},
+  {g:"Сохранения", id:"sv-uploading",n:"Выгрузка идёт",         d:"62 % текущей точки"},
+  {g:"Сохранения", id:"sv-nocloud",  n:"Облако недоступно",     d:"копим локально"},
+  {g:"В игре",     id:"ovl",         n:"Оверлей в игре",        d:"в прототипе — клавиша O"},
+  {g:"В игре",     id:"ritual",      n:"Ритуал запуска",        d:"полная последовательность"}
+];
+(() => {
+  const groups = [];
+  STATES.forEach(s => {
+    let g = groups.find(x => x.g === s.g);
+    if(!g) groups.push(g = {g:s.g, items:[]});
+    g.items.push(s);
+  });
+  $("#demoList").innerHTML = groups.map(g =>
+    `<div class="gl">${g.g}</div>` + g.items.map(s =>
+      `<button class="demo-i" data-st="${s.id}" aria-pressed="${s.id === "lib-default"}">
+         <span class="k"></span>
+         <span class="tx"><span class="n">${s.n}</span><span class="d">${s.d}</span></span>
+       </button>`).join("")).join("");
+  $("#demoC").textContent = STATES[0].n;
+})();
+const demo = $("#demo");
+$("#demoH").onclick = () => {
+  const open = demo.classList.toggle("open");
+  $("#demoH").setAttribute("aria-expanded", String(open));
+};
+$("#demoList").onclick = e => {
+  const b = e.target.closest(".demo-i");
+  if(b) applyState(b.dataset.st);
+};
+
+addEventListener("keydown", e => {
+  if(e.target.tagName === "INPUT") return;
+  if(e.key === "Escape" && ovl.classList.contains("on")){ closeOvl(); return; }
+  if(e.key === "o" || e.key === "O" || e.key === "щ" || e.key === "Щ"){
+    ovl.classList.contains("on") ? closeOvl() : applyState("ovl");
+    return;
+  }
+  if(e.key === "s" || e.key === "S" || e.key === "ы" || e.key === "Ы"){
+    const open = demo.classList.toggle("open");
+    $("#demoH").setAttribute("aria-expanded", String(open));
+  }
 });
 
 /* keep republished views alive where the platform supports it */
