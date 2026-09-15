@@ -1,0 +1,852 @@
+<title>Evaporate Identity Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=Unbounded:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+:root{
+  color-scheme:dark;
+  --void:#06060a; --sub:#0a0b11; --surface:#0e0f16; --raised:#15161f;
+  --line:#22242f; --line-soft:#191b24;
+  --ink:#f2f3f7; --ink-2:#a8acbd; --ink-3:#6e7387; --ink-4:#464a5c;
+  --hot-1:#ff7a18; --hot-2:#ffc24d; --hot-deep:#c93a05; --cool:#5ee7ff; --arc:#a66bff;
+  --ok:#3be39b; --warn:#ffc24d; --bad:#ff4d5e;
+  --glow-hot:255 122 24; --glow-cool:94 231 255;
+  --font-ui:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-dsp:"Unbounded","Onest",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --ease-out:cubic-bezier(.16,1,.3,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0;background:var(--void);color:var(--ink);
+  font-family:var(--font-ui);font-size:15px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--hot-2);outline-offset:3px;border-radius:4px}
+
+#bgwrap{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#bgwrap::after{content:"";position:absolute;inset:0;background:
+  radial-gradient(60% 45% at 14% 4%,rgb(var(--glow-hot)/.11),transparent 62%),
+  radial-gradient(52% 40% at 92% 62%,rgb(var(--glow-cool)/.07),transparent 62%)}
+#grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;mix-blend-mode:overlay;background-repeat:repeat}
+
+.wrap{position:relative;z-index:2;max-width:1140px;margin:0 auto;padding-block:0 90px;padding-inline:clamp(18px,4vw,40px)}
+
+/* ── masthead ───────────────────────────────────────────── */
+.mast{padding-block:clamp(48px,8vw,96px) clamp(36px,5vw,60px);border-bottom:1px solid var(--line-soft)}
+.lock{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.lock svg{width:76px;height:76px;flex:0 0 auto;filter:drop-shadow(0 0 30px rgb(var(--glow-hot)/.45))}
+.wordmark{font-family:var(--font-dsp);font-weight:800;font-size:clamp(30px,6vw,60px);letter-spacing:.02em;line-height:1}
+.wordmark{background:linear-gradient(96deg,var(--ink) 34%,var(--hot-2) 76%,var(--hot-1));-webkit-background-clip:text;background-clip:text;color:transparent}
+.wordmark i{font-style:normal}
+.tagline{font-family:var(--font-mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--hot-2);margin-top:12px}
+.lede{font-size:clamp(17px,2.2vw,21px);color:var(--ink-2);max-width:60ch;margin:26px 0 0;text-wrap:pretty}
+.lede b{color:var(--ink);font-weight:500}
+
+/* ── section frame ──────────────────────────────────────── */
+section{padding-block:clamp(44px,6vw,72px);border-bottom:1px solid var(--line-soft)}
+section:last-of-type{border-bottom:0}
+.sh{display:flex;align-items:baseline;gap:16px;margin-bottom:8px;flex-wrap:wrap}
+.sh .no{font-family:var(--font-mono);font-size:11px;color:var(--hot-1);letter-spacing:.14em}
+.sh h2{margin:0;font-family:var(--font-dsp);font-weight:300;font-size:clamp(24px,3.6vw,38px);letter-spacing:-.025em}
+.sh h2 b{font-weight:800}
+.sub{color:var(--ink-3);max-width:66ch;margin:0 0 30px;font-size:14.5px}
+
+.lab{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-4)}
+
+/* ── grids ──────────────────────────────────────────────── */
+.g{display:grid;gap:14px}
+.g-4{grid-template-columns:repeat(auto-fit,minmax(196px,1fr))}
+.g-3{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.g-2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+
+.tile{
+  border:1px solid var(--line-soft);border-radius:18px;padding:16px;
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.006));
+}
+.tile .cap{margin-top:13px}
+.tile .cap .n{font-size:13.5px;font-weight:500}
+.tile .cap .d{font-size:12px;color:var(--ink-4);margin-top:3px;line-height:1.45}
+
+/* ── logo variants ──────────────────────────────────────── */
+.mk{aspect-ratio:1;display:grid;place-items:center;border-radius:14px;background:radial-gradient(70% 70% at 50% 34%,rgba(255,255,255,.035),transparent 70%),#08080d;border:1px solid var(--line-soft)}
+.mk svg{width:62%;height:62%}
+.sizes{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:6px}
+.sizes .s{display:flex;flex-direction:column;align-items:center;gap:7px}
+.sizes .s span{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-4)}
+
+/* construction diagram */
+.constr{position:relative;border-radius:18px;border:1px solid var(--line-soft);background:#08080d;padding:20px;display:grid;place-items:center}
+.constr svg{width:min(290px,100%);height:auto}
+
+/* ── icon set ───────────────────────────────────────────── */
+.icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:2px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:14px;overflow:hidden}
+.ic{background:var(--surface);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;transition:background .22s}
+.ic:hover{background:var(--raised)}
+.ic:hover svg{color:var(--hot-2);filter:drop-shadow(0 0 9px rgb(var(--glow-hot)/.7))}
+.ic svg{width:24px;height:24px;color:var(--ink-2);transition:.22s}
+.ic em{font-style:normal;font-family:var(--font-mono);font-size:9px;color:var(--ink-4);letter-spacing:.04em}
+
+/* ── colour ─────────────────────────────────────────────── */
+.dir{border:1px solid var(--line-soft);border-radius:18px;overflow:hidden}
+.dir .top{height:88px;position:relative}
+.dir .top::after{content:"";position:absolute;inset:0;box-shadow:inset 0 -1px 0 rgba(255,255,255,.1)}
+.dir .bd{padding:15px 16px 17px}
+.dir .nm{font-family:var(--font-dsp);font-weight:600;font-size:13px;letter-spacing:.16em;text-transform:uppercase}
+.dir .role{font-size:12.5px;color:var(--ink-3);margin-top:5px;min-height:2.6em}
+.ramp{display:flex;margin-top:14px;border-radius:7px;overflow:hidden;height:26px}
+.ramp i{flex:1}
+.hexes{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:12px}
+.hex{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3)}
+.hex b{width:11px;height:11px;border-radius:3px;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+.tw{overflow-x:auto;border:1px solid var(--line-soft);border-radius:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line-soft);white-space:nowrap}
+th{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);font-weight:400}
+tr:last-child td{border-bottom:0}
+td.m{font-family:var(--font-mono);font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+td.w{white-space:normal;color:var(--ink-3);min-width:150px}
+table{min-width:620px}
+
+/* ── type specimen ──────────────────────────────────────── */
+.spec{border:1px solid var(--line-soft);border-radius:18px;padding:22px;background:linear-gradient(180deg,rgba(255,255,255,.028),transparent)}
+.spec + .spec{margin-top:14px}
+.spec .hd{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:baseline;margin-bottom:16px}
+.spec .fam{font-family:var(--font-dsp);font-size:14px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.spec .use{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4)}
+.big-d{font-family:var(--font-dsp);font-weight:300;font-size:clamp(30px,6.4vw,64px);line-height:.98;letter-spacing:-.03em}
+.big-d b{font-weight:800}
+.glyphs{font-family:var(--font-dsp);font-size:clamp(13px,1.8vw,17px);color:var(--ink-3);letter-spacing:.06em;margin-top:14px;word-spacing:.2em}
+.body-d{font-size:16px;color:var(--ink-2);max-width:62ch;margin:0}
+.mono-d{font-family:var(--font-mono);font-size:13px;color:var(--cool);font-variant-numeric:tabular-nums}
+.scale-row{display:flex;align-items:baseline;gap:18px;padding:9px 0;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+.scale-row:last-child{border-bottom:0}
+.scale-row .t{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);width:112px;flex:0 0 auto;letter-spacing:.1em}
+.scale-row .v{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);margin-left:auto}
+
+/* ── component anatomy ──────────────────────────────────── */
+.anat{border:1px solid var(--line-soft);border-radius:18px;padding:clamp(18px,3vw,30px);background:radial-gradient(90% 120% at 22% 10%,rgba(255,255,255,.035),transparent 62%),var(--sub);display:grid;gap:26px;place-items:center}
+.playdemo{position:relative;display:inline-flex}
+.play{
+  position:relative;display:flex;align-items:center;gap:13px;height:60px;padding:0 30px 0 26px;border-radius:99px;
+  color:#170800;font-weight:600;font-size:16px;overflow:hidden;isolation:isolate;
+  background:linear-gradient(115deg,var(--hot-2),var(--hot-1) 58%,var(--hot-deep));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -8px 18px rgba(120,30,0,.32),
+             0 10px 34px rgb(var(--glow-hot)/.42),0 0 0 1px rgb(var(--glow-hot)/.35);
+  transition:transform .2s var(--ease-out);
+}
+.play::before{content:"";position:absolute;inset:-40% -10%;z-index:-1;filter:blur(6px);opacity:.78;
+  background:radial-gradient(45% 120% at var(--cx,22%) 50%,rgba(255,255,255,.88),rgba(255,210,120,.36) 40%,transparent 72%);}
+.play::after{content:"";position:absolute;top:0;bottom:0;width:38%;left:-45%;z-index:1;transform:skewX(-18deg);
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent)}
+.play:hover::after{animation:sweep 1.05s var(--ease-out)}
+@keyframes sweep{to{left:120%}}
+.play svg{width:20px;height:20px;position:relative;z-index:2}
+.play span{position:relative;z-index:2}
+.callout{position:absolute;font-family:var(--font-mono);font-size:10px;color:var(--ink-3);white-space:nowrap;display:flex;align-items:center;gap:7px}
+.callout::before{content:"";width:26px;height:1px;background:linear-gradient(90deg,var(--hot-1),transparent)}
+.callout.l::before{background:linear-gradient(270deg,var(--hot-1),transparent)}
+.callout.l{flex-direction:row-reverse}
+@media(max-width:700px){.callout{display:none}}
+.layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;width:100%}
+.layer{border:1px solid var(--line-soft);border-radius:12px;padding:12px}
+.layer .k{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;color:var(--hot-2)}
+.layer .t{font-size:12.5px;margin-top:6px;color:var(--ink-2);line-height:1.45}
+
+/* ── effects lab ────────────────────────────────────────── */
+.fxg{display:grid;grid-template-columns:repeat(auto-fit,minmax(228px,1fr));gap:14px}
+.fx{border:1px solid var(--line-soft);border-radius:18px;overflow:hidden;background:var(--surface)}
+.fx .stage{position:relative;aspect-ratio:16/10;background:#07070c;overflow:hidden;display:grid;place-items:center;cursor:crosshair}
+.fx .meta{padding:13px 15px 15px;border-top:1px solid var(--line-soft)}
+.fx .meta .n{font-size:13px;font-weight:500}
+.fx .meta .d{font-size:11.5px;color:var(--ink-4);margin-top:4px;line-height:1.45}
+.fx .meta .tag{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;color:var(--hot-2);text-transform:uppercase}
+.fx canvas{position:absolute;inset:0;width:100%;height:100%}
+
+.smoke{position:absolute;inset:-25%;background-size:52% 52%;filter:blur(13px);opacity:.36;mix-blend-mode:screen}
+.par{position:absolute;inset:0}
+.par i{position:absolute;inset:-8%;background-size:cover;background-position:center;transition:transform .16s linear}
+.glowball{width:64px;height:64px;border-radius:50%;
+  background:radial-gradient(circle at 36% 32%,#fff,var(--hot-2) 32%,var(--hot-1) 60%,var(--hot-deep));
+  box-shadow:0 0 34px rgb(var(--glow-hot)/.9),0 0 90px rgb(var(--glow-hot)/.55),0 0 160px rgb(var(--glow-hot)/.3),inset 0 -8px 20px rgba(120,20,0,.6);
+  animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.07);filter:brightness(1.16)}}
+.sss{
+  width:120px;height:120px;border-radius:26px;position:relative;isolation:isolate;overflow:hidden;
+  background:linear-gradient(150deg,rgba(255,190,120,.22),rgba(255,120,30,.1));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 0 0 1px rgba(255,170,90,.24),0 12px 40px rgba(0,0,0,.5);
+  backdrop-filter:blur(2px);
+}
+.sss::before{content:"";position:absolute;width:88px;height:88px;border-radius:50%;
+  left:var(--x,20px);top:var(--y,30px);translate:-50% -50%;filter:blur(17px);
+  background:radial-gradient(circle,#fff,var(--hot-2) 32%,var(--hot-1) 58%,transparent 74%);}
+.sss::after{content:"";position:absolute;inset:0;border-radius:inherit;
+  box-shadow:inset 0 0 28px rgba(255,200,140,.4),inset 0 -22px 40px rgba(180,60,0,.3)}
+.tilt{width:104px;aspect-ratio:3/4;border-radius:12px;background:center/cover;border:1px solid var(--line);
+  box-shadow:0 18px 40px rgba(0,0,0,.6);transition:transform .14s linear;transform-style:preserve-3d;position:relative;overflow:hidden}
+.tilt::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.3) 48%,transparent 62%);
+  opacity:0;transition:opacity .3s}
+.fx .stage:hover .tilt::after{opacity:1}
+.rune{width:132px;height:132px;position:relative;display:grid;place-items:center}
+.rune svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.chroma{font-family:var(--font-dsp);font-weight:800;font-size:27px;letter-spacing:.02em;position:relative;color:var(--ink)}
+.chroma::before,.chroma::after{content:attr(data-t);position:absolute;inset:0;opacity:.85}
+.chroma::before{color:#ff2d6f;animation:cab 2.6s ease-in-out infinite}
+.chroma::after{color:#2de8ff;animation:cab 2.6s ease-in-out infinite reverse}
+@keyframes cab{0%,100%{transform:translate(0,0)}25%{transform:translate(-2.4px,1px)}60%{transform:translate(2px,-1.4px)}}
+.wave{position:absolute;left:50%;top:50%;translate:-50% -50%;width:12px;height:12px;border-radius:50%;
+  border:2px solid rgb(var(--glow-hot)/.9);opacity:0}
+.wave.go{animation:wv .95s var(--ease-out) forwards}
+@keyframes wv{0%{opacity:1;width:12px;height:12px;border-width:3px}100%{opacity:0;width:300px;height:300px;border-width:0}}
+.hint{position:absolute;bottom:9px;right:11px;font-family:var(--font-mono);font-size:9px;color:var(--ink-4);letter-spacing:.1em;pointer-events:none}
+.grainpv{position:absolute;inset:0;background-repeat:repeat;opacity:.5}
+
+/* ── motion table ───────────────────────────────────────── */
+.curve{display:inline-block;width:52px;height:20px;vertical-align:middle}
+
+.foot{padding-block:44px 0;color:var(--ink-4);font-family:var(--font-mono);font-size:11px;display:flex;gap:20px;flex-wrap:wrap}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+
+<svg style="position:absolute;width:0;height:0" aria-hidden="true"><defs>
+  <linearGradient id="gm" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#c93a05"/><stop offset=".52" stop-color="#ff7a18"/><stop offset="1" stop-color="#ffc24d"/>
+  </linearGradient>
+  <linearGradient id="gm2" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0" stop-color="#7a2fd6"/><stop offset=".5" stop-color="#ff7a18"/><stop offset="1" stop-color="#5ee7ff"/>
+  </linearGradient>
+  <filter id="heat" x="-14%" y="-14%" width="128%" height="128%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.014 0.038" numOctaves="2" seed="5" result="n">
+      <animate attributeName="baseFrequency" dur="6s" values="0.014 0.038;0.026 0.062;0.014 0.038" repeatCount="indefinite"/>
+    </feTurbulence>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="14" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+
+  <!-- instrument icon set -->
+  <symbol id="i-lib" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="7" height="16" rx="1.6"/><rect x="13" y="4" width="8" height="7" rx="1.6"/><rect x="13" y="14" width="8" height="6" rx="1.6"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"/><path d="M8 10.5 12 14.5 16 10.5"/><path d="M4 17.5c2.2 1.6 4.8 2.5 8 2.5s5.8-.9 8-2.5"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="7" rx="7.5" ry="3.2"/><path d="M4.5 7v10c0 1.8 3.4 3.2 7.5 3.2s7.5-1.4 7.5-3.2V7" stroke-linecap="round"/><path d="M4.5 12.2c0 1.8 3.4 3.2 7.5 3.2s7.5-1.4 7.5-3.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-set" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="3"/><path d="M12 3.8v4.1M12 16.1v4.1M3.8 12h4.1M16.1 12h4.1" stroke-linecap="round"/></symbol>
+  <symbol id="i-friends" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9.5" r="3.4"/><circle cx="16.5" cy="11" r="2.4"/><path d="M3.4 19.5c.5-3.2 2.9-5 5.6-5s5.1 1.8 5.6 5" stroke-linecap="round"/><path d="M17 16.4c2 .5 3.3 1.8 3.6 3.1" stroke-linecap="round"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="6.2"/><path d="M15.6 15.6 20 20"/><path d="M11 6.4v1.6M11 14v1.6M6.4 11h1.6M14 11h1.6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7.5 4.8a1 1 0 0 1 1.52-.85l10.2 6.35a1 1 0 0 1 0 1.7L9.02 18.35a1 1 0 0 1-1.52-.85V4.8Z" fill="currentColor"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="5" width="3.6" height="14" rx="1.2"/><rect x="13.4" y="5" width="3.6" height="14" rx="1.2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12.5 6l6 6-6 6"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="8.4"/><path d="M12 11v5.2M12 7.8v.4"/></symbol>
+  <symbol id="i-peers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="2.2"/><circle cx="4.4" cy="6.5" r="1.7"/><circle cx="19.6" cy="6.5" r="1.7"/><circle cx="4.4" cy="17.5" r="1.7"/><circle cx="19.6" cy="17.5" r="1.7"/><path d="m6 7.6 4.2 3.1M18 7.6l-4.2 3.1M6 16.4l4.2-3.1M18 16.4l-4.2-3.1" stroke-linecap="round"/></symbol>
+  <symbol id="i-seed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M12 20V9"/><path d="M12 9c0-3.4 2.6-5.6 6.4-5.6C18.4 7.4 15.6 9.4 12 9Z"/><path d="M12 13.4C9.2 13.4 7 11.8 7 8.6c2.8 0 5 1.6 5 4.8Z"/></symbol>
+  <symbol id="i-speed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4.2 17.6a9 9 0 1 1 15.6 0"/><path d="m12 13 4.2-4.2"/><circle cx="12" cy="13" r="1.3" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-disk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.6v3.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4h9v5.2a4.5 4.5 0 0 1-9 0V4Z"/><path d="M7.5 5.6H5.2a2.6 2.6 0 0 0 2.4 3.5M16.5 5.6h2.3a2.6 2.6 0 0 1-2.4 3.5"/><path d="M12 13.7V17M9 20h6"/></symbol>
+  <symbol id="i-pc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2.6" y="4.5" width="18.8" height="12" rx="1.8"/><path d="M8.5 20h7M12 16.5V20"/></symbol>
+  <symbol id="i-lap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4.5" y="5" width="15" height="10" rx="1.6"/><path d="M2 18.5h20"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 18.5a4 4 0 0 1-.5-7.97 5.2 5.2 0 0 1 10.05-1.2A3.9 3.9 0 0 1 17.6 18.5H7Z"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3.2 6.4A1.8 1.8 0 0 1 5 4.6h3.6l1.8 2.2H19a1.8 1.8 0 0 1 1.8 1.8v8.8a1.8 1.8 0 0 1-1.8 1.8H5a1.8 1.8 0 0 1-1.8-1.8V6.4Z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 3.2 19.4 6v6.2c0 4.3-3 7.2-7.4 8.6-4.4-1.4-7.4-4.3-7.4-8.6V6L12 3.2Z"/><path d="m9 12.2 2.2 2.2L15.2 10" stroke-linecap="round"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M13.4 2.8 5.6 13.4h5.2l-.6 7.8 7.8-10.6h-5.2l.6-7.8Z"/></symbol>
+  <symbol id="i-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 9.4h3.1L12 5.6v12.8l-4.4-3.8H4.5V9.4Z"/><path d="M15.4 9.6a3.4 3.4 0 0 1 0 4.8M18 7a7 7 0 0 1 0 10"/></symbol>
+</defs></svg>
+
+<div id="bgwrap"><canvas id="bgc"></canvas></div>
+<div id="grain" aria-hidden="true"></div>
+
+<div class="wrap">
+
+<!-- ══ masthead ═══════════════════════════════════════════════ -->
+<header class="mast">
+  <div class="lock">
+    <svg viewBox="0 0 48 48" aria-label="Знак Evaporate">
+      <rect x="2" y="2" width="44" height="44" rx="14" fill="#0b0b12" stroke="rgba(255,255,255,.1)"/>
+      <path d="M24 39c-6 0-10-3.6-10-8.6 0-4.4 3.2-7.4 6-11.2C22.4 15.8 24 12 24 9c0 3 1.6 6.8 4 10.2 2.8 3.8 6 6.8 6 11.2 0 5-4 8.6-10 8.6Z" fill="url(#gm)"/>
+      <path d="M24 34.5c-2.5 0-4.2-1.5-4.2-3.7 0-2.2 1.9-3.4 3-5.4.7-1.3 1.2-2.7 1.2-4 0 1.3.5 2.7 1.2 4 1.1 2 3 3.2 3 5.4 0 2.2-1.7 3.7-4.2 3.7Z" fill="#fff" opacity=".92"/>
+      <circle cx="24" cy="7" r="1.5" fill="#ffc24d"/><circle cx="18.5" cy="11.5" r="1" fill="#ffc24d" opacity=".55"/><circle cx="29.5" cy="12.5" r=".9" fill="#ffc24d" opacity=".45"/>
+    </svg>
+    <div>
+      <div class="wordmark">EVAPOR<i>ATE</i></div>
+      <div class="tagline">Фаза · Пар · Запуск</div>
+    </div>
+  </div>
+  <p class="lede">Айдентика и дизайн-система лаунчера. Одна идея держит всё: <b>материя переходит в энергию</b>. Торрент конденсируется в игру, а интерфейс испаряется в момент запуска. Отсюда пламя в знаке, восходящие угли в фоне и ритуал удержания кнопки «Играть».</p>
+</header>
+
+<!-- ══ 01 · знак ══════════════════════════════════════════════ -->
+<section>
+  <div class="sh"><span class="no">01</span><h2>Знак и <b>варианты</b></h2></div>
+  <p class="sub">Основной знак — «Отдушина»: капля пламени с белым ядром внутри и тремя восходящими искрами. Ядро светлее оболочки — это то же подповерхностное свечение, что живёт в кнопке запуска. Три альтернативы решают ту же идею фазового перехода другими средствами.</p>
+
+  <div class="g g-4">
+    <div class="tile">
+      <div class="mk"><svg viewBox="0 0 48 48" aria-label="Вариант A — Отдушина">
+        <path d="M24 42c-7.2 0-12-4.3-12-10.3 0-5.3 3.8-8.9 7.2-13.4C22.1 14 24 9.4 24 5.8c0 3.6 1.9 8.2 4.8 12.5 3.4 4.5 7.2 8.1 7.2 13.4 0 6-4.8 10.3-12 10.3Z" fill="url(#gm)"/>
+        <path d="M24 36.6c-3 0-5-1.8-5-4.4 0-2.7 2.2-4.1 3.6-6.5.8-1.5 1.4-3.2 1.4-4.8 0 1.6.6 3.3 1.4 4.8 1.4 2.4 3.6 3.8 3.6 6.5 0 2.6-2 4.4-5 4.4Z" fill="#fff" opacity=".94"/>
+        <circle cx="24" cy="3" r="1.8" fill="#ffc24d"/><circle cx="16" cy="8.5" r="1.2" fill="#ffc24d" opacity=".55"/><circle cx="32.4" cy="9.6" r="1.1" fill="#ffc24d" opacity=".45"/>
+      </svg></div>
+      <div class="cap"><div class="n">A · Отдушина</div><div class="d">Основной. Читается с 16 px, ядро остаётся видимым.</div></div>
+    </div>
+
+    <div class="tile">
+      <div class="mk"><svg viewBox="0 0 48 48" aria-label="Вариант B — Призма">
+        <path d="M24 6 42 38H6L24 6Z" fill="none" stroke="url(#gm2)" stroke-width="2.6" stroke-linejoin="round"/>
+        <path d="M6 30h12" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M27 27.5h15" stroke="#ff4d5e" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M27 32h15" stroke="#ffc24d" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M27 36.5h15" stroke="#5ee7ff" stroke-width="2.2" stroke-linecap="round"/>
+      </svg></div>
+      <div class="cap"><div class="n">B · Призма</div><div class="d">Для тем Nebula и Cryo: один луч на входе, спектр на выходе.</div></div>
+    </div>
+
+    <div class="tile">
+      <div class="mk"><svg viewBox="0 0 48 48" aria-label="Вариант C — Распад капли">
+        <path d="M24 44c-6.6 0-11.4-4.4-11.4-10.4 0-5.6 5.6-10.2 8.4-15.6h6c2.8 5.4 8.4 10 8.4 15.6C35.4 39.6 30.6 44 24 44Z" fill="url(#gm)"/>
+        <g fill="#ffc24d">
+          <rect x="20.4" y="13" width="7.2" height="2.6" rx="1.3" opacity=".9"/>
+          <rect x="21.6" y="8.4" width="4.8" height="2.4" rx="1.2" opacity=".62"/>
+          <rect x="22.6" y="4.4" width="2.8" height="2.2" rx="1.1" opacity=".38"/>
+        </g>
+        <circle cx="24" cy="34" r="4.6" fill="#fff" opacity=".9"/>
+      </svg></div>
+      <div class="cap"><div class="n">C · Распад капли</div><div class="d">Капля, разбирающаяся на слои снизу вверх. Для анимированных заставок.</div></div>
+    </div>
+
+    <div class="tile">
+      <div class="mk"><svg viewBox="0 0 48 48" aria-label="Вариант D — Ядро">
+        <circle cx="24" cy="24" r="17" fill="none" stroke="url(#gm)" stroke-width="3"/>
+        <circle cx="24" cy="24" r="22" fill="none" stroke="#ff7a18" stroke-width="1" stroke-dasharray="2 6" opacity=".55"/>
+        <circle cx="24" cy="24" r="7.4" fill="#fff"/>
+        <circle cx="24" cy="24" r="11.4" fill="#ffc24d" opacity=".28"/>
+      </svg></div>
+      <div class="cap"><div class="n">D · Ядро</div><div class="d">Максимально редуцированный. Трей, курсор загрузки, фавикон.</div></div>
+    </div>
+  </div>
+
+  <div class="g g-2" style="margin-top:14px">
+    <div class="constr">
+      <svg viewBox="0 0 300 200" aria-label="Схема построения знака: сетка 12, защитное поле равно высоте ядра">
+        <g stroke="#22242f" stroke-width="1">
+          <path d="M20 20h260M20 60h260M20 100h260M20 140h260M20 180h260"/>
+          <path d="M20 20v160M75 20v160M150 20v160M225 20v160M280 20v160"/>
+        </g>
+        <rect x="75" y="20" width="150" height="160" fill="none" stroke="#ff7a18" stroke-width="1" stroke-dasharray="4 4" opacity=".65"/>
+        <g transform="translate(110,42) scale(1.65)">
+          <path d="M24 42c-7.2 0-12-4.3-12-10.3 0-5.3 3.8-8.9 7.2-13.4C22.1 14 24 9.4 24 5.8c0 3.6 1.9 8.2 4.8 12.5 3.4 4.5 7.2 8.1 7.2 13.4 0 6-4.8 10.3-12 10.3Z" fill="none" stroke="#ffc24d" stroke-width="1.4"/>
+          <path d="M24 36.6c-3 0-5-1.8-5-4.4 0-2.7 2.2-4.1 3.6-6.5.8-1.5 1.4-3.2 1.4-4.8 0 1.6.6 3.3 1.4 4.8 1.4 2.4 3.6 3.8 3.6 6.5 0 2.6-2 4.4-5 4.4Z" fill="none" stroke="#5ee7ff" stroke-width="1.2"/>
+        </g>
+        <text x="150" y="194" text-anchor="middle" fill="#6e7387" style="font:400 9px var(--font-mono);letter-spacing:.12em">СЕТКА 12 · ЗАЩИТНОЕ ПОЛЕ = ВЫСОТА ЯДРА</text>
+      </svg>
+    </div>
+    <div class="tile" style="display:flex;flex-direction:column;justify-content:center;gap:20px">
+      <div>
+        <div class="lab">Минимальные размеры</div>
+        <div class="sizes">
+          <div class="s"><svg width="64" height="64" viewBox="0 0 48 48"><rect width="48" height="48" rx="14" fill="#0b0b12"/><path d="M24 39c-6 0-10-3.6-10-8.6 0-4.4 3.2-7.4 6-11.2C22.4 15.8 24 12 24 9c0 3 1.6 6.8 4 10.2 2.8 3.8 6 6.8 6 11.2 0 5-4 8.6-10 8.6Z" fill="url(#gm)"/><path d="M24 34.5c-2.5 0-4.2-1.5-4.2-3.7 0-2.2 1.9-3.4 3-5.4.7-1.3 1.2-2.7 1.2-4 0 1.3.5 2.7 1.2 4 1.1 2 3 3.2 3 5.4 0 2.2-1.7 3.7-4.2 3.7Z" fill="#fff"/></svg><span>64</span></div>
+          <div class="s"><svg width="32" height="32" viewBox="0 0 48 48"><rect width="48" height="48" rx="14" fill="#0b0b12"/><path d="M24 39c-6 0-10-3.6-10-8.6 0-4.4 3.2-7.4 6-11.2C22.4 15.8 24 12 24 9c0 3 1.6 6.8 4 10.2 2.8 3.8 6 6.8 6 11.2 0 5-4 8.6-10 8.6Z" fill="url(#gm)"/><path d="M24 34.5c-2.5 0-4.2-1.5-4.2-3.7 0-2.2 1.9-3.4 3-5.4.7-1.3 1.2-2.7 1.2-4 0 1.3.5 2.7 1.2 4 1.1 2 3 3.2 3 5.4 0 2.2-1.7 3.7-4.2 3.7Z" fill="#fff"/></svg><span>32</span></div>
+          <div class="s"><svg width="16" height="16" viewBox="0 0 48 48"><rect width="48" height="48" rx="14" fill="#0b0b12"/><path d="M24 39c-6 0-10-3.6-10-8.6 0-4.4 3.2-7.4 6-11.2C22.4 15.8 24 12 24 9c0 3 1.6 6.8 4 10.2 2.8 3.8 6 6.8 6 11.2 0 5-4 8.6-10 8.6Z" fill="url(#gm)"/><path d="M24 34.5c-2.5 0-4.2-1.5-4.2-3.7 0-2.2 1.9-3.4 3-5.4.7-1.3 1.2-2.7 1.2-4 0 1.3.5 2.7 1.2 4 1.1 2 3 3.2 3 5.4 0 2.2-1.7 3.7-4.2 3.7Z" fill="#fff"/></svg><span>16</span></div>
+          <div class="s"><svg width="16" height="16" viewBox="0 0 48 48"><rect width="48" height="48" rx="14" fill="#fff"/><path d="M24 39c-6 0-10-3.6-10-8.6 0-4.4 3.2-7.4 6-11.2C22.4 15.8 24 12 24 9c0 3 1.6 6.8 4 10.2 2.8 3.8 6 6.8 6 11.2 0 5-4 8.6-10 8.6Z" fill="#0b0b12"/></svg><span>моно</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="lab">Правила</div>
+        <p class="body-d" style="font-size:13.5px;margin-top:8px">Знак всегда на тёмной подложке. Градиент не поворачивается: горячее всегда вверху. Ниже 20 px искры и ядро убираются — остаётся силуэт капли. Знак не обводится, не кладётся на фотографию и не перекрашивается в один цвет, кроме служебного монохрома.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 02 · иконки ════════════════════════════════════════════ -->
+<section>
+  <div class="sh"><span class="no">02</span><h2>Набор <b>иконок</b></h2></div>
+  <p class="sub">Приборный стиль, взятый с референсов бортовых интерфейсов: только окружности, дуги и прямые, обводка 1.5 px на сетке 24, скруглённые концы. Никакой заливки — кроме «Играть», которая единственная сплошная, потому что это единственное необратимое действие.</p>
+  <div class="icons">
+    <div class="ic"><svg><use href="#i-lib"/></svg><em>library</em></div>
+    <div class="ic"><svg><use href="#i-dl"/></svg><em>download</em></div>
+    <div class="ic"><svg><use href="#i-save"/></svg><em>saves</em></div>
+    <div class="ic"><svg><use href="#i-set"/></svg><em>settings</em></div>
+    <div class="ic"><svg><use href="#i-friends"/></svg><em>friends</em></div>
+    <div class="ic"><svg><use href="#i-search"/></svg><em>search</em></div>
+    <div class="ic"><svg><use href="#i-play"/></svg><em>play</em></div>
+    <div class="ic"><svg><use href="#i-pause"/></svg><em>pause</em></div>
+    <div class="ic"><svg><use href="#i-peers"/></svg><em>peers</em></div>
+    <div class="ic"><svg><use href="#i-seed"/></svg><em>seed</em></div>
+    <div class="ic"><svg><use href="#i-speed"/></svg><em>speed</em></div>
+    <div class="ic"><svg><use href="#i-disk"/></svg><em>disk</em></div>
+    <div class="ic"><svg><use href="#i-cloud"/></svg><em>cloud</em></div>
+    <div class="ic"><svg><use href="#i-folder"/></svg><em>folder</em></div>
+    <div class="ic"><svg><use href="#i-trophy"/></svg><em>trophy</em></div>
+    <div class="ic"><svg><use href="#i-shield"/></svg><em>verified</em></div>
+    <div class="ic"><svg><use href="#i-bolt"/></svg><em>boost</em></div>
+    <div class="ic"><svg><use href="#i-sound"/></svg><em>audio</em></div>
+    <div class="ic"><svg><use href="#i-pc"/></svg><em>desktop</em></div>
+    <div class="ic"><svg><use href="#i-lap"/></svg><em>laptop</em></div>
+    <div class="ic"><svg><use href="#i-info"/></svg><em>info</em></div>
+    <div class="ic"><svg><use href="#i-arrow"/></svg><em>go</em></div>
+    <div class="ic"><svg><use href="#i-x"/></svg><em>close</em></div>
+  </div>
+</section>
+
+<!-- ══ 03 · цвет ══════════════════════════════════════════════ -->
+<section>
+  <div class="sh"><span class="no">03</span><h2>Три <b>температуры</b></h2></div>
+  <p class="sub">Тема не «раскрашивает» интерфейс, а задаёт температуру источника света. Земля во всех трёх одна — почти чёрный с уходом в фиолетовый, никогда не чистый #000: на OLED чистый чёрный даёт ступеньку на градиентах. Нейтральные серые смещены в сторону акцента, поэтому они читаются как выбранные, а не как значения по умолчанию.</p>
+
+  <div class="g g-3">
+    <div class="dir">
+      <div class="top" style="background:linear-gradient(115deg,#06060a,#3a1403 42%,#ff7a18 76%,#ffc24d)"></div>
+      <div class="bd">
+        <div class="nm">Magma</div>
+        <div class="role">Основная. Янтарь наследует текущий продукт; плазменный циан уходит в телеметрию и графики.</div>
+        <div class="ramp"><i style="background:#06060a"></i><i style="background:#0e0f16"></i><i style="background:#c93a05"></i><i style="background:#ff7a18"></i><i style="background:#ffc24d"></i><i style="background:#5ee7ff"></i></div>
+        <div class="hexes">
+          <span class="hex"><b style="background:#06060a"></b>#06060A</span>
+          <span class="hex"><b style="background:#0e0f16"></b>#0E0F16</span>
+          <span class="hex"><b style="background:#ff7a18"></b>#FF7A18</span>
+          <span class="hex"><b style="background:#ffc24d"></b>#FFC24D</span>
+          <span class="hex"><b style="background:#5ee7ff"></b>#5EE7FF</span>
+          <span class="hex"><b style="background:#a66bff"></b>#A66BFF</span>
+        </div>
+      </div>
+    </div>
+    <div class="dir">
+      <div class="top" style="background:linear-gradient(115deg,#07050d,#2c0a50 42%,#c15bff 74%,#ff4fd8)"></div>
+      <div class="bd">
+        <div class="nm">Nebula</div>
+        <div class="role">Для ночных сессий и киберпанк-каталога. Фиалка на входе, магента на пике, циан удерживает данные.</div>
+        <div class="ramp"><i style="background:#07050d"></i><i style="background:#100c1b"></i><i style="background:#6c15a8"></i><i style="background:#c15bff"></i><i style="background:#ff4fd8"></i><i style="background:#37d6ff"></i></div>
+        <div class="hexes">
+          <span class="hex"><b style="background:#07050d"></b>#07050D</span>
+          <span class="hex"><b style="background:#100c1b"></b>#100C1B</span>
+          <span class="hex"><b style="background:#c15bff"></b>#C15BFF</span>
+          <span class="hex"><b style="background:#ff4fd8"></b>#FF4FD8</span>
+          <span class="hex"><b style="background:#37d6ff"></b>#37D6FF</span>
+          <span class="hex"><b style="background:#ff8ae0"></b>#FF8AE0</span>
+        </div>
+      </div>
+    </div>
+    <div class="dir">
+      <div class="top" style="background:linear-gradient(115deg,#04070d,#0b3f8f 42%,#3b82f6 74%,#22d3ee)"></div>
+      <div class="bd">
+        <div class="nm">Cryo</div>
+        <div class="role">Спокойная. Холодная база, а единственная тёплая искра остаётся только на кнопке запуска.</div>
+        <div class="ramp"><i style="background:#04070d"></i><i style="background:#0b1019"></i><i style="background:#0b3f8f"></i><i style="background:#3b82f6"></i><i style="background:#22d3ee"></i><i style="background:#ff6b3d"></i></div>
+        <div class="hexes">
+          <span class="hex"><b style="background:#04070d"></b>#04070D</span>
+          <span class="hex"><b style="background:#0b1019"></b>#0B1019</span>
+          <span class="hex"><b style="background:#3b82f6"></b>#3B82F6</span>
+          <span class="hex"><b style="background:#22d3ee"></b>#22D3EE</span>
+          <span class="hex"><b style="background:#ff6b3d"></b>#FF6B3D</span>
+          <span class="hex"><b style="background:#8fb6ff"></b>#8FB6FF</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tw" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Токен</th><th>Magma</th><th>Роль</th><th>Правило</th></tr></thead>
+      <tbody>
+        <tr><td class="m">--void</td><td class="m">#06060A</td><td class="w">Земля окна</td><td class="w">Всегда самый нижний слой. Не осветляется даже под модальным окном.</td></tr>
+        <tr><td class="m">--surface</td><td class="m">#0E0F16</td><td class="w">Панели и карточки</td><td class="w">+1 ступень. Поверх — градиент белого 3 % → 0.6 %.</td></tr>
+        <tr><td class="m">--raised</td><td class="m">#15161F</td><td class="w">Поповеры, палитра команд</td><td class="w">Только для того, что лежит поверх модального слоя.</td></tr>
+        <tr><td class="m">--line</td><td class="m">#22242F</td><td class="w">Границы</td><td class="w">1 px. Активная граница — акцент 35 % + внешнее свечение.</td></tr>
+        <tr><td class="m">--ink</td><td class="m">#F2F3F7</td><td class="w">Основной текст</td><td class="w">Контраст к --surface ≈ 15:1.</td></tr>
+        <tr><td class="m">--ink-3</td><td class="m">#6E7387</td><td class="w">Подписи</td><td class="w">Минимум 12 px. Ниже — только --ink-2.</td></tr>
+        <tr><td class="m">--hot-1 / 2</td><td class="m">#FF7A18 / #FFC24D</td><td class="w">Акцент, градиент запуска</td><td class="w">Насыщенная заливка — не более одного объекта на экран.</td></tr>
+        <tr><td class="m">--cool</td><td class="m">#5EE7FF</td><td class="w">Данные, приём, пиры</td><td class="w">Только для чисел и графиков, никогда для кнопок.</td></tr>
+        <tr><td class="m">--ok / warn / bad</td><td class="m">#3BE39B / #FFC24D / #FF4D5E</td><td class="w">Состояния</td><td class="w">Семантика отдельно от акцента и не заменяет его.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ 04 · типографика ═══════════════════════════════════════ -->
+<section>
+  <div class="sh"><span class="no">04</span><h2>Шрифтовая <b>пара</b></h2></div>
+  <p class="sub">Интерфейс русскоязычный, поэтому обе гарнитуры выбраны из тех, у кого кириллица нарисована, а не подставлена. Unbounded — широкий геометрический дисплей, даёт голос бренду. Onest ведёт всё остальное. JetBrains Mono держит скорости, пиры и хеши в моноширинной колонке.</p>
+
+  <div class="spec">
+    <div class="hd"><span class="fam">Unbounded</span><span class="use">дисплей · 300 / 600 / 800 · заголовки, числа, знак</span></div>
+    <div class="big-d">Пепельный <b>Предел</b></div>
+    <div class="glyphs">А Б В Г Д Е Ж З И К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ъ Ы Ь Э Ю Я &nbsp; 0 1 2 3 4 5 6 7 8 9</div>
+  </div>
+
+  <div class="spec">
+    <div class="hd"><span class="fam">Onest</span><span class="use">интерфейс · 300–700 · всё остальное</span></div>
+    <p class="body-d">Пятая глава разблокирована. Ваш отряд ждёт у Кузни Сумерек — последнее сохранение синхронизировано шесть минут назад. Строка описания держится в пределах 62 знаков, чтобы глаз не терял начало следующей.</p>
+    <div style="margin-top:18px">
+      <div class="scale-row"><span class="t">DISPLAY / 68</span><span style="font-family:var(--font-dsp);font-weight:300;font-size:30px;letter-spacing:-.03em">Библиотека</span><span class="v">clamp(34,5.4vw,68) · 0.94</span></div>
+      <div class="scale-row"><span class="t">SECTION / 13</span><span style="font-family:var(--font-dsp);font-weight:600;font-size:13px;letter-spacing:.2em;text-transform:uppercase">Загрузки</span><span class="v">13 · 0.2em · caps</span></div>
+      <div class="scale-row"><span class="t">TITLE / 15</span><span style="font-size:15px;font-weight:500">Красный Меридиан</span><span class="v">15 · 500 · −0.005em</span></div>
+      <div class="scale-row"><span class="t">BODY / 14</span><span style="font-size:14px;color:var(--ink-2)">Пошаговые бои на изломе фронта</span><span class="v">14 · 400 · 1.5</span></div>
+      <div class="scale-row"><span class="t">LABEL / 10.5</span><span class="lab">приём · сейчас</span><span class="v">10.5 · mono · 0.2em</span></div>
+      <div class="scale-row"><span class="t">DATA / 11.5</span><span class="mono-d">592 КБ/с · сиды 27 · пиры 31</span><span class="v">mono · tabular-nums</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 05 · кнопка ════════════════════════════════════════════ -->
+<section>
+  <div class="sh"><span class="no">05</span><h2>Анатомия <b>запуска</b></h2></div>
+  <p class="sub">На экране библиотеки ровно один насыщенный объект — кнопка «Играть». Она собрана из пяти слоёв, имитирующих подповерхностное рассеивание: свет рождается внутри оболочки, а не лежит на ней. Наведите курсор — ядро следует за ним, как за источником тепла.</p>
+
+  <div class="anat">
+    <div class="playdemo" id="pd">
+      <span class="callout l" style="right:calc(100% + 18px);top:4px">−1 · ядро (blur 6)</span>
+      <span class="callout" style="left:calc(100% + 18px);top:2px">+1 · блик, skew −18°</span>
+      <span class="callout" style="left:calc(100% + 18px);bottom:0">0 · оболочка, градиент 115°</span>
+      <button class="play" id="pb"><svg><use href="#i-play"/></svg><span>Играть</span></button>
+    </div>
+    <div class="layers">
+      <div class="layer"><div class="k">СЛОЙ −1</div><div class="t">Ядро. Радиальный белый в янтарь, blur 6 px, дышит 3.6 с. Даёт ощущение горячей массы под поверхностью.</div></div>
+      <div class="layer"><div class="k">СЛОЙ 0</div><div class="t">Оболочка. Линейный градиент 115°: #FFC24D → #FF7A18 → #C93A05.</div></div>
+      <div class="layer"><div class="k">ВНУТРЬ</div><div class="t">inset 0 1 0 белый 55 % сверху и тёплая тень 18 px снизу — кромка, освещённая изнутри.</div></div>
+      <div class="layer"><div class="k">СЛОЙ +1</div><div class="t">Спекулярный блик 38 % ширины, проходит за 1.05 с только при наведении.</div></div>
+      <div class="layer"><div class="k">НАРУЖУ</div><div class="t">Свечение 34 px при 42 % и контурная линия акцента 35 % — объект светит на фон.</div></div>
+      <div class="layer"><div class="k">УДЕРЖАНИЕ</div><div class="t">620 мс. Кольцо заряда обходит кнопку, фон уходит под тепловое искажение. Защита от случайного старта.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 06 · эффекты ═══════════════════════════════════════════ -->
+<section>
+  <div class="sh"><span class="no">06</span><h2>Лаборатория <b>эффектов</b></h2></div>
+  <p class="sub">Двенадцать приёмов, из которых собрана атмосфера. Каждый живой — наведите или кликните. В продукте они объединены в один бюджет кадра и отключаются тремя пресетами качества: «Эко», «Полное», «Макс».</p>
+
+  <div class="fxg">
+    <div class="fx"><div class="stage"><canvas data-fx="plume"></canvas><span class="hint">ШЕЙДЕР</span></div>
+      <div class="meta"><div class="tag">01 · fragment</div><div class="n">Плюм пара</div><div class="d">Пятиоктавный fbm с двойным искажением домена. Домен уезжает вверх — получается восходящий поток, а не облако.</div></div></div>
+
+    <div class="fx"><div class="stage"><canvas data-fx="embers"></canvas><span class="hint">ЧАСТИЦЫ</span></div>
+      <div class="meta"><div class="tag">02 · canvas</div><div class="n">Угли и искры</div><div class="d">Аддитивное смешивание, синусная турбулентность, срок жизни 0.3–0.9 с. Плотность привязана к ширине окна.</div></div></div>
+
+    <div class="fx"><div class="stage"><div class="smoke" id="sm1"></div><div class="smoke" id="sm2" style="opacity:.22"></div><span class="hint">ДЫМ</span></div>
+      <div class="meta"><div class="tag">03 · composite</div><div class="n">Дым</div><div class="d">Два слоя размытого шума дрейфуют с разной скоростью в режиме screen. Дешевле объёмного рендера, читается так же.</div></div></div>
+
+    <div class="fx"><div class="stage" data-par><div class="par"><i data-d="6"></i><i data-d="16"></i><i data-d="34"></i></div><span class="hint">ВЕДИТЕ КУРСОР</span></div>
+      <div class="meta"><div class="tag">04 · transform</div><div class="n">Параллакс</div><div class="d">Четыре слоя глубины 5 / 14 / 30 / −8. Текст сдвигается против движения — это и создаёт объём.</div></div></div>
+
+    <div class="fx"><div class="stage" data-heat><div class="tilt" id="heatArt" style="width:120px"></div><span class="hint">НАВЕДИТЕ</span></div>
+      <div class="meta"><div class="tag">05 · SVG filter</div><div class="n">Тепловое марево</div><div class="d">feTurbulence + feDisplacementMap, scale 14. Включается только на заряде кнопки — искажение дорогое.</div></div></div>
+
+    <div class="fx"><div class="stage"><div class="glowball"></div><span class="hint">СВЕЧЕНИЕ</span></div>
+      <div class="meta"><div class="tag">06 · shadow</div><div class="n">Ореол</div><div class="d">Три тени 34 / 90 / 160 px с падающей непрозрачностью вместо одного размытия. Цвет держится у ядра, не расползается.</div></div></div>
+
+    <div class="fx"><div class="stage" data-sss><div class="sss"></div><span class="hint">ВЕДИТЕ КУРСОР</span></div>
+      <div class="meta"><div class="tag">07 · SSS</div><div class="n">Подповерхностное рассеивание</div><div class="d">Источник внутри полупрозрачной оболочки, размытие 17 px, внутренняя тень по кромке. Материал выглядит плотным и горячим.</div></div></div>
+
+    <div class="fx"><div class="stage" data-tilt><div class="tilt" id="tiltArt"></div><span class="hint">3D</span></div>
+      <div class="meta"><div class="tag">08 · 3d</div><div class="n">Наклон обложки</div><div class="d">rotateX/Y до 11°, перспектива 700 px, поверх — спекулярная полоса. Обложки — единственное, что выходит из плоскости.</div></div></div>
+
+    <div class="fx"><div class="stage" data-rune><div class="rune"><svg viewBox="0 0 132 132">
+        <circle cx="66" cy="66" r="52" fill="none" stroke="rgba(255,255,255,.08)"/>
+        <circle cx="66" cy="66" r="44" fill="none" stroke="rgb(255 122 24/.3)" stroke-dasharray="3 7"><animateTransform attributeName="transform" type="rotate" from="0 66 66" to="360 66 66" dur="16s" repeatCount="indefinite"/></circle>
+        <circle cx="66" cy="66" r="60" fill="none" stroke="rgb(255 122 24/.18)" stroke-dasharray="1 11"><animateTransform attributeName="transform" type="rotate" from="360 66 66" to="0 66 66" dur="24s" repeatCount="indefinite"/></circle>
+        <circle id="rr" cx="66" cy="66" r="52" fill="none" stroke="#ffc24d" stroke-width="2" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" transform="rotate(-90 66 66)" style="filter:drop-shadow(0 0 8px #ffc24d)"/>
+      </svg><div class="glowball" style="width:38px;height:38px;animation:none"></div></div><span class="hint">УДЕРЖИВАЙТЕ</span></div>
+      <div class="meta"><div class="tag">09 · ritual</div><div class="n">Круг заряда</div><div class="d">Три кольца с разной скоростью и направлением плюс дуга прогресса. Вращение медленное — 16 и 24 с на оборот.</div></div></div>
+
+    <div class="fx"><div class="stage" data-wave><div class="wave" id="wv"></div><div style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3);letter-spacing:.14em">КЛИКНИТЕ</div></div>
+      <div class="meta"><div class="tag">10 · launch</div><div class="n">Ударная волна и ирис</div><div class="d">Кольцо разлетается до 190 vmax за 0.9 с, следом радиальный ирис закрывает кадр. Момент, когда интерфейс уступает игре.</div></div></div>
+
+    <div class="fx"><div class="stage"><div class="chroma" data-t="ЗАПУСК">ЗАПУСК</div><span class="hint">АБЕРРАЦИЯ</span></div>
+      <div class="meta"><div class="tag">11 · grade</div><div class="n">Хроматическая аберрация</div><div class="d">Красный и циановый дубли смещаются на ±2.4 px в противофазе. Только на вспышке запуска — постоянная утомляет.</div></div></div>
+
+    <div class="fx"><div class="stage"><div class="grainpv" id="gpv"></div><span class="hint">100 % · ЗЕРНО</span></div>
+      <div class="meta"><div class="tag">12 · overlay</div><div class="n">Плёночное зерно</div><div class="d">Плитка 128 px, overlay 5 %. Убирает бандинг на больших градиентах — без него тёмные переходы полосят.</div></div></div>
+  </div>
+</section>
+
+<!-- ══ 07 · моушн ═════════════════════════════════════════════ -->
+<section>
+  <div class="sh"><span class="no">07</span><h2>Тайминги и <b>кривые</b></h2></div>
+  <p class="sub">Один принцип: всё, что появляется, приходит с ускорением наружу; всё, что исчезает, уходит линейно и быстро. Длительности кратны 40 мс.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Событие</th><th>Длит.</th><th>Кривая</th><th></th><th>Что меняется</th></tr></thead>
+      <tbody>
+        <tr><td class="w">Наведение на карточку</td><td class="m">400</td><td class="m">ease-out .16 1 .3 1</td><td><svg class="curve" viewBox="0 0 100 40"><path d="M0 40C16 40 30 4 100 0" fill="none" stroke="#ff7a18" stroke-width="2.5"/></svg></td><td class="w">−8 px по Y, тень 26→54, контур акцента</td></tr>
+        <tr><td class="w">Смена раздела</td><td class="m">340 / 440</td><td class="m">ease-out</td><td><svg class="curve" viewBox="0 0 100 40"><path d="M0 40C16 40 30 4 100 0" fill="none" stroke="#ff7a18" stroke-width="2.5"/></svg></td><td class="w">Прозрачность и +10 px, масштаб 0.994→1</td></tr>
+        <tr><td class="w">Удержание «Играть»</td><td class="m">620</td><td class="m">linear</td><td><svg class="curve" viewBox="0 0 100 40"><path d="M0 40 100 0" fill="none" stroke="#5ee7ff" stroke-width="2.5"/></svg></td><td class="w">Дуга 0→100, тепловое искажение фона</td></tr>
+        <tr><td class="w">Ритуал запуска</td><td class="m">2600</td><td class="m">linear + ease-out</td><td><svg class="curve" viewBox="0 0 100 40"><path d="M0 40 60 14C76 6 88 2 100 0" fill="none" stroke="#ffc24d" stroke-width="2.5"/></svg></td><td class="w">Шесть стадий, кольцо, выброс частиц, вспышка, ирис</td></tr>
+        <tr><td class="w">Палитра команд</td><td class="m">280</td><td class="m">ease-out</td><td><svg class="curve" viewBox="0 0 100 40"><path d="M0 40C16 40 30 4 100 0" fill="none" stroke="#ff7a18" stroke-width="2.5"/></svg></td><td class="w">−12 px по Y, масштаб 0.98→1, размытие фона 12</td></tr>
+        <tr><td class="w">Дыхание ядра</td><td class="m">3600 ∞</td><td class="m">ease-in-out</td><td><svg class="curve" viewBox="0 0 100 40"><path d="M0 34C26 34 24 6 50 6 76 6 74 34 100 34" fill="none" stroke="#a66bff" stroke-width="2.5"/></svg></td><td class="w">Масштаб 1→1.05, яркость +20 %</td></tr>
+        <tr><td class="w">Параллакс за курсором</td><td class="m">—</td><td class="m">lerp 0.055 / кадр</td><td><svg class="curve" viewBox="0 0 100 40"><path d="M0 40C40 40 60 8 100 2" fill="none" stroke="#5ee7ff" stroke-width="2.5"/></svg></td><td class="w">Сглаживание вместо анимации — слои не отстают рывками</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ 08 · раскладка ═════════════════════════════════════════ -->
+<section style="border-bottom:0">
+  <div class="sh"><span class="no">08</span><h2>Сетка, радиусы, <b>тени</b></h2></div>
+  <div class="g g-3" style="margin-top:22px">
+    <div class="tile">
+      <div class="lab">Радиусы</div>
+      <div style="display:flex;gap:9px;align-items:flex-end;margin-top:14px;flex-wrap:wrap">
+        <div style="width:44px;height:44px;border:1px solid var(--line);border-radius:6px"></div>
+        <div style="width:44px;height:44px;border:1px solid var(--line);border-radius:10px"></div>
+        <div style="width:44px;height:44px;border:1px solid var(--line);border-radius:16px"></div>
+        <div style="width:44px;height:44px;border:1px solid var(--line);border-radius:22px"></div>
+        <div style="width:44px;height:44px;border:1px solid var(--line);border-radius:30px"></div>
+      </div>
+      <p class="body-d" style="font-size:12.5px;margin-top:14px">6 чипы · 10 кнопки · 16 карточки · 22 панели · 30 герой. Кнопка «Играть» и все статусы — 99 px.</p>
+    </div>
+    <div class="tile">
+      <div class="lab">Каркас окна</div>
+      <svg viewBox="0 0 240 150" style="width:100%;margin-top:12px">
+        <rect x="1" y="1" width="238" height="148" rx="10" fill="#0a0b11" stroke="#22242f"/>
+        <rect x="1" y="1" width="30" height="148" rx="10" fill="#0e0f16"/><path d="M31 1v148" stroke="#22242f"/>
+        <path d="M31 25h208" stroke="#22242f"/><path d="M31 131h208" stroke="#22242f"/>
+        <rect x="44" y="38" width="182" height="62" rx="7" fill="#15161f" stroke="#ff7a18" stroke-opacity=".38"/>
+        <rect x="44" y="108" width="34" height="14" rx="3" fill="#15161f"/><rect x="83" y="108" width="34" height="14" rx="3" fill="#15161f"/>
+        <rect x="122" y="108" width="34" height="14" rx="3" fill="#15161f"/><rect x="161" y="108" width="34" height="14" rx="3" fill="#15161f"/>
+        <text x="135" y="141" text-anchor="middle" fill="#464a5c" style="font:400 7px var(--font-mono);letter-spacing:.1em">76 РЕЙЛ · ТОПБАР 58 · ПОДСКАЗКИ 32</text>
+      </svg>
+    </div>
+    <div class="tile">
+      <div class="lab">Тени и свечения</div>
+      <div style="display:grid;gap:12px;margin-top:16px">
+        <div style="height:34px;border-radius:12px;background:var(--surface);box-shadow:0 14px 30px rgba(0,0,0,.55);border:1px solid var(--line-soft)"></div>
+        <div style="height:34px;border-radius:12px;background:var(--surface);box-shadow:0 26px 54px rgba(0,0,0,.7);border:1px solid var(--line)"></div>
+        <div style="height:34px;border-radius:12px;background:var(--surface);box-shadow:0 0 0 1px rgb(var(--glow-hot)/.4),0 0 42px rgb(var(--glow-hot)/.3);border:1px solid transparent"></div>
+      </div>
+      <p class="body-d" style="font-size:12.5px;margin-top:14px">Покой · поднято · активно. Тень всегда чёрная и мягкая; цветным бывает только свечение, и только у того, что реагирует на пользователя.</p>
+    </div>
+  </div>
+</section>
+
+<div class="foot">
+  <span>EVAPORATE · IDENTITY KIT · 2026</span>
+  <span>Unbounded + Onest + JetBrains Mono</span>
+  <span>Обложки в прототипе сгенерированы процедурно</span>
+</div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const rng=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+
+/* grain tile, shared by the page overlay and the demo tile */
+const grainURL=(()=>{
+  const c=document.createElement("canvas");c.width=c.height=128;
+  const x=c.getContext("2d"),d=x.createImageData(128,128);
+  for(let i=0;i<128*128;i++){const v=110+Math.random()*90|0;d.data[i*4]=d.data[i*4+1]=d.data[i*4+2]=v;d.data[i*4+3]=255}
+  x.putImageData(d,0,0);return c.toDataURL();
+})();
+$("#grain").style.backgroundImage=`url(${grainURL})`;
+$("#gpv").style.backgroundImage=`url(${grainURL})`;
+
+/* soft noise plate, used for smoke + generated key art */
+function plate(n,seed){
+  const r=rng(seed),c=document.createElement("canvas");c.width=c.height=n;
+  const x=c.getContext("2d"),d=x.createImageData(n,n);
+  for(let i=0;i<n*n;i++){const v=(r()*255)|0;d.data[i*4]=d.data[i*4+1]=d.data[i*4+2]=v;d.data[i*4+3]=255}
+  x.putImageData(d,0,0);return c.toDataURL();
+}
+$("#sm1").style.backgroundImage=`url(${plate(10,88)})`;
+$("#sm2").style.backgroundImage=`url(${plate(6,412)})`;
+
+/* miniature of the launcher's key art — same routine, smaller */
+function art(W,H,seed,pal){
+  const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d"),r=rng(seed);
+  let g=x.createLinearGradient(0,0,W*.3,H);
+  g.addColorStop(0,pal[0]);g.addColorStop(.5,pal[1]);g.addColorStop(1,"#040407");x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.save();x.globalCompositeOperation="screen";
+  [[6,.34],[17,.2],[44,.11]].forEach(([n,a])=>{
+    const im=new Image();const p=document.createElement("canvas");p.width=n;p.height=Math.max(3,n*H/W|0);
+    const px=p.getContext("2d"),dd=px.createImageData(p.width,p.height);
+    for(let i=0;i<p.width*p.height;i++){const v=(r()*255)|0;dd.data[i*4]=dd.data[i*4+1]=dd.data[i*4+2]=v;dd.data[i*4+3]=255}
+    px.putImageData(dd,0,0);x.globalAlpha=a;x.filter=`blur(${Math.round(W/n/2.2)}px)`;x.drawImage(p,0,0,W,H);x.filter="none";
+  });
+  x.globalAlpha=1;
+  const sx=W*.62,sy=H*.3,sr=W*.2;
+  g=x.createRadialGradient(sx,sy,0,sx,sy,sr*3.4);
+  g.addColorStop(0,"#fff");g.addColorStop(.12,pal[3]);g.addColorStop(.36,pal[2]);g.addColorStop(1,"rgba(0,0,0,0)");
+  x.fillStyle=g;x.beginPath();x.arc(sx,sy,sr*3.4,0,7);x.fill();x.restore();
+  for(let k=0;k<2;k++){
+    const base=H*(.62+k*.13),amp=H*.14,ph=r()*9;
+    x.beginPath();x.moveTo(-2,H+2);
+    for(let i=-2;i<=W+2;i+=W/26)x.lineTo(i,base+Math.sin(i/W*5.6+ph)*amp*.7+Math.sin(i/W*14+ph*2)*amp*.3);
+    x.lineTo(W+2,H+2);x.closePath();x.fillStyle=k?"#020205":"rgba(4,4,8,.75)";x.fill();
+    x.save();x.globalCompositeOperation="screen";x.strokeStyle=pal[2];x.globalAlpha=.45-k*.2;
+    x.lineWidth=1.3;x.shadowColor=pal[2];x.shadowBlur=11;x.stroke();x.restore();
+  }
+  g=x.createRadialGradient(W*.5,H*.42,H*.2,W*.5,H*.5,H*1.1);
+  g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(2,2,5,.84)");x.fillStyle=g;x.fillRect(0,0,W,H);
+  return c.toDataURL("image/jpeg",.84);
+}
+const PAL_ASH=["#2a0f06","#160806","#ff7a18","#ffd28a"];
+const PAL_NEO=["#1b0636","#0d0320","#c15bff","#ffb6f2"];
+const PAL_DEEP=["#04222c","#03121a","#33d6d0","#c8fff6"];
+$("#tiltArt").style.backgroundImage=`url(${art(300,400,1207,PAL_ASH)})`;
+$("#heatArt").style.backgroundImage=`url(${art(300,400,9314,PAL_DEEP)})`;
+(()=>{const L=$$(".par i"),seeds=[[4422,PAL_NEO],[7781,PAL_ASH],[2960,PAL_DEEP]];
+  L.forEach((el,i)=>{el.style.backgroundImage=`url(${art(420,280,seeds[i][0],seeds[i][1])})`;
+    el.style.opacity=i===0?"1":i===1?".8":".55"})})();
+
+/* ── page-wide ambient plume ───────────────────────────────── */
+const FS=`
+precision highp float; varying vec2 v;
+uniform vec2 uRes; uniform float uT; uniform vec3 c1,c2,c3;
+float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+  return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){float s=0.,a=.5;for(int i=0;i<5;i++){s+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return s;}
+void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*uRes)/uRes.y;
+  float t=uT*.03;
+  vec2 p=uv*1.6+vec2(0.,-t*2.1);
+  vec2 q=vec2(fbm(p+vec2(0.,t)),fbm(p+vec2(5.2,1.3)-t));
+  vec2 r=vec2(fbm(p+3.4*q+vec2(1.7,9.2)+t*.6),fbm(p+3.4*q+vec2(8.3,2.8)-t*.4));
+  float f=fbm(p+3.0*r);
+  float rise=smoothstep(-.95,.8,uv.y);
+  float body=pow(clamp(f*1.25,0.,1.),1.6)*(1.-rise*.88);
+  vec3 col=mix(c1*.55,c2,clamp(r.x*1.25,0.,1.));
+  col=mix(col,c3,clamp(q.y*.85-.15,0.,1.)*.5);
+  float core=exp(-length(uv-vec2(.1,-.62))*2.4);
+  col+=c2*core*.5;
+  float a=body*.6+core*.2;
+  a*=smoothstep(1.25,.05,length(uv*vec2(.72,1.)));
+  gl_FragColor=vec4(col*a*1.5,a*.9);
+}`;
+function makePlume(canvas,scale){
+  const gl=canvas.getContext("webgl",{alpha:true,antialias:false});
+  if(!gl)return null;
+  const vs=`attribute vec2 p;varying vec2 v;void main(){v=p;gl_Position=vec4(p,0.,1.);}`;
+  const mk=(t,s)=>{const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh};
+  const pr=gl.createProgram();gl.attachShader(pr,mk(gl.VERTEX_SHADER,vs));gl.attachShader(pr,mk(gl.FRAGMENT_SHADER,FS));
+  gl.linkProgram(pr);
+  if(!gl.getProgramParameter(pr,gl.LINK_STATUS))return null;
+  gl.useProgram(pr);
+  const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(pr,"p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  const U={};["uRes","uT","c1","c2","c3"].forEach(k=>U[k]=gl.getUniformLocation(pr,k));
+  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  gl.uniform3f(U.c1,1,.48,.09);gl.uniform3f(U.c2,1,.76,.30);gl.uniform3f(U.c3,.37,.91,1);
+  function size(){
+    const r=canvas.getBoundingClientRect(), s=scale*Math.min(devicePixelRatio||1,2);
+    canvas.width=Math.max(2,r.width*s|0);canvas.height=Math.max(2,r.height*s|0);
+    gl.viewport(0,0,canvas.width,canvas.height);
+  }
+  size();addEventListener("resize",size);
+  return t=>{gl.useProgram(pr);gl.uniform2f(U.uRes,canvas.width,canvas.height);gl.uniform1f(U.uT,t);
+    gl.drawArrays(gl.TRIANGLES,0,3)};
+}
+const drawBG=makePlume($("#bgc"),.45);
+const drawMini=makePlume($('[data-fx="plume"]'),.8);
+
+/* ── ember demo ────────────────────────────────────────────── */
+const ec=$('[data-fx="embers"]'), ex=ec.getContext("2d");
+let eps=[];
+function eSize(){
+  const r=ec.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);
+  ec.width=r.width*d|0;ec.height=r.height*d|0;ex.setTransform(d,0,0,d,0,0);
+  eps=Array.from({length:46},()=>eSpawn(true,r.width,r.height));
+}
+function eSpawn(any,w,h){return{x:Math.random()*w,y:any?Math.random()*h:h+8,
+  vy:-(.2+Math.random()*.6),vx:(Math.random()-.5)*.14,r:.5+Math.random()*1.6,
+  life:0,max:900+Math.random()*900,ph:Math.random()*7,sw:.3+Math.random()*.7,cool:Math.random()<.22}}
+function eDraw(dt){
+  const r=ec.getBoundingClientRect();
+  ex.clearRect(0,0,r.width,r.height);
+  ex.globalCompositeOperation="lighter";
+  for(let i=0;i<eps.length;i++){
+    const p=eps[i];p.life+=dt;
+    if(p.life>p.max||p.y<-10){eps[i]=eSpawn(false,r.width,r.height);continue}
+    p.ph+=dt*.0026;p.x+=p.vx+Math.sin(p.ph)*p.sw*.5;p.y+=p.vy*(1+p.life/p.max*.7);
+    const k=p.life/p.max,a=Math.sin(Math.PI*Math.min(1,k*1.15))*.75;
+    const c=p.cool?[94,231,255]:[255,194,77],rr=p.r*(1-k*.3);
+    const g=ex.createRadialGradient(p.x,p.y,0,p.x,p.y,rr*5.5);
+    g.addColorStop(0,`rgba(${c[0]},${c[1]},${c[2]},${a})`);
+    g.addColorStop(.35,`rgba(${c[0]},${c[1]},${c[2]},${a*.3})`);
+    g.addColorStop(1,"rgba(0,0,0,0)");
+    ex.fillStyle=g;ex.beginPath();ex.arc(p.x,p.y,rr*5.5,0,7);ex.fill();
+    ex.fillStyle=`rgba(255,246,230,${a*.9})`;ex.beginPath();ex.arc(p.x,p.y,rr*.6,0,7);ex.fill();
+  }
+  ex.globalCompositeOperation="source-over";
+}
+eSize();addEventListener("resize",eSize);
+
+/* ── smoke drift ───────────────────────────────────────────── */
+const sm1=$("#sm1"),sm2=$("#sm2");
+
+/* ── loop ──────────────────────────────────────────────────── */
+let last=performance.now(),t0=last;
+function loop(now){
+  const dt=Math.min(60,now-last);last=now;const t=(now-t0)/1000;
+  drawBG&&drawBG(t); drawMini&&drawMini(t); eDraw(dt);
+  sm1.style.transform=`translate(${Math.sin(t*.16)*26}px,${-t*7%160-40}px)`;
+  sm2.style.transform=`translate(${Math.cos(t*.11)*34}px,${-t*4%160-40}px) scale(1.3)`;
+  requestAnimationFrame(loop);
+}
+if(RM){drawBG&&drawBG(6);drawMini&&drawMini(6);eDraw(16)}
+else requestAnimationFrame(loop);
+
+/* ── interactive demos ─────────────────────────────────────── */
+// play button: core follows the pointer
+const pd=$("#pd"),pb=$("#pb");
+pd.addEventListener("pointermove",e=>{
+  const r=pb.getBoundingClientRect();
+  pb.style.setProperty("--cx",clamp((e.clientX-r.left)/r.width*100,8,92)+"%");
+});
+pd.addEventListener("pointerleave",()=>pb.style.setProperty("--cx","22%"));
+
+// parallax tile
+const pStage=$("[data-par]");
+pStage.addEventListener("pointermove",e=>{
+  const r=pStage.getBoundingClientRect(),ox=(e.clientX-r.left)/r.width-.5,oy=(e.clientY-r.top)/r.height-.5;
+  $$(".par i",pStage).forEach(el=>{const d=+el.dataset.d;
+    el.style.transform=`translate(${-ox*d}px,${-oy*d*.6}px)`});
+});
+pStage.addEventListener("pointerleave",()=>$$(".par i",pStage).forEach(el=>el.style.transform=""));
+
+// heat shimmer
+const hStage=$("[data-heat]");
+hStage.addEventListener("pointerenter",()=>$("#heatArt").style.filter="url(#heat)");
+hStage.addEventListener("pointerleave",()=>$("#heatArt").style.filter="");
+
+// subsurface core
+const sStage=$("[data-sss]"),sBox=$(".sss",sStage);
+sStage.addEventListener("pointermove",e=>{
+  const r=sBox.getBoundingClientRect();
+  sBox.style.setProperty("--x",clamp(e.clientX-r.left,6,r.width-6)+"px");
+  sBox.style.setProperty("--y",clamp(e.clientY-r.top,6,r.height-6)+"px");
+});
+
+// 3d tilt
+const tStage=$("[data-tilt]"),tCard=$("#tiltArt");
+tStage.style.perspective="700px";
+tStage.addEventListener("pointermove",e=>{
+  const r=tStage.getBoundingClientRect();
+  const ox=(e.clientX-r.left)/r.width-.5, oy=(e.clientY-r.top)/r.height-.5;
+  tCard.style.transform=`rotateY(${ox*22}deg) rotateX(${-oy*22}deg) translateZ(14px)`;
+});
+tStage.addEventListener("pointerleave",()=>tCard.style.transform="");
+
+// charge ring
+const rStage=$("[data-rune]"),rr=$("#rr");
+let rt=null,rs=0;
+function rStart(){rs=performance.now();
+  const step=()=>{const p=clamp((performance.now()-rs)/900,0,1);
+    rr.style.strokeDashoffset=String(100-100*p);
+    if(p<1)rt=requestAnimationFrame(step)};
+  rt=requestAnimationFrame(step)}
+function rStop(){cancelAnimationFrame(rt);rr.style.strokeDashoffset="100"}
+rStage.addEventListener("pointerdown",rStart);
+["pointerup","pointerleave","pointercancel"].forEach(ev=>rStage.addEventListener(ev,rStop));
+
+// shockwave
+const wStage=$("[data-wave]"),wv=$("#wv");
+wStage.addEventListener("click",()=>{wv.classList.remove("go");void wv.offsetWidth;wv.classList.add("go")});
+})();
+</script>

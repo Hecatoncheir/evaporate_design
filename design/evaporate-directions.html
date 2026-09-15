@@ -1,0 +1,496 @@
+<title>Evaporate Four Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=Unbounded:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+:root{
+  color-scheme:dark;
+  --void:#06060a; --sub:#0a0b11; --surface:#0e0f16; --raised:#15161f;
+  --line:#22242f; --line-soft:#191b24;
+  --ink:#f2f3f7; --ink-2:#a8acbd; --ink-3:#6e7387; --ink-4:#464a5c;
+  --hot-1:#ff7a18; --hot-2:#ffc24d; --hot-deep:#c93a05; --cool:#5ee7ff; --arc:#a66bff;
+  --ok:#3be39b; --bad:#ff4d5e;
+  --glow-hot:255 122 24; --glow-cool:94 231 255;
+  --font-ui:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-dsp:"Unbounded","Onest",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--void);color:var(--ink);font-family:var(--font-ui);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--hot-2);outline-offset:3px}
+#amb{position:fixed;inset:0;z-index:0;pointer-events:none;background:
+  radial-gradient(58% 42% at 10% 0%,rgb(var(--glow-hot)/.12),transparent 62%),
+  radial-gradient(50% 40% at 94% 48%,rgb(var(--glow-cool)/.06),transparent 62%)}
+#grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;mix-blend-mode:overlay;background-repeat:repeat}
+
+.wrap{position:relative;z-index:2;max-width:1180px;margin:0 auto;padding-block:clamp(44px,7vw,84px) 90px;padding-inline:clamp(18px,4vw,40px)}
+
+.kicker{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--hot-2);display:flex;align-items:center;gap:11px}
+.kicker::before{content:"";width:26px;height:1px;background:linear-gradient(90deg,var(--hot-1),transparent)}
+h1{margin:18px 0 0;font-family:var(--font-dsp);font-weight:300;font-size:clamp(32px,6vw,62px);line-height:.98;letter-spacing:-.03em;text-wrap:balance}
+h1 b{font-weight:800}
+.lede{font-size:clamp(16px,2vw,19px);color:var(--ink-2);max-width:62ch;margin:24px 0 0;text-wrap:pretty}
+.lede b{color:var(--ink);font-weight:500}
+
+.dir{padding-block:clamp(40px,6vw,66px);border-top:1px solid var(--line-soft)}
+.dir:first-of-type{margin-top:clamp(36px,5vw,60px)}
+.dh{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.dh .no{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;color:var(--hot-1)}
+.dh h2{margin:0;font-family:var(--font-dsp);font-weight:300;font-size:clamp(22px,3.4vw,34px);letter-spacing:-.025em}
+.dh h2 b{font-weight:800}
+.dh .en{font-family:var(--font-mono);font-size:11px;color:var(--ink-4);letter-spacing:.14em;text-transform:uppercase}
+.dsub{color:var(--ink-3);max-width:70ch;margin:0 0 22px;font-size:14.5px}
+
+/* scaled desktop frame */
+.frameBox{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);
+  background:var(--void);box-shadow:0 30px 70px rgba(0,0,0,.6)}
+.frame{width:1120px;height:640px;transform-origin:top left;position:relative;overflow:hidden;background:var(--sub)}
+
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin-top:16px}
+.note{border:1px solid var(--line-soft);border-radius:14px;padding:13px 15px;background:linear-gradient(180deg,rgba(255,255,255,.028),rgba(255,255,255,.005))}
+.note .k{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--hot-2)}
+.note.warn .k{color:var(--ink-3)}
+.note .t{font-size:12.8px;color:var(--ink-2);margin-top:7px;line-height:1.5}
+
+/* ── shared mini-UI atoms ───────────────────────────────────── */
+.f-rail{position:absolute;left:0;top:0;bottom:0;width:62px;border-right:1px solid var(--line-soft);
+  display:flex;flex-direction:column;align-items:center;gap:5px;padding:14px 0;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 40%)}
+.f-rail .lg{width:28px;height:28px;margin-bottom:12px}
+.f-ic{width:38px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--ink-4);position:relative}
+.f-ic svg{width:17px;height:17px}
+.f-ic.on{color:var(--ink)}
+.f-ic.on::before{content:"";position:absolute;left:-12px;top:50%;translate:0 -50%;width:3px;height:18px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,var(--hot-2),var(--hot-1));box-shadow:0 0 10px rgb(var(--glow-hot)/.9)}
+.f-top{position:absolute;left:0;right:0;top:0;height:46px;display:flex;align-items:center;gap:12px;padding:0 22px;border-bottom:1px solid var(--line-soft)}
+.f-brand{font-family:var(--font-dsp);font-weight:600;font-size:11px;letter-spacing:.18em}
+.f-crumb{font-size:11.5px;color:var(--ink-3)}
+.f-sp{flex:1}
+.f-pill{display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:99px;border:1px solid var(--line);font-family:var(--font-mono);font-size:10px;color:var(--ink-3)}
+.f-dot{width:5px;height:5px;border-radius:50%;background:var(--ok);box-shadow:0 0 7px var(--ok)}
+.f-foot{position:absolute;left:0;right:0;bottom:0;height:28px;display:flex;align-items:center;gap:16px;
+  padding:0 22px;border-top:1px solid var(--line-soft);font-family:var(--font-mono);font-size:9.5px;color:var(--ink-4)}
+.f-foot em{font-style:normal;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--ink-3);margin-right:5px}
+.f-play{display:inline-flex;align-items:center;gap:9px;height:40px;padding:0 20px 0 17px;border-radius:99px;
+  color:#170800;font-weight:600;font-size:13px;position:relative;overflow:hidden;
+  background:linear-gradient(115deg,var(--hot-2),var(--hot-1) 58%,var(--hot-deep));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 8px 26px rgb(var(--glow-hot)/.45),0 0 0 1px rgb(var(--glow-hot)/.35)}
+.f-play svg{width:14px;height:14px}
+.f-ghost{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 17px;border-radius:99px;
+  border:1px solid var(--line);color:var(--ink-2);font-size:12.5px;background:rgba(14,15,22,.6)}
+.f-chip{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-2);padding:3px 8px;border-radius:5px;border:1px solid var(--line);background:rgba(10,11,17,.6)}
+.f-chip.hot{color:var(--hot-2);border-color:rgb(var(--glow-hot)/.4);background:rgb(var(--glow-hot)/.1)}
+.f-sec{font-family:var(--font-dsp);font-weight:600;font-size:10px;letter-spacing:.2em;text-transform:uppercase}
+.f-rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+/* A · Витрина */
+.a-hero{position:absolute;left:84px;right:22px;top:66px;height:300px;border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+.a-hero .art{position:absolute;inset:0;background-size:cover;background-position:center}
+.a-hero::after{content:"";position:absolute;inset:0;background:
+  linear-gradient(90deg,var(--sub) 2%,rgba(10,11,17,.85) 32%,rgba(10,11,17,.1) 66%,transparent),
+  linear-gradient(0deg,var(--sub) 1%,transparent 46%)}
+.a-body{position:absolute;z-index:2;left:30px;bottom:26px;max-width:58%;display:flex;flex-direction:column;gap:11px}
+.a-ttl{font-family:var(--font-dsp);font-weight:300;font-size:42px;line-height:.94;letter-spacing:-.025em}
+.a-ttl b{font-weight:800;display:block}
+.a-shelf{position:absolute;left:84px;right:22px;top:396px;display:flex;gap:13px;overflow:hidden}
+.a-card{width:124px;flex:0 0 auto}
+.a-card .c{aspect-ratio:3/4;border-radius:11px;background-size:cover;background-position:center;border:1px solid var(--line);box-shadow:0 12px 26px rgba(0,0,0,.55);position:relative;overflow:hidden}
+.a-card .c::after{content:"";position:absolute;inset:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -30px 46px -24px rgba(0,0,0,.85)}
+.a-card.sel .c{box-shadow:0 18px 34px rgba(0,0,0,.6),0 0 0 1px rgb(var(--glow-hot)/.55),0 0 30px rgb(var(--glow-hot)/.3)}
+.a-card .n{font-size:11px;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-card .s{font-family:var(--font-mono);font-size:9px;color:var(--ink-4);margin-top:2px}
+
+/* B · Стена */
+.b-grid{position:absolute;left:84px;right:22px;top:66px;bottom:38px;display:grid;
+  grid-template-columns:repeat(6,1fr);grid-auto-rows:1fr;gap:11px}
+.b-t{border-radius:12px;background-size:cover;background-position:center;position:relative;overflow:hidden;border:1px solid var(--line)}
+.b-t::after{content:"";position:absolute;inset:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -40px 60px -30px rgba(0,0,0,.9)}
+.b-t .nm{position:absolute;left:10px;right:10px;bottom:9px;font-size:10.5px;z-index:2;text-shadow:0 2px 8px #000}
+.b-t.big{grid-column:span 3;grid-row:span 2}
+.b-t.big .over{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;padding:20px;
+  background:linear-gradient(0deg,rgba(6,6,10,.94) 6%,rgba(6,6,10,.35) 48%,transparent)}
+.b-t.big .tt{font-family:var(--font-dsp);font-weight:800;font-size:27px;line-height:.96;letter-spacing:-.02em}
+.b-t.big{box-shadow:0 0 0 1px rgb(var(--glow-hot)/.5),0 0 44px rgb(var(--glow-hot)/.26)}
+.b-filters{position:absolute;left:84px;right:22px;top:46px;height:0}
+
+/* C · Пульт */
+.c-stage{position:absolute;inset:0;display:grid;place-items:center}
+.c-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(26px) saturate(1.2);transform:scale(1.14);opacity:.42}
+.c-veil{position:absolute;inset:0;background:radial-gradient(60% 70% at 50% 46%,transparent,rgba(4,4,8,.92))}
+.c-flow{position:relative;z-index:2;display:flex;align-items:center;gap:26px}
+.c-cv{width:130px;aspect-ratio:3/4;border-radius:14px;background-size:cover;background-position:center;border:1px solid var(--line);opacity:.4;transform:scale(.82);box-shadow:0 20px 40px rgba(0,0,0,.6)}
+.c-cv.mid{width:216px;opacity:1;transform:scale(1);box-shadow:0 30px 70px rgba(0,0,0,.75),0 0 0 1px rgb(var(--glow-hot)/.5),0 0 60px rgb(var(--glow-hot)/.3)}
+.c-info{position:absolute;z-index:3;left:0;right:0;bottom:66px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:13px}
+.c-ttl{font-family:var(--font-dsp);font-weight:300;font-size:46px;line-height:.96;letter-spacing:-.03em}
+.c-ttl b{font-weight:800}
+.c-pads{position:absolute;bottom:0;left:0;right:0;height:30px;display:flex;align-items:center;justify-content:center;gap:26px;
+  font-family:var(--font-mono);font-size:9.5px;color:var(--ink-4);border-top:1px solid var(--line-soft)}
+.c-pads b{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid var(--line);color:var(--ink-3);font-size:8px;margin-right:6px;font-weight:400}
+
+/* D · Терминал */
+.d-head{position:absolute;left:84px;right:22px;top:58px;display:flex;gap:16px;align-items:baseline}
+.d-big{font-family:var(--font-dsp);font-weight:800;font-size:30px;letter-spacing:.01em}
+.d-kpi{position:absolute;left:84px;right:22px;top:108px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:8px;overflow:hidden}
+.d-kpi div{background:var(--surface);padding:9px 12px}
+.d-kpi .k{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)}
+.d-kpi .v{font-family:var(--font-mono);font-size:15px;margin-top:3px;font-variant-numeric:tabular-nums}
+.d-tbl{position:absolute;left:84px;right:22px;top:180px;bottom:38px;overflow:hidden;border:1px solid var(--line-soft);border-radius:8px}
+.d-row{display:grid;grid-template-columns:26px 34px 1fr 96px 84px 70px 52px;gap:11px;align-items:center;
+  padding:7px 12px;border-bottom:1px solid var(--line-soft);font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3)}
+.d-row.hd{color:var(--ink-4);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;background:rgba(255,255,255,.022)}
+.d-row.sel{background:rgb(var(--glow-hot)/.09);color:var(--ink);box-shadow:inset 2px 0 0 var(--hot-1)}
+.d-row .nm{color:var(--ink-2);font-family:var(--font-ui);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d-row.sel .nm{color:var(--ink)}
+.d-row .th{width:24px;height:31px;border-radius:4px;background-size:cover;background-position:center;border:1px solid var(--line)}
+.d-row .st{display:inline-block;width:6px;height:6px;border-radius:50%}
+.d-bar{display:block;height:4px;border-radius:9px;background:rgba(255,255,255,.07);overflow:hidden}
+.d-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--hot-deep),var(--hot-2));box-shadow:0 0 10px rgb(var(--glow-hot)/.6)}
+.d-bar.c i{background:linear-gradient(90deg,#1b6f8a,var(--cool));box-shadow:0 0 10px rgb(var(--glow-cool)/.5)}
+.d-bar.done i{background:rgba(255,255,255,.2);box-shadow:none}
+.d-bar.idle i{background:rgba(255,255,255,.1);box-shadow:none}
+
+/* ── verdict table ──────────────────────────────────────────── */
+.tw{overflow-x:auto;border:1px solid var(--line-soft);border-radius:14px;margin-top:22px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+th,td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);font-weight:400;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.n{font-family:var(--font-dsp);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+td small{display:block;color:var(--ink-4);font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;margin-top:4px;font-weight:400;text-transform:none}
+td.w{color:var(--ink-3);min-width:150px}
+.rec{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;
+  padding:3px 8px;border-radius:99px;color:var(--hot-2);border:1px solid rgb(var(--glow-hot)/.4);background:rgb(var(--glow-hot)/.1);white-space:nowrap}
+
+.close{margin-top:40px;border:1px solid var(--line-soft);border-radius:18px;padding:clamp(20px,3vw,30px);
+  background:radial-gradient(90% 130% at 12% 0%,rgb(var(--glow-hot)/.1),transparent 60%),linear-gradient(180deg,rgba(255,255,255,.028),transparent)}
+.close h3{margin:0;font-family:var(--font-dsp);font-weight:300;font-size:clamp(19px,2.6vw,26px);letter-spacing:-.02em}
+.close h3 b{font-weight:800}
+.close p{color:var(--ink-2);max-width:66ch;margin:14px 0 0;font-size:14.5px}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<svg style="position:absolute;width:0;height:0" aria-hidden="true"><defs>
+  <linearGradient id="gm" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#c93a05"/><stop offset=".52" stop-color="#ff7a18"/><stop offset="1" stop-color="#ffc24d"/></linearGradient>
+  <symbol id="i-lib" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="4" width="7" height="16" rx="1.6"/><rect x="13" y="4" width="8" height="7" rx="1.6"/><rect x="13" y="14" width="8" height="6" rx="1.6"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"/><path d="M8 10.5 12 14.5 16 10.5"/><path d="M4 17.5c2.2 1.6 4.8 2.5 8 2.5s5.8-.9 8-2.5"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="7" rx="7.5" ry="3.2"/><path d="M4.5 7v10c0 1.8 3.4 3.2 7.5 3.2s7.5-1.4 7.5-3.2V7" stroke-linecap="round"/></symbol>
+  <symbol id="i-set" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="3"/><path d="M12 3.8v4.1M12 16.1v4.1M3.8 12h4.1M16.1 12h4.1" stroke-linecap="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7.5 4.8a1 1 0 0 1 1.52-.85l10.2 6.35a1 1 0 0 1 0 1.7L9.02 18.35a1 1 0 0 1-1.52-.85V4.8Z" fill="currentColor"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.4"/><path d="M12 11v5.2M12 7.8v.4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="6.2"/><path d="M15.6 15.6 20 20"/></symbol>
+</defs></svg>
+
+<div id="amb"></div><div id="grain" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="kicker">Выбор направления · главный экран</div>
+  <h1>Четыре способа<br>открыть <b>библиотеку</b></h1>
+  <p class="lede">Один и тот же набор данных — установленные игры, две активные загрузки, облачные сохранения — разложен четырьмя разными способами. Палитра, шрифты и эффекты везде одни и те же: меняется только <b>то, что видно первым</b>. Выберите одно направление, остальные останутся как режимы просмотра.</p>
+
+  <!-- ══ A ═════════════════════════════════════════════════════ -->
+  <section class="dir">
+    <div class="dh"><span class="no">A</span><h2>Витрина</h2><span class="en">Showcase</span></div>
+    <p class="dsub">Одна игра занимает половину экрана и выглядит как постер. Под ней — полки. Открыв лаунчер, вы уже смотрите на мир игры, а не на список файлов: параллакс, угли и свечение работают в полную силу именно здесь.</p>
+    <div class="frameBox"><div class="frame" data-dir="a">
+      <div class="f-rail">
+        <svg class="lg" viewBox="0 0 48 48"><rect width="48" height="48" rx="14" fill="#0b0b12"/><path d="M24 39c-6 0-10-3.6-10-8.6 0-4.4 3.2-7.4 6-11.2C22.4 15.8 24 12 24 9c0 3 1.6 6.8 4 10.2 2.8 3.8 6 6.8 6 11.2 0 5-4 8.6-10 8.6Z" fill="url(#gm)"/><path d="M24 34.5c-2.5 0-4.2-1.5-4.2-3.7 0-2.2 1.9-3.4 3-5.4.7-1.3 1.2-2.7 1.2-4 0 1.3.5 2.7 1.2 4 1.1 2 3 3.2 3 5.4 0 2.2-1.7 3.7-4.2 3.7Z" fill="#fff"/></svg>
+        <div class="f-ic on"><svg><use href="#i-lib"/></svg></div>
+        <div class="f-ic"><svg><use href="#i-dl"/></svg></div>
+        <div class="f-ic"><svg><use href="#i-save"/></svg></div>
+        <div class="f-ic"><svg><use href="#i-set"/></svg></div>
+      </div>
+      <div class="f-top" style="left:62px">
+        <span class="f-brand">EVAPORATE</span><span class="f-crumb">/ Библиотека</span>
+        <span class="f-sp"></span>
+        <span class="f-pill"><svg style="width:11px;height:11px"><use href="#i-search"/></svg>Поиск</span>
+        <span class="f-pill"><span class="f-dot"></span>1.6 МБ/с</span>
+      </div>
+      <div class="a-hero">
+        <div class="art" data-art="hero"></div>
+        <div class="a-body">
+          <div class="f-chip hot" style="align-self:flex-start">Продолжить · 24 ч 10 мин</div>
+          <div class="a-ttl">Пепельный<b>Предел</b></div>
+          <div style="display:flex;gap:6px"><span class="f-chip">v2.4.1</span><span class="f-chip">68.4 ГБ</span><span class="f-chip">Action-RPG</span></div>
+          <div style="display:flex;gap:10px;margin-top:4px">
+            <span class="f-play"><svg><use href="#i-play"/></svg>Играть</span>
+            <span class="f-ghost"><svg style="width:13px;height:13px"><use href="#i-info"/></svg>Подробнее</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:absolute;left:84px;right:22px;top:378px;display:flex;align-items:baseline;gap:12px">
+        <span class="f-sec">Библиотека</span><span style="font-family:var(--font-mono);font-size:9.5px;color:var(--ink-4)">8 установлено</span><span class="f-rule"></span>
+      </div>
+      <div class="a-shelf"></div>
+      <div class="f-foot" style="left:62px">
+        <span><em>↑↓←→</em>Навигация</span><span><em>Enter</em>Выбрать</span><span><em>/</em>Поиск</span>
+        <span class="f-sp"></span><span style="color:var(--ok)">● ГОТОВ</span>
+      </div>
+    </div></div>
+    <div class="notes">
+      <div class="note"><div class="k">Первым видно</div><div class="t">Одну игру во всю ширину и кнопку запуска. Решение «во что играть» занимает ноль кликов, если вы возвращаетесь.</div></div>
+      <div class="note"><div class="k">Сильная сторона</div><div class="t">Эмоция. Вся глубина, параллакс и свет живут в герое — приложение ощущается как продолжение игры.</div></div>
+      <div class="note warn"><div class="k">Цена</div><div class="t">На экран помещается 8–9 обложек. Библиотеке в 200 игр нужен отдельный режим «Все игры».</div></div>
+      <div class="note warn"><div class="k">Кому</div><div class="t">10–40 игр, одна-две активные. Основной сценарий — «запустить то же, что вчера».</div></div>
+    </div>
+  </section>
+
+  <!-- ══ B ═════════════════════════════════════════════════════ -->
+  <section class="dir">
+    <div class="dh"><span class="no">B</span><h2>Стена</h2><span class="en">Wall</span></div>
+    <p class="dsub">Никакого героя — сразу плотная сетка обложек во весь экран. Выделенная игра разворачивается прямо в сетке на четыре клетки, поэтому раскладка не прыгает. Свечение остаётся только на активной плитке: одна точка внимания на всю стену.</p>
+    <div class="frameBox"><div class="frame" data-dir="b">
+      <div class="f-rail">
+        <svg class="lg" viewBox="0 0 48 48"><rect width="48" height="48" rx="14" fill="#0b0b12"/><path d="M24 39c-6 0-10-3.6-10-8.6 0-4.4 3.2-7.4 6-11.2C22.4 15.8 24 12 24 9c0 3 1.6 6.8 4 10.2 2.8 3.8 6 6.8 6 11.2 0 5-4 8.6-10 8.6Z" fill="url(#gm)"/><path d="M24 34.5c-2.5 0-4.2-1.5-4.2-3.7 0-2.2 1.9-3.4 3-5.4.7-1.3 1.2-2.7 1.2-4 0 1.3.5 2.7 1.2 4 1.1 2 3 3.2 3 5.4 0 2.2-1.7 3.7-4.2 3.7Z" fill="#fff"/></svg>
+        <div class="f-ic on"><svg><use href="#i-lib"/></svg></div>
+        <div class="f-ic"><svg><use href="#i-dl"/></svg></div>
+        <div class="f-ic"><svg><use href="#i-save"/></svg></div>
+        <div class="f-ic"><svg><use href="#i-set"/></svg></div>
+      </div>
+      <div class="f-top" style="left:62px">
+        <span class="f-brand">EVAPORATE</span><span class="f-crumb">/ Библиотека · 8</span>
+        <span class="f-sp"></span>
+        <span class="f-chip hot">Все</span><span class="f-chip">Установлены</span><span class="f-chip">Качаются</span><span class="f-chip">Недавние</span>
+        <span class="f-pill" style="margin-left:6px"><svg style="width:11px;height:11px"><use href="#i-search"/></svg>Поиск</span>
+      </div>
+      <div class="b-grid"></div>
+      <div class="f-foot" style="left:62px">
+        <span><em>Tab</em>Фильтр</span><span><em>Enter</em>Запустить</span><span><em>/</em>Поиск</span>
+        <span class="f-sp"></span><span style="color:var(--ok)">● ГОТОВ</span>
+      </div>
+    </div></div>
+    <div class="notes">
+      <div class="note"><div class="k">Первым видно</div><div class="t">Всю библиотеку целиком. Ни одного клика, чтобы понять, что у вас есть.</div></div>
+      <div class="note"><div class="k">Сильная сторона</div><div class="t">Плотность и скорость. Фильтры в шапке вместо разделов; 24 обложки на экран вместо 9.</div></div>
+      <div class="note warn"><div class="k">Цена</div><div class="t">Атмосферы меньше: параллакс и угли уходят на второй план, работает только выделенная плитка.</div></div>
+      <div class="note warn"><div class="k">Кому</div><div class="t">50+ игр, много экспериментов, привычка «полистать и выбрать».</div></div>
+    </div>
+  </section>
+
+  <!-- ══ C ═════════════════════════════════════════════════════ -->
+  <section class="dir">
+    <div class="dh"><span class="no">C</span><h2>Пульт</h2><span class="en">Console</span></div>
+    <p class="dsub">Экран для дивана и геймпада. Боковой рейл убран целиком, обложки идут каруселью, фон — размытая копия текущей игры. Всё рассчитано на чтение с трёх метров: заголовок 46 px, подсказки по кнопкам вместо клавиш.</p>
+    <div class="frameBox"><div class="frame" data-dir="c">
+      <div class="c-stage">
+        <div class="c-bg" data-art="cbg"></div><div class="c-veil"></div>
+        <div class="c-flow">
+          <div class="c-cv" data-cv="0"></div>
+          <div class="c-cv" data-cv="1"></div>
+          <div class="c-cv mid" data-cv="2"></div>
+          <div class="c-cv" data-cv="3"></div>
+          <div class="c-cv" data-cv="4"></div>
+        </div>
+      </div>
+      <div class="f-top" style="border-bottom:0">
+        <span class="f-brand">EVAPORATE</span><span class="f-sp"></span>
+        <span class="f-pill"><span class="f-dot"></span>Библиотека · 8</span>
+        <span class="f-pill" style="border-color:rgb(var(--glow-hot)/.4);color:var(--hot-2)">ВВ</span>
+      </div>
+      <div class="c-info">
+        <div style="display:flex;gap:6px"><span class="f-chip hot">Установлена</span><span class="f-chip">68.4 ГБ</span><span class="f-chip">Action-RPG</span></div>
+        <div class="c-ttl">Пепельный <b>Предел</b></div>
+        <div style="display:flex;gap:11px">
+          <span class="f-play" style="height:44px;font-size:14px;padding:0 24px 0 20px"><svg style="width:15px;height:15px"><use href="#i-play"/></svg>Продолжить</span>
+          <span class="f-ghost" style="height:44px"><svg style="width:13px;height:13px"><use href="#i-info"/></svg>Подробнее</span>
+        </div>
+      </div>
+      <div class="c-pads">
+        <span><b>A</b>Запустить</span><span><b>X</b>Подробнее</span><span><b>Y</b>Поиск</span><span><b>≡</b>Разделы</span>
+      </div>
+    </div></div>
+    <div class="notes">
+      <div class="note"><div class="k">Первым видно</div><div class="t">Одну обложку в центре и две кнопки. Меньше всего решений на экран из всех четырёх.</div></div>
+      <div class="note"><div class="k">Сильная сторона</div><div class="t">Читается с дивана и полностью проходится геймпадом. Фон — размытая обложка, так что тема меняется вместе с игрой.</div></div>
+      <div class="note warn"><div class="k">Цена</div><div class="t">Одна игра за раз: пять обложек в кадре, до дальних нужно долистать.</div></div>
+      <div class="note warn"><div class="k">Кому</div><div class="t">Режим «Big Picture». Как второй режим к A или B, а не как единственный.</div></div>
+    </div>
+  </section>
+
+  <!-- ══ D ═════════════════════════════════════════════════════ -->
+  <section class="dir">
+    <div class="dh"><span class="no">D</span><h2>Терминал</h2><span class="en">Terminal</span></div>
+    <p class="dsub">Прямое развитие того, что в продукте сейчас. Моноширинная таблица, всё состояние сразу в колонках, обложка ужата до 24 px — она здесь опознавательный знак, а не картина. Свет применяется скупо: только строка под курсором и полосы прогресса.</p>
+    <div class="frameBox"><div class="frame" data-dir="d">
+      <div class="f-rail">
+        <svg class="lg" viewBox="0 0 48 48"><rect width="48" height="48" rx="14" fill="#0b0b12"/><path d="M24 39c-6 0-10-3.6-10-8.6 0-4.4 3.2-7.4 6-11.2C22.4 15.8 24 12 24 9c0 3 1.6 6.8 4 10.2 2.8 3.8 6 6.8 6 11.2 0 5-4 8.6-10 8.6Z" fill="url(#gm)"/><path d="M24 34.5c-2.5 0-4.2-1.5-4.2-3.7 0-2.2 1.9-3.4 3-5.4.7-1.3 1.2-2.7 1.2-4 0 1.3.5 2.7 1.2 4 1.1 2 3 3.2 3 5.4 0 2.2-1.7 3.7-4.2 3.7Z" fill="#fff"/></svg>
+        <div class="f-ic"><svg><use href="#i-lib"/></svg></div>
+        <div class="f-ic on"><svg><use href="#i-dl"/></svg></div>
+        <div class="f-ic"><svg><use href="#i-save"/></svg></div>
+        <div class="f-ic"><svg><use href="#i-set"/></svg></div>
+      </div>
+      <div class="f-top" style="left:62px">
+        <span class="f-brand">EVAPORATE</span><span class="f-crumb">/ Загрузки</span>
+        <span class="f-sp"></span>
+        <span class="f-pill"><span class="f-dot" style="background:var(--cool);box-shadow:0 0 7px var(--cool)"></span>Движок загрузок: готов</span>
+      </div>
+      <div class="d-head"><span style="font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;color:var(--hot-1)">[ 01 / АКТИВНО ]</span></div>
+      <div class="d-head" style="top:70px"><span class="d-big">ЗАГРУЗКИ</span></div>
+      <div class="d-kpi">
+        <div><div class="k">Приём</div><div class="v" style="color:var(--hot-2)">1.62 МБ/с</div></div>
+        <div><div class="k">Отдача</div><div class="v" style="color:var(--cool)">612 КБ/с</div></div>
+        <div><div class="k">Активных</div><div class="v">2 / 3</div></div>
+        <div><div class="k">В очереди</div><div class="v">2</div></div>
+      </div>
+      <div class="d-tbl"></div>
+      <div class="f-foot" style="left:62px">
+        <span><em>↑↓</em>Строка</span><span><em>Space</em>Пауза</span><span><em>Del</em>Отменить</span><span><em>/</em>Поиск</span>
+        <span class="f-sp"></span><span style="color:var(--ok)">● ГОТОВ</span>
+      </div>
+    </div></div>
+    <div class="notes">
+      <div class="note"><div class="k">Первым видно</div><div class="t">Числа. Скорость, сиды, пиры, прогресс и путь — всё без раскрытия строки.</div></div>
+      <div class="note"><div class="k">Сильная сторона</div><div class="t">Плотность данных и клавиатура. Ближе всего к нынешнему продукту — переход для пользователей незаметен.</div></div>
+      <div class="note warn"><div class="k">Цена</div><div class="t">Радости в момент открытия нет: это инструмент, а не витрина.</div></div>
+      <div class="note warn"><div class="k">Кому</div><div class="t">Идеально для раздела «Загрузки» в любом из вариантов A–C. Как главный экран — только для опытных.</div></div>
+    </div>
+  </section>
+
+  <!-- ══ verdict ═══════════════════════════════════════════════ -->
+  <section class="dir">
+    <div class="dh"><span class="no">•</span><h2>Что <b>выбрать</b></h2></div>
+    <p class="dsub">Направления не исключают друг друга. Один каркас — рейл, топбар, строка подсказок — держит все четыре, поэтому B и C можно добавить позже как режимы просмотра, не переделывая экран.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Направление</th><th>Обложек на экран</th><th>Эффекты</th><th>Сценарий</th><th>Роль</th></tr></thead>
+      <tbody>
+        <tr><td class="n">A · Витрина<small>SHOWCASE</small></td><td class="w">8–9</td><td class="w">Полные: параллакс, угли, ритуал</td><td class="w">«Запустить то же, что вчера»</td><td><span class="rec">◆ основной экран</span></td></tr>
+        <tr><td class="n">B · Стена<small>WALL</small></td><td class="w">24+</td><td class="w">Точечные: только активная плитка</td><td class="w">«Полистать и выбрать»</td><td class="w">Второй режим библиотеки, переключатель в топбаре</td></tr>
+        <tr><td class="n">C · Пульт<small>CONSOLE</small></td><td class="w">5</td><td class="w">Полные плюс размытый фон обложки</td><td class="w">Диван, геймпад, телевизор</td><td class="w">Отдельный режим Big Picture</td></tr>
+        <tr><td class="n">D · Терминал<small>TERMINAL</small></td><td class="w">24 px иконки</td><td class="w">Минимум: строка и полосы</td><td class="w">Следить за загрузками и чинить их</td><td><span class="rec">◆ раздел «Загрузки»</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="close">
+      <h3>Рекомендация: <b>A</b> как главный экран, <b>D</b> как загрузки</h3>
+      <p>Это даёт нужную эмоцию там, где её ждут — в первые две секунды после запуска приложения, — и не мешает работать там, где нужны числа. B добавляется одним переключателем в топбаре, когда библиотека перерастёт две полки; C имеет смысл, когда появится поддержка геймпада. Прототип A уже собран и живёт в отдельном артефакте — его можно открыть и пощёлкать.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const rng=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+
+/* grain */
+(()=>{const c=document.createElement("canvas");c.width=c.height=128;
+  const x=c.getContext("2d"),d=x.createImageData(128,128);
+  for(let i=0;i<128*128;i++){const v=110+Math.random()*90|0;d.data[i*4]=d.data[i*4+1]=d.data[i*4+2]=v;d.data[i*4+3]=255}
+  x.putImageData(d,0,0);$("#grain").style.backgroundImage=`url(${c.toDataURL()})`})();
+
+/* procedural key art — same routine as the prototype */
+function art(W,H,seed,pal,opt={}){
+  const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d"),r=rng(seed);
+  let g=x.createLinearGradient(0,0,W*.3,H);
+  g.addColorStop(0,pal[0]);g.addColorStop(.48,pal[1]);g.addColorStop(1,"#040407");x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.save();x.globalCompositeOperation="screen";
+  [[6,.32],[17,.2],[46,.11]].forEach(([n,a])=>{
+    const p=document.createElement("canvas");p.width=n;p.height=Math.max(3,n*H/W|0);
+    const px=p.getContext("2d"),dd=px.createImageData(p.width,p.height);
+    for(let i=0;i<p.width*p.height;i++){const v=(r()*255)|0;dd.data[i*4]=dd.data[i*4+1]=dd.data[i*4+2]=v;dd.data[i*4+3]=255}
+    px.putImageData(dd,0,0);x.globalAlpha=a;x.filter=`blur(${Math.round(W/n/2.2)}px)`;x.drawImage(p,0,0,W,H);x.filter="none";
+  });
+  x.globalAlpha=1;
+  const sx=W*(opt.sx??.6),sy=H*(opt.sy??.3),sr=W*.19;
+  g=x.createRadialGradient(sx,sy,0,sx,sy,sr*3.6);
+  g.addColorStop(0,"#fff");g.addColorStop(.11,pal[3]);g.addColorStop(.35,pal[2]);g.addColorStop(1,"rgba(0,0,0,0)");
+  x.fillStyle=g;x.beginPath();x.arc(sx,sy,sr*3.6,0,7);x.fill();
+  x.globalAlpha=.18;
+  for(let i=0;i<4;i++){x.save();x.translate(sx,sy);x.rotate((r()-.5)*1.4+Math.PI/2);
+    const gg=x.createLinearGradient(0,0,0,H*1.5);gg.addColorStop(0,pal[3]);gg.addColorStop(1,"rgba(0,0,0,0)");
+    x.fillStyle=gg;x.beginPath();x.moveTo(0,0);x.lineTo(-W*(.02+r()*.05),H*1.5);x.lineTo(W*(.02+r()*.05),H*1.5);x.closePath();x.fill();x.restore()}
+  x.globalAlpha=1;
+  for(let i=0;i<70;i++){x.fillStyle=`rgba(255,255,255,${r()*.5})`;x.fillRect(r()*W,r()*H*.6,1.1,1.1)}
+  x.restore();
+  const nR=opt.ridges??2;
+  for(let k=0;k<nR;k++){
+    const base=H*(.60+k*.13),amp=H*.15,ph=r()*9;
+    x.beginPath();x.moveTo(-2,H+2);
+    for(let i=-2;i<=W+2;i+=W/28)x.lineTo(i,base+Math.sin(i/W*5.6+ph)*amp*.7+Math.sin(i/W*14+ph*2)*amp*.3);
+    x.lineTo(W+2,H+2);x.closePath();x.fillStyle=k?"#020205":"rgba(4,4,8,.74)";x.fill();
+    x.save();x.globalCompositeOperation="screen";x.strokeStyle=pal[2];x.globalAlpha=.44-k*.18;
+    x.lineWidth=1.4;x.shadowColor=pal[2];x.shadowBlur=12;x.stroke();x.restore();
+  }
+  g=x.createRadialGradient(W*.5,H*.42,H*.2,W*.5,H*.5,H*1.12);
+  g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(2,2,5,.85)");x.fillStyle=g;x.fillRect(0,0,W,H);
+  return c.toDataURL("image/jpeg",.84);
+}
+const G=[
+  {t:"Пепельный Предел",s:"Action-RPG · 24 ч",seed:1207,p:["#2a0f06","#160806","#ff7a18","#ffd28a"]},
+  {t:"Глубина 9",       s:"Хоррор · 6 ч",     seed:9314,p:["#04222c","#03121a","#33d6d0","#c8fff6"]},
+  {t:"Неон Хальцион",   s:"Киберпанк · 40 ч", seed:4422,p:["#1b0636","#0d0320","#c15bff","#ffb6f2"]},
+  {t:"Лунная Колея",    s:"Симулятор · 12 ч", seed:7781,p:["#0a1430","#050a1c","#6f9bff","#dce8ff"]},
+  {t:"Красный Меридиан",s:"Тактика · 31 ч",   seed:2960,p:["#2e0610","#170309","#ff3d5e","#ffc0c8"]},
+  {t:"Стеклянный Сад",  s:"Головоломка · 4 ч",seed:5518,p:["#0b2a22","#04130f","#3be39b","#d3ffe9"]},
+  {t:"Волчья Тропа",    s:"Открытый мир · 58 ч",seed:3345,p:["#231a08","#120d04","#ffc24d","#fff0c4"]},
+  {t:"Орбита 7",        s:"Космосим · 66 %",  seed:8802,p:["#0a0620","#050313","#8f6bff","#d8ccff"]},
+  {t:"Тихий Порог",     s:"Нарратив · 9 ч",   seed:6127,p:["#231226","#100815","#ff7ad9","#ffd6f4"]},
+  {t:"Грозовой Фронт",  s:"Гонки · 17 ч",     seed:1993,p:["#04182c","#020c18","#5ee7ff","#d6f8ff"]},
+  {t:"Хальцион: Эхо",   s:"DLC · 40 %",       seed:2211,p:["#1b0636","#0d0320","#c15bff","#ffb6f2"]},
+  {t:"Перигей",         s:"DLC · очередь",    seed:4747,p:["#0a0620","#050313","#8f6bff","#d8ccff"]},
+];
+G.forEach(g=>g.cover=art(300,400,g.seed,g.p));
+
+/* A — hero + shelf */
+$('[data-art="hero"]').style.backgroundImage=`url(${art(1000,560,1207,G[0].p,{ridges:2,sx:.7,sy:.34})})`;
+$(".a-shelf").innerHTML=G.slice(1,9).map((g,i)=>`
+  <div class="a-card${i===1?" sel":""}"><div class="c" style="background-image:url(${g.cover})"></div>
+  <div class="n">${g.t}</div><div class="s">${g.s}</div></div>`).join("");
+
+/* B — wall, with one tile expanded in place */
+(() => {
+  const el=$(".b-grid");
+  const big=G[0];
+  let html=`<div class="b-t big" style="background-image:url(${art(700,500,1207,big.p,{ridges:2,sx:.66,sy:.36})})">
+    <div class="over">
+      <div style="display:flex;gap:6px"><span class="f-chip hot">Продолжить</span><span class="f-chip">68.4 ГБ</span></div>
+      <div class="tt">Пепельный<br>Предел</div>
+      <div><span class="f-play"><svg><use href="#i-play"/></svg>Играть</span></div>
+    </div></div>`;
+  const rest=[...G.slice(1),...G.slice(1,8)];
+  html+=rest.slice(0,15).map(g=>`<div class="b-t" style="background-image:url(${g.cover})"><div class="nm">${g.t}</div></div>`).join("");
+  el.innerHTML=html;
+})();
+
+/* C — coverflow */
+(() => {
+  const order=[4,2,0,1,6];
+  $$(".c-cv").forEach((el,i)=>{el.style.backgroundImage=`url(${G[order[i]].cover})`});
+  $('[data-art="cbg"]').style.backgroundImage=`url(${art(600,400,1207,G[0].p,{ridges:1,sx:.5,sy:.4})})`;
+})();
+
+/* D — dense table */
+(() => {
+  const rows=[
+    {g:0,n:"orbita-7 · Полное издание [RU+ENG] (2026) v5.2 + 3 DLC",st:"var(--hot-2)",pct:40,dn:"592 КБ/с",up:"1.6 МБ/с",pr:"27 / 31",sz:"11.5 / 28.8 ГБ",sel:true,cool:false},
+    {g:10,n:"neon-halcyon-echo · дополнение «Эхо» v1.0",st:"var(--cool)",pct:66,dn:"1.03 МБ/с",up:"340 КБ/с",pr:"81 / 82",sz:"6.2 / 9.4 ГБ",cool:true},
+    {g:2,n:"neon-halcyon · базовая игра v1.9",st:"var(--ink-4)",pct:0,dn:"—",up:"—",pr:"0 / 0",sz:"0 / 24.1 ГБ",q:true},
+    {g:11,n:"orbita-7-perigee · дополнение «Перигей»",st:"var(--ink-4)",pct:0,dn:"—",up:"—",pr:"0 / 0",sz:"0 / 6.8 ГБ",q:true},
+    {g:1,n:"depth-9 · патч 1.7.2 · исправления света",st:"var(--ok)",pct:100,dn:"готово",up:"512 КБ/с",pr:"12 / 3",sz:"1.2 / 1.2 ГБ"},
+    {g:6,n:"wolf-path · текстуры высокого разрешения",st:"var(--ok)",pct:100,dn:"готово",up:"880 КБ/с",pr:"44 / 9",sz:"18.4 / 18.4 ГБ"},
+    {g:4,n:"red-meridian · кампания «Излом» v2.2",st:"var(--ok)",pct:100,dn:"готово",up:"120 КБ/с",pr:"7 / 2",sz:"22.6 / 22.6 ГБ"},
+    {g:9,n:"storm-front · сезонные трассы",st:"var(--bad)",pct:12,dn:"нет сидов",up:"—",pr:"0 / 4",sz:"6.4 / 53.4 ГБ"},
+  ];
+  $(".d-tbl").innerHTML=
+    `<div class="d-row hd"><span></span><span></span><span>Раздача</span><span>Прогресс</span><span>Приём</span><span>Сиды / пиры</span><span></span></div>`+
+    rows.map(r=>`<div class="d-row${r.sel?" sel":""}">
+      <span><i class="st" style="background:${r.st};box-shadow:0 0 7px ${r.st}"></i></span>
+      <span class="th" style="background-image:url(${G[r.g].cover})"></span>
+      <span class="nm">${r.n}</span>
+      <span><span class="d-bar${r.pct===100?" done":r.q?" idle":r.cool?" c":""}"><i style="width:${r.pct||2}%"></i></span></span>
+      <span>${r.dn}</span><span>${r.pr}</span><span style="text-align:right">${r.pct}%</span>
+    </div>`).join("");
+})();
+
+/* scale the 1120×640 frames to whatever width the column gives us */
+function fit(){
+  $$(".frameBox").forEach(box=>{
+    const f=$(".frame",box), w=box.clientWidth, s=w/1120;
+    f.style.transform=`scale(${s})`;
+    box.style.height=(640*s)+"px";
+  });
+}
+fit();addEventListener("resize",fit);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);
+})();
+</script>

@@ -1,0 +1,1689 @@
+<title>Evaporate Launcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=Unbounded:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+/* ───────────────────────────────────────────────────────────────
+   EVAPORATE — design tokens
+   Phase-change language: matter → vapour → energy.
+   Single committed dark world (client brief: тёмная тема только).
+   ─────────────────────────────────────────────────────────────── */
+:root{
+  color-scheme: dark;
+
+  /* ground — near-black with a violet bias, never pure #000 */
+  --void:#06060a;
+  --sub:#0a0b11;
+  --surface:#0e0f16;
+  --raised:#15161f;
+  --line:#22242f;
+  --line-soft:#191b24;
+
+  /* ink */
+  --ink:#f2f3f7;
+  --ink-2:#a8acbd;
+  --ink-3:#6e7387;
+  --ink-4:#464a5c;
+
+  /* MAGMA (default skin) */
+  --hot-1:#ff7a18;
+  --hot-2:#ffc24d;
+  --hot-deep:#c93a05;
+  --cool:#5ee7ff;
+  --arc:#a66bff;
+
+  /* semantic — separate from accent */
+  --ok:#3be39b;
+  --warn:#ffc24d;
+  --bad:#ff4d5e;
+
+  --glow-hot:255 122 24;
+  --glow-cool:94 231 255;
+
+  --r-1:6px; --r-2:10px; --r-3:16px; --r-4:22px; --r-5:30px;
+  --pad:clamp(16px,2.2vw,30px);
+
+  --ease:cubic-bezier(.22,.9,.24,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+
+  --font-ui:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-dsp:"Unbounded","Onest",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",monospace;
+}
+[data-skin="nebula"]{
+  --void:#07050d; --sub:#0b0814; --surface:#100c1b; --raised:#181226;
+  --line:#2a2140; --line-soft:#1e1830;
+  --ink-2:#b0a4c8; --ink-3:#7a6f92;
+  --hot-1:#c15bff; --hot-2:#ff4fd8; --hot-deep:#6c15a8;
+  --cool:#37d6ff; --arc:#ff8ae0;
+  --glow-hot:193 91 255; --glow-cool:55 214 255;
+}
+[data-skin="cryo"]{
+  --void:#04070d; --sub:#070b13; --surface:#0b1019; --raised:#111823;
+  --line:#1e2836; --line-soft:#161e2a;
+  --ink-2:#9fb0c6; --ink-3:#647588;
+  --hot-1:#3b82f6; --hot-2:#22d3ee; --hot-deep:#0b3f8f;
+  --cool:#ff6b3d; --arc:#8fb6ff;
+  --glow-hot:59 130 246; --glow-cool:255 107 61;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0; background:var(--void); color:var(--ink);
+  font-family:var(--font-ui); font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--hot-2);outline-offset:3px;border-radius:4px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-4)}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ── ambient layers ─────────────────────────────────────────── */
+#gl,#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+#gl{z-index:0}
+#fx{z-index:1;mix-blend-mode:screen}
+#grain{
+  position:fixed;inset:0;z-index:2;pointer-events:none;
+  opacity:.05;mix-blend-mode:overlay;background-repeat:repeat;
+}
+.defs{position:absolute;width:0;height:0;overflow:hidden}
+
+/* ── shell ──────────────────────────────────────────────────── */
+.shell{
+  position:relative;z-index:3;
+  display:grid;grid-template-columns:76px 1fr;
+  height:100svh;
+}
+
+/* rail */
+.rail{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:18px 0 14px;
+  border-right:1px solid var(--line-soft);
+  background:linear-gradient(180deg,rgba(255,255,255,.022),transparent 40%);
+  backdrop-filter:blur(14px);
+}
+.mark{width:36px;height:36px;margin-bottom:16px;display:block;filter:drop-shadow(0 0 14px rgb(var(--glow-hot)/.5))}
+.rail nav{display:flex;flex-direction:column;gap:4px;width:100%;align-items:center}
+.rbtn{
+  position:relative;width:48px;height:44px;border-radius:var(--r-2);
+  display:grid;place-items:center;color:var(--ink-3);
+  transition:color .25s var(--ease),background .25s var(--ease);
+}
+.rbtn svg{width:21px;height:21px}
+.rbtn:hover{color:var(--ink);background:rgba(255,255,255,.045)}
+.rbtn[aria-current="true"]{color:var(--ink)}
+.rbtn[aria-current="true"]::before{
+  content:"";position:absolute;left:-14px;top:50%;translate:0 -50%;
+  width:3px;height:22px;border-radius:0 3px 3px 0;
+  background:linear-gradient(180deg,var(--hot-2),var(--hot-1));
+  box-shadow:0 0 12px rgb(var(--glow-hot)/.9);
+}
+.rbtn[aria-current="true"]::after{
+  content:"";position:absolute;inset:0;border-radius:var(--r-2);
+  background:radial-gradient(70% 90% at 0% 50%,rgb(var(--glow-hot)/.20),transparent 72%);
+}
+.rbtn .tip{
+  position:absolute;left:58px;top:50%;translate:0 -50%;
+  padding:5px 10px;border-radius:var(--r-1);white-space:nowrap;
+  background:var(--raised);border:1px solid var(--line);
+  font-size:12px;color:var(--ink-2);opacity:0;pointer-events:none;
+  transition:opacity .18s;z-index:20;
+}
+.rbtn:hover .tip{opacity:1}
+.rail-sp{flex:1}
+.me{
+  width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--font-dsp);font-size:13px;font-weight:600;color:#0b0b10;
+  background:conic-gradient(from 200deg,var(--hot-2),var(--hot-1),var(--arc),var(--hot-2));
+  box-shadow:0 0 0 1px rgba(255,255,255,.14),0 6px 18px rgb(var(--glow-hot)/.35);
+}
+
+/* stage */
+.stage{display:flex;flex-direction:column;min-width:0;min-height:0}
+
+.topbar{
+  display:flex;align-items:center;gap:14px;
+  padding:14px var(--pad) 12px;
+  border-bottom:1px solid var(--line-soft);
+}
+.crumbs{font-size:12.5px;color:var(--ink-3);display:flex;align-items:center;gap:9px;min-width:0}
+.crumbs b{
+  font-family:var(--font-dsp);font-weight:600;font-size:12px;letter-spacing:.16em;
+  color:var(--ink);
+}
+.crumbs .sl{color:var(--ink-4)}
+.crumbs .cur{color:var(--ink-2)}
+.tb-sp{flex:1}
+.kbtn{
+  display:flex;align-items:center;gap:9px;height:34px;padding:0 10px 0 11px;
+  border:1px solid var(--line);border-radius:var(--r-2);color:var(--ink-3);
+  background:rgba(255,255,255,.02);transition:.22s var(--ease);
+}
+.kbtn:hover{border-color:var(--ink-4);color:var(--ink-2);background:rgba(255,255,255,.05)}
+.kbtn svg{width:15px;height:15px}
+.kbd{
+  font-family:var(--font-mono);font-size:10.5px;padding:2px 5px;border-radius:4px;
+  background:rgba(255,255,255,.07);color:var(--ink-3);border:1px solid var(--line);
+}
+.pill{
+  display:flex;align-items:center;gap:7px;height:30px;padding:0 11px;
+  border-radius:99px;border:1px solid var(--line);font-size:12px;color:var(--ink-2);
+  font-family:var(--font-mono);
+}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 9px var(--ok)}
+.dot.busy{background:var(--cool);box-shadow:0 0 9px var(--cool);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.35}}
+
+/* screens */
+.screens{flex:1;min-height:0;position:relative}
+.screen{
+  position:absolute;inset:0;overflow:auto;overscroll-behavior:contain;
+  padding:0 0 26px;
+  opacity:0;visibility:hidden;transform:translateY(10px) scale(.994);
+  transition:opacity .34s var(--ease-out),transform .44s var(--ease-out),visibility .34s;
+}
+.screen.on{opacity:1;visibility:visible;transform:none}
+
+/* ── HERO ───────────────────────────────────────────────────── */
+.hero{
+  position:relative;margin:var(--pad) var(--pad) 0;
+  height:clamp(340px,52vh,520px);
+  border-radius:var(--r-5);overflow:hidden;
+  border:1px solid var(--line);
+  background:var(--sub);
+  perspective:1100px;
+  isolation:isolate;
+}
+.hl{position:absolute;inset:-6%;background-size:cover;background-position:center;will-change:transform}
+.hl.sky{inset:-9%}
+.hl.dust{background:none}
+.hero::after{ /* cinematic grade + bottom fade */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    linear-gradient(90deg,var(--sub) 2%,rgba(10,11,17,.86) 30%,rgba(10,11,17,.12) 66%,transparent),
+    linear-gradient(0deg,var(--sub) 1%,transparent 44%),
+    radial-gradient(120% 90% at 78% 30%,transparent 40%,rgba(3,3,6,.62));
+}
+.hero-body{
+  position:absolute;z-index:3;left:clamp(20px,3.4vw,44px);bottom:clamp(20px,3.4vw,40px);
+  right:clamp(20px,3.4vw,44px);max-width:min(620px,72%);
+  display:flex;flex-direction:column;gap:14px;
+}
+.eyebrow{
+  display:flex;align-items:center;gap:10px;font-family:var(--font-mono);
+  font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--hot-2);
+}
+.eyebrow::before{content:"";width:22px;height:1px;background:linear-gradient(90deg,var(--hot-1),transparent)}
+h1.title{
+  margin:0;font-family:var(--font-dsp);font-weight:300;
+  font-size:clamp(34px,5.4vw,68px);line-height:.94;letter-spacing:-.022em;
+  text-wrap:balance;
+  text-shadow:0 0 44px rgba(0,0,0,.8),0 0 90px rgb(var(--glow-hot)/.16);
+}
+h1.title b{font-weight:800;display:block}
+.meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{
+  font-family:var(--font-mono);font-size:11px;color:var(--ink-2);
+  padding:4px 9px;border-radius:var(--r-1);
+  border:1px solid var(--line);background:rgba(10,11,17,.55);backdrop-filter:blur(8px);
+}
+.chip.hot{color:var(--hot-2);border-color:rgb(var(--glow-hot)/.35);background:rgb(var(--glow-hot)/.09)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:4px}
+.blurb{color:var(--ink-2);font-size:14px;max-width:46ch;margin:0}
+
+/* ── PLAY — the one saturated object. hold to charge ────────── */
+.play{
+  position:relative;display:flex;align-items:center;gap:13px;
+  height:56px;padding:0 26px 0 22px;border-radius:99px;
+  color:#170800;font-weight:600;font-size:15px;letter-spacing:.01em;
+  background:linear-gradient(115deg,var(--hot-2),var(--hot-1) 58%,var(--hot-deep));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.55),
+    inset 0 -8px 18px rgba(120,30,0,.32),
+    0 10px 34px rgb(var(--glow-hot)/.42),
+    0 0 0 1px rgb(var(--glow-hot)/.35);
+  overflow:hidden;isolation:isolate;
+  transition:transform .2s var(--ease),box-shadow .3s var(--ease);
+}
+.play::before{ /* subsurface core — light bleeding from inside */
+  content:"";position:absolute;inset:-40% -10%;z-index:-1;
+  background:radial-gradient(45% 120% at 22% 50%,rgba(255,255,255,.85),rgba(255,210,120,.35) 40%,transparent 72%);
+  filter:blur(6px);opacity:.75;
+  animation:breathe 3.6s ease-in-out infinite;
+}
+.play::after{ /* specular sweep */
+  content:"";position:absolute;top:0;bottom:0;width:38%;left:-45%;z-index:1;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
+  transform:skewX(-18deg);
+}
+.play:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -8px 18px rgba(120,30,0,.3),0 16px 46px rgb(var(--glow-hot)/.55),0 0 0 1px rgb(var(--glow-hot)/.5)}
+.play:hover::after{animation:sweep 1.05s var(--ease-out)}
+.play:active{transform:translateY(0) scale(.985)}
+.play svg{width:19px;height:19px;position:relative;z-index:2}
+.play span{position:relative;z-index:2}
+.play .hold{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;
+  opacity:.62;position:relative;z-index:2;
+}
+@keyframes sweep{to{left:120%}}
+@keyframes breathe{50%{opacity:1;transform:scale(1.05)}}
+/* charge ring drawn around the button while held */
+.charge{
+  position:absolute;inset:-14px;border-radius:99px;pointer-events:none;
+  opacity:0;transition:opacity .2s;
+}
+.charge svg{width:100%;height:100%;overflow:visible}
+.play-wrap{position:relative;display:inline-flex}
+.play-wrap.charging .charge{opacity:1}
+
+.ghost{
+  display:flex;align-items:center;gap:9px;height:56px;padding:0 20px;border-radius:99px;
+  border:1px solid var(--line);color:var(--ink-2);
+  background:rgba(14,15,22,.6);backdrop-filter:blur(10px);
+  transition:.24s var(--ease);
+}
+.ghost:hover{color:var(--ink);border-color:var(--ink-4);background:rgba(24,26,36,.75)}
+.ghost svg{width:17px;height:17px}
+
+/* ── section heads ──────────────────────────────────────────── */
+.sec{padding:0 var(--pad);margin-top:30px}
+.sec-h{display:flex;align-items:baseline;gap:14px;margin-bottom:16px}
+.sec-h h2{
+  margin:0;font-family:var(--font-dsp);font-weight:600;font-size:13px;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--ink);
+}
+.sec-h .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.sec-h .count{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-4)}
+.sec-h a{font-size:12px;color:var(--ink-3);text-decoration:none;transition:color .2s}
+.sec-h a:hover{color:var(--hot-2)}
+
+/* ── shelf ──────────────────────────────────────────────────── */
+.shelf{
+  display:flex;gap:16px;overflow-x:auto;padding:6px 0 18px;
+  scroll-snap-type:x proximity;
+}
+.shelf::-webkit-scrollbar{height:6px}
+.card{
+  position:relative;flex:0 0 auto;width:178px;scroll-snap-align:start;
+  border-radius:var(--r-3);cursor:pointer;
+  transform-style:preserve-3d;transition:transform .4s var(--ease-out);
+  text-align:left;
+}
+.card .art{
+  position:relative;aspect-ratio:3/4;border-radius:var(--r-3);overflow:hidden;
+  background:var(--raised) center/cover;
+  border:1px solid var(--line);
+  box-shadow:0 14px 30px rgba(0,0,0,.55);
+  transition:box-shadow .4s var(--ease-out),border-color .3s;
+}
+.card .art::after{ /* rim light — subsurface edge */
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -40px 60px -30px rgba(0,0,0,.8);
+}
+.card .sheen{
+  position:absolute;inset:0;border-radius:inherit;opacity:0;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.22) 48%,transparent 62%);
+  transition:opacity .3s;
+}
+.card:hover{transform:translateY(-8px)}
+.card:hover .art{box-shadow:0 26px 54px rgba(0,0,0,.7),0 0 0 1px rgb(var(--glow-hot)/.4),0 0 42px rgb(var(--glow-hot)/.3)}
+.card:hover .sheen{opacity:1}
+.card .lab{padding:11px 2px 0}
+.card .lab .n{font-size:13px;font-weight:500;line-height:1.25;letter-spacing:-.005em}
+.card .lab .s{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);margin-top:4px}
+.badge{
+  position:absolute;top:9px;left:9px;z-index:2;
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  padding:3px 7px;border-radius:5px;backdrop-filter:blur(10px);
+  background:rgba(6,6,10,.7);border:1px solid rgba(255,255,255,.12);color:var(--ink-2);
+}
+.badge.new{color:var(--hot-2);border-color:rgb(var(--glow-hot)/.4);background:rgb(var(--glow-hot)/.14)}
+.badge.dl{color:var(--cool);border-color:rgb(var(--glow-cool)/.4);background:rgb(var(--glow-cool)/.12)}
+.prog{position:absolute;left:0;right:0;bottom:0;height:3px;z-index:2;background:rgba(0,0,0,.55)}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--cool),var(--hot-2));box-shadow:0 0 12px var(--cool)}
+
+/* ── continue strip ─────────────────────────────────────────── */
+.strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:12px}
+.row{
+  display:flex;align-items:center;gap:13px;padding:11px;
+  border:1px solid var(--line-soft);border-radius:var(--r-3);
+  background:linear-gradient(180deg,rgba(255,255,255,.028),rgba(255,255,255,.008));
+  cursor:pointer;transition:.26s var(--ease);text-align:left;width:100%;
+}
+.row:hover{border-color:var(--line);background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.012));transform:translateX(3px)}
+.row .thumb{width:46px;height:60px;border-radius:9px;background:var(--raised) center/cover;flex:0 0 auto;box-shadow:0 6px 16px rgba(0,0,0,.5);border:1px solid var(--line)}
+.row .t{min-width:0;flex:1;display:flex;flex-direction:column}
+.row .t .n{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .t .s{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);margin-top:3px}
+.row .go{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);color:var(--ink-3);flex:0 0 auto;transition:.24s}
+.row:hover .go{color:var(--hot-2);border-color:rgb(var(--glow-hot)/.5);box-shadow:0 0 18px rgb(var(--glow-hot)/.3)}
+.row .go svg{width:13px;height:13px}
+
+/* ── downloads ──────────────────────────────────────────────── */
+.dl-head{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;padding:var(--pad) var(--pad) 0}
+@media(max-width:900px){.dl-head{grid-template-columns:1fr}}
+.panel{
+  border:1px solid var(--line-soft);border-radius:var(--r-4);padding:18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.006));
+  position:relative;overflow:hidden;
+}
+.panel > .glowcorner{
+  position:absolute;width:260px;height:260px;right:-90px;top:-120px;pointer-events:none;
+  background:radial-gradient(circle,rgb(var(--glow-hot)/.16),transparent 66%);
+}
+.p-lab{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-4)}
+.big{
+  font-family:var(--font-dsp);font-weight:300;font-size:clamp(30px,4.4vw,50px);
+  line-height:1;letter-spacing:-.03em;margin-top:8px;font-variant-numeric:tabular-nums;
+}
+.big u{text-decoration:none;font-size:.36em;color:var(--ink-3);margin-left:8px;letter-spacing:.05em;font-family:var(--font-mono)}
+.spark{display:block;width:100%;height:74px;margin-top:10px}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line-soft);border-radius:var(--r-2);overflow:hidden;margin-top:16px}
+.kpi{background:var(--surface);padding:12px 13px}
+.kpi .v{font-family:var(--font-mono);font-size:17px;font-weight:500;margin-top:5px;font-variant-numeric:tabular-nums}
+.kpi .v.c{color:var(--cool)}
+.kpi .v.h{color:var(--hot-2)}
+
+/* vapour-pressure gauge */
+.gauge{display:flex;align-items:center;gap:18px}
+.gauge svg{width:132px;height:132px;flex:0 0 auto}
+.gauge .lgd{display:flex;flex-direction:column;gap:9px;min-width:0}
+.lg{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ink-2)}
+.lg i{width:8px;height:8px;border-radius:2px;flex:0 0 auto}
+.lg b{font-family:var(--font-mono);font-weight:500;color:var(--ink);margin-left:auto;padding-left:14px;font-variant-numeric:tabular-nums}
+
+/* heat grid — swarm activity */
+.heat{display:grid;grid-template-columns:repeat(32,1fr);gap:2px;margin-top:14px}
+.heat i{aspect-ratio:1;border-radius:1.5px;background:var(--line-soft)}
+
+/* torrent rows */
+.tor{
+  border:1px solid var(--line-soft);border-radius:var(--r-3);padding:15px 16px;
+  background:linear-gradient(180deg,rgba(255,255,255,.026),rgba(255,255,255,.004));
+  display:grid;gap:12px;
+}
+.tor + .tor{margin-top:11px}
+.tor-t{display:flex;align-items:flex-start;gap:12px}
+.tor-t .nm{flex:1;min-width:0;display:flex;flex-direction:column}
+.tor-t .nm .n{font-size:14px;font-weight:500;letter-spacing:-.005em}
+.tor-t .nm .path{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tor-act{display:flex;gap:7px;flex:0 0 auto}
+.ico{
+  width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+  border:1px solid var(--line);color:var(--ink-3);transition:.22s var(--ease);
+}
+.ico svg{width:14px;height:14px}
+.ico:hover{color:var(--ink);border-color:var(--ink-4);background:rgba(255,255,255,.05)}
+.ico.stop:hover{color:var(--bad);border-color:rgb(255 77 94/.5)}
+.ico.go:hover{color:var(--hot-2);border-color:rgb(var(--glow-hot)/.5)}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px}
+.st{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:11.5px;color:var(--ink-3)}
+.st svg{width:13px;height:13px;opacity:.8}
+.st b{color:var(--ink-2);font-weight:500;font-variant-numeric:tabular-nums}
+.bar{height:5px;border-radius:99px;background:rgba(255,255,255,.055);overflow:hidden;position:relative}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--hot-deep),var(--hot-1),var(--hot-2));box-shadow:0 0 14px rgb(var(--glow-hot)/.55)}
+.bar.c i{background:linear-gradient(90deg,#1b6f8a,var(--cool));box-shadow:0 0 14px rgb(var(--glow-cool)/.5)}
+.tor-f{display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:var(--font-mono);font-size:11px;color:var(--ink-4)}
+.tor-f .pc{color:var(--ink);font-size:13px;font-variant-numeric:tabular-nums}
+
+/* queue */
+.q{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:var(--r-2);border:1px dashed var(--line);color:var(--ink-3);font-family:var(--font-mono);font-size:11.5px}
+.q + .q{margin-top:7px}
+.q .x{margin-left:auto;color:var(--ink-4);transition:color .2s}
+.q .x:hover{color:var(--bad)}
+
+/* ── saves ──────────────────────────────────────────────────── */
+.tl{position:relative;padding-left:26px;margin-top:4px}
+.tl::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:1px;background:linear-gradient(180deg,transparent,var(--line) 12%,var(--line) 88%,transparent)}
+.ev{position:relative;padding:13px 0}
+.ev::before{
+  content:"";position:absolute;left:-23px;top:19px;width:9px;height:9px;border-radius:50%;
+  background:var(--void);border:1.5px solid var(--ink-4);
+}
+.ev.now::before{border-color:var(--hot-2);background:var(--hot-2);box-shadow:0 0 14px rgb(var(--glow-hot)/.9)}
+.ev-h{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap}
+.ev-h .n{font-size:13.5px;font-weight:500}
+.ev-h .t{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);margin-left:auto}
+.ev-d{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.dev{
+  display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:10.5px;
+  color:var(--ink-3);padding:4px 9px;border-radius:99px;border:1px solid var(--line-soft);
+}
+.dev svg{width:12px;height:12px}
+.dev.sync{color:var(--ok);border-color:rgb(59 227 155/.32);background:rgb(59 227 155/.07)}
+.dev.conf{color:var(--warn);border-color:rgb(255 194 77/.35);background:rgb(255 194 77/.08)}
+
+/* ── settings ───────────────────────────────────────────────── */
+.set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.skins{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.skin{
+  border:1px solid var(--line);border-radius:var(--r-3);padding:11px;text-align:left;
+  transition:.24s var(--ease);position:relative;overflow:hidden;
+}
+.skin:hover{border-color:var(--ink-4)}
+.skin[aria-pressed="true"]{border-color:rgb(var(--glow-hot)/.6);box-shadow:0 0 0 1px rgb(var(--glow-hot)/.35),0 0 26px rgb(var(--glow-hot)/.22)}
+.swatch{height:52px;border-radius:9px;margin-bottom:10px;position:relative;overflow:hidden}
+.swatch::after{content:"";position:absolute;inset:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.skin .nm{font-family:var(--font-dsp);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.skin .ds{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);margin-top:4px}
+
+.opt{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--line-soft)}
+.opt:last-child{border-bottom:0}
+.opt .txt{flex:1;min-width:0}
+.opt .txt .n{font-size:13.5px}
+.opt .txt .d{font-size:12px;color:var(--ink-4);margin-top:3px}
+.sw{
+  width:44px;height:25px;border-radius:99px;background:rgba(255,255,255,.08);
+  border:1px solid var(--line);position:relative;transition:.28s var(--ease);flex:0 0 auto;
+}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:var(--ink-3);transition:.28s var(--ease)}
+.sw[aria-pressed="true"]{background:rgb(var(--glow-hot)/.26);border-color:rgb(var(--glow-hot)/.55)}
+.sw[aria-pressed="true"]::after{left:20px;background:linear-gradient(180deg,var(--hot-2),var(--hot-1));box-shadow:0 0 14px rgb(var(--glow-hot)/.85)}
+.seg{display:flex;gap:2px;padding:2px;border-radius:99px;border:1px solid var(--line);background:rgba(0,0,0,.25);flex:0 0 auto}
+.seg button{padding:5px 12px;border-radius:99px;font-size:11.5px;color:var(--ink-3);font-family:var(--font-mono);transition:.2s}
+.seg button[aria-pressed="true"]{background:rgba(255,255,255,.1);color:var(--ink)}
+
+/* ── detail sheet ───────────────────────────────────────────── */
+.sheet{
+  position:fixed;inset:0;z-index:40;display:grid;place-items:center;
+  padding:clamp(12px,3vw,40px);
+  background:rgba(4,4,8,.72);backdrop-filter:blur(16px) saturate(.75);
+  opacity:0;visibility:hidden;transition:opacity .3s var(--ease),visibility .3s;
+}
+.sheet.on{opacity:1;visibility:visible}
+.sheet-in{
+  width:min(1020px,100%);max-height:100%;overflow:auto;
+  border:1px solid var(--line);border-radius:var(--r-5);background:var(--surface);
+  box-shadow:0 40px 120px rgba(0,0,0,.8);
+  transform:translateY(18px) scale(.985);transition:transform .42s var(--ease-out);
+}
+.sheet.on .sheet-in{transform:none}
+.sheet-art{position:relative;height:clamp(200px,30vh,300px);background:var(--raised) center/cover;overflow:hidden}
+.sheet-art::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,var(--surface),rgba(14,15,22,.25) 55%,transparent)}
+.sheet-x{position:absolute;top:14px;right:14px;z-index:3;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(6,6,10,.6);border:1px solid var(--line);backdrop-filter:blur(10px);color:var(--ink-2)}
+.sheet-x:hover{color:var(--ink);background:rgba(20,22,30,.85)}
+.sheet-x svg{width:14px;height:14px}
+.sheet-b{padding:0 clamp(18px,3vw,32px) clamp(20px,3vw,30px);position:relative;margin-top:-56px;z-index:2}
+.sheet-cols{display:grid;grid-template-columns:1fr 268px;gap:26px;margin-top:22px}
+@media(max-width:820px){.sheet-cols{grid-template-columns:1fr}}
+.ach{display:flex;gap:11px;align-items:center;padding:10px 0}
+.ach + .ach{border-top:1px solid var(--line-soft)}
+.ach .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto;border:1px solid var(--line);color:var(--ink-4)}
+.ach.got .ic{color:var(--hot-2);border-color:rgb(var(--glow-hot)/.45);background:rgb(var(--glow-hot)/.1);box-shadow:0 0 20px rgb(var(--glow-hot)/.25)}
+.ach .ic svg{width:17px;height:17px}
+.ach .tx{display:flex;flex-direction:column}
+.ach .tx .n{font-size:13px;font-weight:500}
+.ach .tx .d{font-size:11.5px;color:var(--ink-4);margin-top:2px}
+.side-card{border:1px solid var(--line-soft);border-radius:var(--r-3);padding:15px;background:rgba(255,255,255,.022)}
+.side-card + .side-card{margin-top:12px}
+.frow{display:flex;align-items:center;gap:10px;padding:7px 0}
+.av{width:28px;height:28px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;font-size:11px;font-weight:600;color:#0b0b10}
+.frow{min-width:0}
+.frow .fn{font-size:12.5px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frow .fs{font-family:var(--font-mono);font-size:10px;color:var(--ink-4)}
+
+/* ── command palette ────────────────────────────────────────── */
+.cmd{
+  position:fixed;inset:0;z-index:60;display:flex;justify-content:center;
+  padding-top:min(15vh,130px);
+  background:rgba(4,4,8,.6);backdrop-filter:blur(12px);
+  opacity:0;visibility:hidden;transition:opacity .22s,visibility .22s;
+}
+.cmd.on{opacity:1;visibility:visible}
+.cmd-in{
+  width:min(620px,92vw);height:max-content;max-height:70vh;display:flex;flex-direction:column;
+  border:1px solid var(--line);border-radius:var(--r-4);background:var(--raised);
+  box-shadow:0 40px 100px rgba(0,0,0,.75),0 0 0 1px rgba(255,255,255,.04);
+  transform:translateY(-12px) scale(.98);transition:transform .28s var(--ease-out);overflow:hidden;
+}
+.cmd.on .cmd-in{transform:none}
+.cmd-f{display:flex;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line-soft)}
+.cmd-f svg{width:17px;height:17px;color:var(--ink-4);flex:0 0 auto}
+.cmd-f input{
+  flex:1;background:none;border:0;outline:0;color:var(--ink);font-family:var(--font-ui);font-size:16px;min-width:0;
+}
+.cmd-f input::placeholder{color:var(--ink-4)}
+.cmd-l{overflow:auto;padding:7px}
+.ci{display:flex;align-items:center;gap:12px;padding:9px 11px;border-radius:var(--r-2);cursor:pointer;width:100%;text-align:left}
+.ci[data-sel="1"]{background:rgba(255,255,255,.06)}
+.ci[data-sel="1"] .cn{color:var(--hot-2)}
+.ci .ct{width:34px;height:44px;border-radius:6px;background:var(--surface) center/cover;flex:0 0 auto;border:1px solid var(--line)}
+.ci .cb{flex:1;min-width:0;display:flex;flex-direction:column}
+.ci .cn{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci .cs{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);margin-top:3px}
+.ci .ck{font-family:var(--font-mono);font-size:10px;color:var(--ink-4)}
+.cmd-foot{padding:9px 16px;border-top:1px solid var(--line-soft);display:flex;gap:16px;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4)}
+
+/* ── launch ritual ──────────────────────────────────────────── */
+.launch{
+  position:fixed;inset:0;z-index:90;display:grid;place-items:center;
+  opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;
+  background:radial-gradient(70% 70% at 50% 52%,rgba(8,4,2,.5),rgba(3,3,6,.97));
+}
+.launch.on{opacity:1;visibility:visible}
+.iris{
+  position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 50%,transparent var(--ir,0%),var(--void) calc(var(--ir,0%) + 1%));
+}
+.lz{position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:22px}
+.core{position:relative;width:170px;height:170px;display:grid;place-items:center}
+.core svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.core .orb{
+  width:64px;height:64px;border-radius:50%;
+  background:radial-gradient(circle at 36% 32%,#fff,var(--hot-2) 34%,var(--hot-1) 62%,var(--hot-deep));
+  box-shadow:0 0 50px rgb(var(--glow-hot)/.9),0 0 130px rgb(var(--glow-hot)/.55),inset 0 -8px 20px rgba(120,20,0,.6);
+  animation:orbp 1.5s ease-in-out infinite;
+}
+@keyframes orbp{50%{transform:scale(1.11);filter:brightness(1.2)}}
+.l-t{font-family:var(--font-dsp);font-weight:300;font-size:clamp(22px,3.4vw,38px);letter-spacing:-.02em}
+.l-t b{font-weight:800}
+.l-s{font-family:var(--font-mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--hot-2)}
+.l-bar{width:min(340px,70vw);height:2px;background:rgba(255,255,255,.1);border-radius:9px;overflow:hidden}
+.l-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--hot-1),var(--hot-2),#fff);box-shadow:0 0 18px rgb(var(--glow-hot)/.9)}
+.l-log{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);height:16px}
+.shock{
+  position:absolute;left:50%;top:50%;translate:-50% -50%;
+  width:20px;height:20px;border-radius:50%;border:2px solid rgb(var(--glow-hot)/.9);
+  opacity:0;pointer-events:none;
+}
+.shock.go{animation:shock .9s var(--ease-out) forwards}
+@keyframes shock{0%{opacity:1;width:20px;height:20px;border-width:3px}100%{opacity:0;width:190vmax;height:190vmax;border-width:0}}
+.flash{position:fixed;inset:0;z-index:95;background:#fff;opacity:0;pointer-events:none}
+.flash.go{animation:flash .5s ease-out forwards}
+@keyframes flash{0%{opacity:.9}100%{opacity:0}}
+
+/* ── footer hints — kept from the shipping app ──────────────── */
+.hints{
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  padding:9px var(--pad);border-top:1px solid var(--line-soft);
+  font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);
+  background:linear-gradient(0deg,rgba(255,255,255,.018),transparent);
+}
+.hints span{display:flex;align-items:center;gap:7px}
+.hints .k{
+  font-style:normal;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.06);
+  border:1px solid var(--line);color:var(--ink-3);
+}
+.hints .sp{flex:1}
+.hints .rdy{color:var(--ok)}
+
+/* ── responsive ─────────────────────────────────────────────── */
+@media(max-width:760px){
+  .shell{grid-template-columns:1fr;grid-template-rows:1fr auto}
+  .rail{
+    grid-row:2;flex-direction:row;justify-content:space-around;align-items:center;
+    border-right:0;border-top:1px solid var(--line);padding:8px 10px;
+  }
+  .mark{display:none}
+  .rail nav{flex-direction:row;gap:2px}
+  .rail-sp{display:none}
+  .rbtn[aria-current="true"]::before{left:50%;top:auto;bottom:-8px;translate:-50% 0;width:20px;height:2px;border-radius:2px 2px 0 0}
+  .rbtn .tip{display:none}
+  .me{width:32px;height:32px}
+  .hints{display:none}
+  .hero{height:min(58vh,400px)}
+  .hero-body{max-width:100%}
+  .heat{grid-template-columns:repeat(20,1fr)}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+
+<!-- ── SVG defs: filters + the icon system ─────────────────────── -->
+<svg class="defs" aria-hidden="true">
+  <defs>
+    <filter id="shimmer" x="-12%" y="-12%" width="124%" height="124%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.03" numOctaves="2" seed="7" result="n">
+        <animate attributeName="baseFrequency" dur="7s" values="0.012 0.03;0.02 0.05;0.012 0.03" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <linearGradient id="gMark" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="var(--hot-deep)"/><stop offset=".5" stop-color="var(--hot-1)"/><stop offset="1" stop-color="var(--hot-2)"/>
+    </linearGradient>
+
+    <!-- instrument-style icon set, stroke geometry only -->
+    <symbol id="i-lib" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <rect x="3" y="4" width="7" height="16" rx="1.6"/><rect x="13" y="4" width="8" height="7" rx="1.6"/><rect x="13" y="14" width="8" height="6" rx="1.6"/>
+    </symbol>
+    <symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v11"/><path d="M8 10.5 12 14.5 16 10.5"/><path d="M4 17.5c2.2 1.6 4.8 2.5 8 2.5s5.8-.9 8-2.5"/>
+    </symbol>
+    <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <ellipse cx="12" cy="7" rx="7.5" ry="3.2"/><path d="M4.5 7v10c0 1.8 3.4 3.2 7.5 3.2s7.5-1.4 7.5-3.2V7" stroke-linecap="round"/><path d="M4.5 12.2c0 1.8 3.4 3.2 7.5 3.2s7.5-1.4 7.5-3.2" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-set" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="3"/><path d="M12 3.8v4.1M12 16.1v4.1M3.8 12h4.1M16.1 12h4.1" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-friends" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="9" cy="9.5" r="3.4"/><circle cx="16.5" cy="11" r="2.4"/><path d="M3.4 19.5c.5-3.2 2.9-5 5.6-5s5.1 1.8 5.6 5" stroke-linecap="round"/><path d="M17 16.4c2 .5 3.3 1.8 3.6 3.1" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="11" cy="11" r="6.2"/><path d="M15.6 15.6 20 20"/><path d="M11 6.4v1.6M11 14v1.6M6.4 11h1.6M14 11h1.6"/>
+    </symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7.5 4.8a1 1 0 0 1 1.52-.85l10.2 6.35a1 1 0 0 1 0 1.7L9.02 18.35a1 1 0 0 1-1.52-.85V4.8Z" fill="currentColor"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="5" width="3.6" height="14" rx="1.2"/><rect x="13.4" y="5" width="3.6" height="14" rx="1.2"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12.5 6l6 6-6 6"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="8.4"/><path d="M12 11v5.2M12 7.8v.4"/></symbol>
+    <symbol id="i-peers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="2.2"/><circle cx="4.4" cy="6.5" r="1.7"/><circle cx="19.6" cy="6.5" r="1.7"/><circle cx="4.4" cy="17.5" r="1.7"/><circle cx="19.6" cy="17.5" r="1.7"/><path d="m6 7.6 4.2 3.1M18 7.6l-4.2 3.1M6 16.4l4.2-3.1M18 16.4l-4.2-3.1" stroke-linecap="round"/></symbol>
+    <symbol id="i-seed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M12 20V9"/><path d="M12 9c0-3.4 2.6-5.6 6.4-5.6C18.4 7.4 15.6 9.4 12 9Z"/><path d="M12 13.4C9.2 13.4 7 11.8 7 8.6c2.8 0 5 1.6 5 4.8Z"/></symbol>
+    <symbol id="i-speed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4.2 17.6a9 9 0 1 1 15.6 0"/><path d="m12 13 4.2-4.2"/><circle cx="12" cy="13" r="1.3" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-disk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.6v3.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7.5 4h9v5.2a4.5 4.5 0 0 1-9 0V4Z"/><path d="M7.5 5.6H5.2a2.6 2.6 0 0 0 2.4 3.5M16.5 5.6h2.3a2.6 2.6 0 0 1-2.4 3.5"/><path d="M12 13.7V17M9 20h6"/>
+    </symbol>
+    <symbol id="i-pc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2.6" y="4.5" width="18.8" height="12" rx="1.8"/><path d="M8.5 20h7M12 16.5V20"/></symbol>
+    <symbol id="i-lap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4.5" y="5" width="15" height="10" rx="1.6"/><path d="M2 18.5h20"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 18.5a4 4 0 0 1-.5-7.97 5.2 5.2 0 0 1 10.05-1.2A3.9 3.9 0 0 1 17.6 18.5H7Z"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3.2 6.4A1.8 1.8 0 0 1 5 4.6h3.6l1.8 2.2H19a1.8 1.8 0 0 1 1.8 1.8v8.8a1.8 1.8 0 0 1-1.8 1.8H5a1.8 1.8 0 0 1-1.8-1.8V6.4Z"/></symbol>
+  </defs>
+</svg>
+
+<canvas id="gl" aria-hidden="true"></canvas>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div id="grain" aria-hidden="true"></div>
+
+<div class="shell">
+  <!-- ── rail ──────────────────────────────────────────────── -->
+  <aside class="rail">
+    <svg class="mark" viewBox="0 0 48 48" aria-label="Evaporate">
+      <rect x="3" y="3" width="42" height="42" rx="13" fill="#0b0b12" stroke="rgba(255,255,255,.1)"/>
+      <path d="M24 39c-6 0-10-3.6-10-8.6 0-4.4 3.2-7.4 6-11.2C22.4 15.8 24 12 24 9c0 3 1.6 6.8 4 10.2 2.8 3.8 6 6.8 6 11.2 0 5-4 8.6-10 8.6Z" fill="url(#gMark)"/>
+      <path d="M24 34.5c-2.5 0-4.2-1.5-4.2-3.7 0-2.2 1.9-3.4 3-5.4.7-1.3 1.2-2.7 1.2-4 0 1.3.5 2.7 1.2 4 1.1 2 3 3.2 3 5.4 0 2.2-1.7 3.7-4.2 3.7Z" fill="#fff" opacity=".92"/>
+      <circle cx="24" cy="7" r="1.5" fill="var(--hot-2)" opacity=".9"/>
+      <circle cx="18.5" cy="11.5" r="1" fill="var(--hot-2)" opacity=".55"/>
+      <circle cx="29.5" cy="12.5" r=".9" fill="var(--hot-2)" opacity=".45"/>
+    </svg>
+    <nav>
+      <button class="rbtn" data-go="library" aria-current="true"><svg><use href="#i-lib"/></svg><span class="tip">Библиотека</span></button>
+      <button class="rbtn" data-go="downloads"><svg><use href="#i-dl"/></svg><span class="tip">Загрузки · 2</span></button>
+      <button class="rbtn" data-go="saves"><svg><use href="#i-save"/></svg><span class="tip">Сохранения</span></button>
+      <button class="rbtn" data-go="settings"><svg><use href="#i-set"/></svg><span class="tip">Настройки</span></button>
+    </nav>
+    <div class="rail-sp"></div>
+    <button class="rbtn"><svg><use href="#i-friends"/></svg><span class="tip">Друзья · 4 в сети</span></button>
+    <div class="me">ВВ</div>
+  </aside>
+
+  <!-- ── stage ─────────────────────────────────────────────── -->
+  <main class="stage">
+    <header class="topbar">
+      <div class="crumbs"><b>EVAPORATE</b><span class="sl">/</span><span class="cur" id="crumb">Библиотека</span></div>
+      <div class="tb-sp"></div>
+      <button class="kbtn" id="openCmd"><svg><use href="#i-search"/></svg><span>Поиск</span><span class="kbd">/</span></button>
+      <div class="pill"><span class="dot busy"></span><span id="netRate">1.6 МБ/с</span></div>
+      <div class="pill"><span class="dot"></span>Движок готов</div>
+    </header>
+
+    <div class="screens">
+      <!-- ══ LIBRARY ══════════════════════════════════════════ -->
+      <section class="screen on" id="sc-library">
+        <div class="hero" id="hero">
+          <div class="hl sky" data-d="5"></div>
+          <div class="hl mid" data-d="14"></div>
+          <div class="hl sub" data-d="30"></div>
+          <div class="hero-body" data-d="-8">
+            <div class="eyebrow">Продолжить · сыграно 24 ч 10 мин</div>
+            <h1 class="title">Пепельный<b>Предел</b></h1>
+            <p class="blurb">Пятая глава разблокирована. Ваш отряд ждёт у Кузни Сумерек — последнее сохранение синхронизировано 6 минут назад.</p>
+            <div class="meta">
+              <span class="chip hot">Установлена</span>
+              <span class="chip">v2.4.1</span>
+              <span class="chip">68.4 ГБ</span>
+              <span class="chip">Action-RPG</span>
+              <span class="chip">Одиночная</span>
+            </div>
+            <div class="hero-cta">
+              <div class="play-wrap" id="playWrap">
+                <div class="charge"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><rect id="chRect" x="1" y="1" width="98" height="98" rx="49" fill="none" stroke="var(--hot-2)" stroke-width="1.4" vector-effect="non-scaling-stroke" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" style="filter:drop-shadow(0 0 8px var(--hot-2))"/></svg></div>
+                <button class="play" id="playBtn">
+                  <svg><use href="#i-play"/></svg><span>Играть</span><span class="hold">УДЕРЖАТЬ</span>
+                </button>
+              </div>
+              <button class="ghost" data-open="0"><svg><use href="#i-info"/></svg>Подробнее</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h2>Продолжить</h2><span class="count">3 сессии</span><span class="rule"></span></div>
+          <div class="strip" id="contRows"></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h2>Библиотека</h2><span class="count" id="libCount"></span><span class="rule"></span><a href="#" onclick="return false">Все игры</a></div>
+          <div class="shelf" id="shelf"></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h2>Скоро на диске</h2><span class="count">качается</span><span class="rule"></span></div>
+          <div class="shelf" id="shelf2"></div>
+        </div>
+      </section>
+
+      <!-- ══ DOWNLOADS ════════════════════════════════════════ -->
+      <section class="screen" id="sc-downloads">
+        <div class="dl-head">
+          <div class="panel">
+            <div class="glowcorner"></div>
+            <div class="p-lab">Приём · сейчас</div>
+            <div class="big" id="bigRate">1.62<u>МБ/с</u></div>
+            <svg class="spark" id="spark" viewBox="0 0 600 74" preserveAspectRatio="none" aria-label="График скорости за 60 секунд"></svg>
+            <div class="kpis">
+              <div class="kpi"><div class="p-lab">Отдача</div><div class="v c" id="kUp">612 КБ/с</div></div>
+              <div class="kpi"><div class="p-lab">Пик за час</div><div class="v h">7.04 МБ/с</div></div>
+              <div class="kpi"><div class="p-lab">Активных</div><div class="v">2 / 3</div></div>
+              <div class="kpi"><div class="p-lab">На диск</div><div class="v">1.48 МБ/с</div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="p-lab">Рой · распределение частей</div>
+            <div class="gauge" style="margin-top:14px">
+              <svg viewBox="0 0 120 120" aria-label="Кольцевая диаграмма состояния частей">
+                <circle cx="60" cy="60" r="46" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="13"/>
+                <circle cx="60" cy="60" r="46" fill="none" stroke="var(--hot-1)" stroke-width="13" stroke-linecap="round"
+                        pathLength="100" stroke-dasharray="41 59" stroke-dashoffset="25" style="filter:drop-shadow(0 0 8px rgb(var(--glow-hot)/.7))"/>
+                <circle cx="60" cy="60" r="46" fill="none" stroke="var(--cool)" stroke-width="13" stroke-linecap="round"
+                        pathLength="100" stroke-dasharray="17 83" stroke-dashoffset="-16"/>
+                <circle cx="60" cy="60" r="46" fill="none" stroke="var(--arc)" stroke-width="13" stroke-linecap="round"
+                        pathLength="100" stroke-dasharray="9 91" stroke-dashoffset="-33"/>
+                <text x="60" y="56" text-anchor="middle" fill="var(--ink)" style="font:300 24px var(--font-dsp)">41</text>
+                <text x="60" y="72" text-anchor="middle" fill="var(--ink-4)" style="font:500 9px var(--font-mono);letter-spacing:.14em">% ГОТОВО</text>
+              </svg>
+              <div class="lgd">
+                <div class="lg"><i style="background:var(--hot-1)"></i>Получено<b>11.5 ГБ</b></div>
+                <div class="lg"><i style="background:var(--cool)"></i>В работе<b>4.8 ГБ</b></div>
+                <div class="lg"><i style="background:var(--arc)"></i>Проверка<b>2.5 ГБ</b></div>
+                <div class="lg"><i style="background:rgba(255,255,255,.12)"></i>Осталось<b>17.3 ГБ</b></div>
+              </div>
+            </div>
+            <div class="p-lab" style="margin-top:18px">Активность пиров · 60 с</div>
+            <div class="heat" id="heat"></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h2>Сейчас качается</h2><span class="count">2</span><span class="rule"></span></div>
+          <div id="torrents"></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h2>В очереди</h2><span class="count">2</span><span class="rule"></span></div>
+          <div class="q"><svg style="width:13px;height:13px;color:var(--ink-4)"><use href="#i-folder"/></svg>neon-halcyon · v1.9 · 24.1 ГБ<button class="x" aria-label="Убрать из очереди">✕</button></div>
+          <div class="q"><svg style="width:13px;height:13px;color:var(--ink-4)"><use href="#i-folder"/></svg>orbita-7 · дополнение «Перигей» · 6.8 ГБ<button class="x" aria-label="Убрать из очереди">✕</button></div>
+        </div>
+      </section>
+
+      <!-- ══ SAVES ════════════════════════════════════════════ -->
+      <section class="screen" id="sc-saves">
+        <div class="dl-head">
+          <div class="panel">
+            <div class="glowcorner"></div>
+            <div class="p-lab">Облако · занято</div>
+            <div class="big">4.1<u>ГБ из 20</u></div>
+            <div class="bar c" style="margin-top:16px"><i style="width:20.5%"></i></div>
+            <div class="kpis">
+              <div class="kpi"><div class="p-lab">Игр под защитой</div><div class="v">17</div></div>
+              <div class="kpi"><div class="p-lab">Точек отката</div><div class="v h">248</div></div>
+              <div class="kpi"><div class="p-lab">Последняя выгрузка</div><div class="v c">6 мин</div></div>
+              <div class="kpi"><div class="p-lab">Конфликтов</div><div class="v" style="color:var(--warn)">1</div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="p-lab">Устройства</div>
+            <div style="margin-top:14px">
+              <div class="opt"><svg style="width:18px;height:18px;color:var(--ink-3)"><use href="#i-pc"/></svg><div class="txt"><div class="n">ПК · КУЗНЯ</div><div class="d">Windows 11 · этот компьютер</div></div><span class="dev sync">в сети</span></div>
+              <div class="opt"><svg style="width:18px;height:18px;color:var(--ink-3)"><use href="#i-lap"/></svg><div class="txt"><div class="n">Ноутбук · ДОРОГА</div><div class="d">Linux · 2 часа назад</div></div><span class="dev">офлайн</span></div>
+              <div class="opt"><svg style="width:18px;height:18px;color:var(--ink-3)"><use href="#i-cloud"/></svg><div class="txt"><div class="n">Хранилище</div><div class="d">Шифрование на устройстве · AES-256</div></div><span class="dev sync">активно</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h2>Лента сохранений</h2><span class="count">сегодня</span><span class="rule"></span></div>
+          <div class="tl" id="timeline"></div>
+        </div>
+      </section>
+
+      <!-- ══ SETTINGS ═════════════════════════════════════════ -->
+      <section class="screen" id="sc-settings">
+        <div class="dl-head" style="grid-template-columns:1fr">
+          <div class="panel">
+            <div class="glowcorner"></div>
+            <div class="p-lab">Облик</div>
+            <div style="font-family:var(--font-dsp);font-weight:300;font-size:26px;letter-spacing:-.02em;margin-top:6px">Тема оформления</div>
+            <div class="skins">
+              <button class="skin" data-skin="magma" aria-pressed="true">
+                <div class="swatch" style="background:linear-gradient(120deg,#06060a,#3a1403 45%,#ff7a18 78%,#ffc24d)"></div>
+                <div class="nm">Magma</div><div class="ds">янтарь · плазма</div>
+              </button>
+              <button class="skin" data-skin="nebula" aria-pressed="false">
+                <div class="swatch" style="background:linear-gradient(120deg,#07050d,#2c0a50 45%,#c15bff 76%,#ff4fd8)"></div>
+                <div class="nm">Nebula</div><div class="ds">фиалка · магента</div>
+              </button>
+              <button class="skin" data-skin="cryo" aria-pressed="false">
+                <div class="swatch" style="background:linear-gradient(120deg,#04070d,#0b3f8f 45%,#3b82f6 76%,#22d3ee)"></div>
+                <div class="nm">Cryo</div><div class="ds">лёд · искра</div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h2>Эффекты и производительность</h2><span class="rule"></span></div>
+          <div class="set-grid">
+            <div class="panel">
+              <div class="p-lab">Атмосфера</div>
+              <div style="margin-top:6px">
+                <div class="opt"><div class="txt"><div class="n">Живой фон (шейдер)</div><div class="d">Объёмный плюм пара за интерфейсом</div></div><button class="sw" data-fx="bg" aria-pressed="true" aria-label="Живой фон"></button></div>
+                <div class="opt"><div class="txt"><div class="n">Искры и частицы</div><div class="d">Восходящие угли, аддитивное смешивание</div></div><button class="sw" data-fx="sparks" aria-pressed="true" aria-label="Искры"></button></div>
+                <div class="opt"><div class="txt"><div class="n">Параллакс обложек</div><div class="d">Четыре слоя глубины, реакция на курсор</div></div><button class="sw" data-fx="para" aria-pressed="true" aria-label="Параллакс"></button></div>
+                <div class="opt"><div class="txt"><div class="n">Плёночное зерно</div><div class="d">5 % перекрытия, убирает бандинг</div></div><button class="sw" data-fx="grain" aria-pressed="true" aria-label="Зерно"></button></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="p-lab">Качество</div>
+              <div style="margin-top:6px">
+                <div class="opt"><div class="txt"><div class="n">Уровень эффектов</div><div class="d">Влияет на плотность частиц и разрешение шейдера</div></div>
+                  <div class="seg" id="qseg"><button aria-pressed="false">Эко</button><button aria-pressed="true">Полное</button><button aria-pressed="false">Макс</button></div></div>
+                <div class="opt"><div class="txt"><div class="n">Ритуал запуска</div><div class="d">Испарение интерфейса и ударная волна при старте</div></div><button class="sw" data-fx="ritual" aria-pressed="true" aria-label="Ритуал запуска"></button></div>
+                <div class="opt"><div class="txt"><div class="n">Удержание кнопки «Играть»</div><div class="d">Защита от случайного запуска · 620 мс</div></div><button class="sw" data-fx="hold" aria-pressed="true" aria-label="Удержание"></button></div>
+                <div class="opt"><div class="txt"><div class="n">Ограничить до 30 к/с в фоне</div><div class="d">Экономит батарею, когда окно неактивно</div></div><button class="sw" data-fx="idle" aria-pressed="true" aria-label="Ограничение кадров"></button></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="p-lab">Движок загрузок</div>
+              <div style="margin-top:6px">
+                <div class="opt"><div class="txt"><div class="n">Предел приёма</div><div class="d">0 — без ограничения</div></div><span class="chip">0 МБ/с</span></div>
+                <div class="opt"><div class="txt"><div class="n">Предел отдачи</div><div class="d">Держим рой живым</div></div><span class="chip">2 МБ/с</span></div>
+                <div class="opt"><div class="txt"><div class="n">Порт входящих</div><div class="d">UPnP · проброс подтверждён</div></div><span class="chip hot">51413</span></div>
+                <div class="opt"><div class="txt"><div class="n">Шифрование протокола</div><div class="d">Требовать у всех пиров</div></div><button class="sw" data-fx="enc" aria-pressed="true" aria-label="Шифрование"></button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer class="hints">
+      <span><em class="k">↑↓←→</em>Навигация</span>
+      <span><em class="k">Enter</em>Выбрать</span>
+      <span><em class="k">Esc</em>Назад</span>
+      <span><em class="k">Ctrl+Tab</em>Разделы</span>
+      <span><em class="k">/</em>Поиск</span>
+      <span class="sp"></span>
+      <span class="rdy">● ГОТОВ</span>
+      <span>© 2026 EVAPORATE</span>
+    </footer>
+  </main>
+</div>
+
+<!-- ── detail sheet ─────────────────────────────────────────── -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Карточка игры">
+  <div class="sheet-in">
+    <div class="sheet-art" id="shArt"><button class="sheet-x" id="shX" aria-label="Закрыть"><svg><use href="#i-x"/></svg></button></div>
+    <div class="sheet-b">
+      <div class="eyebrow" id="shEye">В библиотеке</div>
+      <h1 class="title" style="font-size:clamp(28px,4vw,46px);margin-top:10px" id="shTitle"></h1>
+      <div class="meta" style="margin-top:14px" id="shMeta"></div>
+      <div class="sheet-cols">
+        <div>
+          <p class="blurb" style="max-width:62ch" id="shBlurb"></p>
+          <div class="sec-h" style="margin-top:24px"><h2>Достижения</h2><span class="count" id="shAchCount"></span><span class="rule"></span></div>
+          <div id="shAch"></div>
+        </div>
+        <div>
+          <div class="side-card">
+            <div class="p-lab">Играют сейчас</div>
+            <div style="margin-top:8px" id="shFriends"></div>
+          </div>
+          <div class="side-card">
+            <div class="p-lab">На диске</div>
+            <div class="stats" style="margin-top:10px">
+              <span class="st"><svg><use href="#i-disk"/></svg>Размер<b id="shSize"></b></span>
+              <span class="st"><svg><use href="#i-folder"/></svg><b>D:\Игры</b></span>
+            </div>
+            <div class="bar" style="margin-top:12px"><i style="width:100%"></i></div>
+          </div>
+          <div class="side-card">
+            <div class="p-lab">Сохранения</div>
+            <div class="ev-d" style="margin-top:10px">
+              <span class="dev sync"><svg><use href="#i-cloud"/></svg>синхронизировано</span>
+              <span class="dev"><svg><use href="#i-pc"/></svg>КУЗНЯ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── command palette ──────────────────────────────────────── -->
+<div class="cmd" id="cmd" role="dialog" aria-modal="true" aria-label="Поиск и команды">
+  <div class="cmd-in">
+    <div class="cmd-f">
+      <svg><use href="#i-search"/></svg>
+      <input id="cmdI" placeholder="Игра, раздел или команда…" autocomplete="off" spellcheck="false">
+      <span class="kbd">ESC</span>
+    </div>
+    <div class="cmd-l" id="cmdL"></div>
+    <div class="cmd-foot"><span>↑↓ выбрать</span><span>↵ открыть</span><span>⇧↵ запустить</span></div>
+  </div>
+</div>
+
+<!-- ── launch ritual ────────────────────────────────────────── -->
+<div class="launch" id="launch" aria-hidden="true">
+  <div class="iris" id="iris"></div>
+  <div class="shock" id="shock"></div>
+  <div class="lz">
+    <div class="core">
+      <svg viewBox="0 0 170 170">
+        <circle cx="85" cy="85" r="66" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+        <circle cx="85" cy="85" r="55" fill="none" stroke="rgb(var(--glow-hot)/.25)" stroke-width="1" stroke-dasharray="3 7">
+          <animateTransform attributeName="transform" type="rotate" from="0 85 85" to="360 85 85" dur="18s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="85" cy="85" r="78" fill="none" stroke="rgb(var(--glow-hot)/.16)" stroke-width="1" stroke-dasharray="1 12">
+          <animateTransform attributeName="transform" type="rotate" from="360 85 85" to="0 85 85" dur="26s" repeatCount="indefinite"/>
+        </circle>
+        <circle id="lRing" cx="85" cy="85" r="66" fill="none" stroke="var(--hot-2)" stroke-width="2.2" stroke-linecap="round"
+                pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" transform="rotate(-90 85 85)"
+                style="filter:drop-shadow(0 0 10px var(--hot-2))"/>
+      </svg>
+      <div class="orb"></div>
+    </div>
+    <div>
+      <div class="l-s" id="lStage">Подготовка среды</div>
+      <div class="l-t" style="margin-top:10px">Пепельный <b>Предел</b></div>
+    </div>
+    <div class="l-bar"><i id="lBar"></i></div>
+    <div class="l-log" id="lLog">монтирование тома…</div>
+  </div>
+</div>
+<div class="flash" id="flash" aria-hidden="true"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   EVAPORATE — prototype runtime
+   ═══════════════════════════════════════════════════════════════ */
+(() => {
+"use strict";
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+/* ── seeded rng + value noise ──────────────────────────────── */
+function rng32(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+/* ── procedural key art ────────────────────────────────────────
+   No external images are reachable from an artifact, and none of
+   these titles exist — so every cover is drawn here. Soft fbm
+   cloud layers are rasterised small and scaled up: cheap, and it
+   gives exactly the volumetric haze this brand wants.           */
+function noiseLayer(w,h,rnd){
+  const c=document.createElement("canvas");c.width=w;c.height=h;
+  const x=c.getContext("2d"),d=x.createImageData(w,h);
+  for(let i=0;i<w*h;i++){const v=(rnd()*255)|0;d.data[i*4]=d.data[i*4+1]=d.data[i*4+2]=v;d.data[i*4+3]=255}
+  x.putImageData(d,0,0);return c;
+}
+function paintScene(ctx,W,H,pal,seed,opt={}){
+  const rnd=rng32(seed);
+  // 1 · sky
+  let g=ctx.createLinearGradient(0,0,W*.3,H);
+  g.addColorStop(0,pal.deep);g.addColorStop(.48,pal.mid);g.addColorStop(1,"#040407");
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // 2 · volumetric haze — three octaves of upscaled noise
+  ctx.save();ctx.globalCompositeOperation="screen";ctx.imageSmoothingEnabled=true;
+  [[7,.30,pal.hot],[19,.20,pal.mid2],[52,.11,pal.hot2]].forEach(([n,a,col])=>{
+    const L=noiseLayer(n,Math.max(4,Math.round(n*H/W)),rnd);
+    ctx.globalAlpha=a;ctx.filter=`blur(${Math.round(W/n/2.1)}px)`;
+    ctx.drawImage(L,0,0,W,H);
+    ctx.filter="none";ctx.globalAlpha=a*.6;ctx.fillStyle=col;
+    ctx.globalCompositeOperation="overlay";ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation="screen";
+  });
+  ctx.restore();
+  // 3 · sun / bloom core
+  const sx=W*(opt.sx??(.24+rnd()*.5)), sy=H*(opt.sy??(.28+rnd()*.24)), sr=W*(.10+rnd()*.14);
+  ctx.save();ctx.globalCompositeOperation="screen";
+  g=ctx.createRadialGradient(sx,sy,0,sx,sy,sr*4.2);
+  g.addColorStop(0,"#fff");g.addColorStop(.10,pal.hot2);g.addColorStop(.34,pal.hot);
+  g.addColorStop(.7,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(sx,sy,sr*4.2,0,7);ctx.fill();
+  // 4 · light shafts
+  ctx.globalAlpha=.20;
+  for(let i=0;i<5;i++){
+    ctx.save();ctx.translate(sx,sy);ctx.rotate((rnd()-.5)*1.5+Math.PI/2);
+    const gg=ctx.createLinearGradient(0,0,0,H*1.5);
+    gg.addColorStop(0,pal.hot2);gg.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=gg;ctx.beginPath();ctx.moveTo(0,0);
+    ctx.lineTo(-W*(.02+rnd()*.05),H*1.5);ctx.lineTo(W*(.02+rnd()*.06),H*1.5);ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+  // 5 · stars
+  ctx.save();ctx.globalCompositeOperation="screen";
+  for(let i=0;i<90;i++){const a=rnd()*.55;ctx.fillStyle=`rgba(255,255,255,${a})`;
+    ctx.fillRect(rnd()*W,rnd()*H*.6,1.1,1.1)}
+  ctx.restore();
+  // 6 · ridges — silhouette horizon with a lit rim
+  const ridges=opt.ridges??3;
+  for(let r=0;r<ridges;r++){
+    const base=H*(.58+r*.11), amp=H*(.16-r*.035), step=W/34;
+    ctx.beginPath();ctx.moveTo(-4,H+4);
+    let ph=rnd()*9;
+    for(let x=-4;x<=W+4;x+=step){
+      const y=base+Math.sin(x/W*6.1+ph)*amp*.6+Math.sin(x/W*15.3+ph*2)*amp*.34+Math.sin(x/W*31+ph*3)*amp*.12;
+      ctx.lineTo(x,y);
+    }
+    ctx.lineTo(W+4,H+4);ctx.closePath();
+    ctx.fillStyle=r===0?"rgba(4,4,8,.72)":r===1?"rgba(3,3,6,.88)":"#020205";
+    ctx.fill();
+    ctx.save();ctx.globalCompositeOperation="screen";ctx.strokeStyle=pal.hot;
+    ctx.globalAlpha=.42-r*.11;ctx.lineWidth=1.4;ctx.shadowColor=pal.hot;ctx.shadowBlur=12;ctx.stroke();ctx.restore();
+  }
+  // 7 · monolith — one hard vertical, gives scale
+  if(opt.monolith!==false){
+    const mw=W*.035, mx=W*(.62+rnd()*.16), mh=H*.34;
+    ctx.save();ctx.globalCompositeOperation="screen";
+    g=ctx.createLinearGradient(mx,H*.72-mh,mx,H*.72);
+    g.addColorStop(0,pal.hot2);g.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=g;ctx.globalAlpha=.75;ctx.shadowColor=pal.hot;ctx.shadowBlur=26;
+    ctx.fillRect(mx,H*.72-mh,mw*.32,mh);ctx.restore();
+    ctx.fillStyle="#020205";ctx.fillRect(mx-mw*.5,H*.72-mh*.96,mw,mh*.96);
+  }
+  // 8 · grade
+  g=ctx.createRadialGradient(W*.5,H*.42,H*.2,W*.5,H*.5,H*1.15);
+  g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(2,2,5,.86)");
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+}
+function makeArt(W,H,pal,seed,opt){
+  const c=document.createElement("canvas");c.width=W;c.height=H;
+  paintScene(c.getContext("2d"),W,H,pal,seed,opt);
+  return c.toDataURL("image/jpeg",.82);
+}
+
+/* ── catalogue ─────────────────────────────────────────────── */
+const P = {
+  ash   :{deep:"#2a0f06",mid:"#160806",mid2:"#7a2a0c",hot:"#ff7a18",hot2:"#ffd28a"},
+  deep  :{deep:"#04222c",mid:"#03121a",mid2:"#0b4d5e",hot:"#33d6d0",hot2:"#c8fff6"},
+  neon  :{deep:"#1b0636",mid:"#0d0320",mid2:"#4a108c",hot:"#c15bff",hot2:"#ffb6f2"},
+  lunar :{deep:"#0a1430",mid:"#050a1c",mid2:"#1f3a7a",hot:"#6f9bff",hot2:"#dce8ff"},
+  crimson:{deep:"#2e0610",mid:"#170309",mid2:"#7d0d22",hot:"#ff3d5e",hot2:"#ffc0c8"},
+  glass :{deep:"#0b2a22",mid:"#04130f",mid2:"#14624a",hot:"#3be39b",hot2:"#d3ffe9"},
+  wolf  :{deep:"#231a08",mid:"#120d04",mid2:"#6b5010",hot:"#ffc24d",hot2:"#fff0c4"},
+  orbit :{deep:"#0a0620",mid:"#050313",mid2:"#2e1a7a",hot:"#8f6bff",hot2:"#d8ccff"},
+  thresh:{deep:"#231226",mid:"#100815",mid2:"#5c2a63",hot:"#ff7ad9",hot2:"#ffd6f4"},
+  storm :{deep:"#04182c",mid:"#020c18",mid2:"#0d4a7a",hot:"#5ee7ff",hot2:"#d6f8ff"},
+};
+const GAMES=[
+  {id:"ashen",  t:"Пепельный Предел", sub:"Action-RPG · 24 ч",      pal:P.ash,    size:"68.4 ГБ", state:"ready", seed:1207,
+   blurb:"Пятая глава разблокирована. Ваш отряд ждёт у Кузни Сумерек — последнее сохранение синхронизировано 6 минут назад.",
+   tags:["Установлена","v2.4.1","68.4 ГБ","Action-RPG","Одиночная"]},
+  {id:"depth",  t:"Глубина 9",        sub:"Хоррор · 6 ч",           pal:P.deep,   size:"41.2 ГБ", state:"ready", seed:9314,
+   blurb:"Станция «Мерло» затоплена до шестого уровня. Кислорода на 41 минуту — этого хватит ровно на один правильный маршрут.",
+   tags:["Установлена","v1.7","41.2 ГБ","Выживание","Одиночная"]},
+  {id:"neon",   t:"Неон Хальцион",    sub:"Киберпанк · в очереди",  pal:P.neon,   size:"24.1 ГБ", state:"queue", seed:4422,
+   blurb:"Открытый мир на 40 часов. Сеть города живая: каждая вышка, которую вы перехватываете, меняет расписание патрулей.",
+   tags:["В очереди","v1.9","24.1 ГБ","Открытый мир"]},
+  {id:"lunar",  t:"Лунная Колея",     sub:"Исследование · 12 ч",    pal:P.lunar,  size:"18.9 ГБ", state:"ready", seed:7781,
+   blurb:"Тихая колонизация без единого выстрела. Стройте маршруты между куполами и слушайте, как реголит скрипит под шасси.",
+   tags:["Установлена","v3.0","18.9 ГБ","Симулятор"]},
+  {id:"crimson",t:"Красный Меридиан", sub:"Тактика · 31 ч",         pal:P.crimson,size:"22.6 ГБ", state:"ready", seed:2960,
+   blurb:"Пошаговые бои на изломе фронта. Каждый выживший боец переносит шрамы и привычки в следующую кампанию.",
+   tags:["Установлена","v2.2","22.6 ГБ","Тактика","Кооп"]},
+  {id:"glass",  t:"Стеклянный Сад",   sub:"Головоломка · 4 ч",      pal:P.glass,  size:"7.3 ГБ",  state:"ready", seed:5518,
+   blurb:"Сто двадцать комнат, выращенных из света. Ни одной подсказки — только то, что вы успели заметить.",
+   tags:["Установлена","v1.4","7.3 ГБ","Головоломка"]},
+  {id:"wolf",   t:"Волчья Тропа",     sub:"Открытый мир · 58 ч",    pal:P.wolf,   size:"92.7 ГБ", state:"ready", seed:3345,
+   blurb:"Тайга размером с область, без маркеров на карте. Ориентируйтесь по звёздам, дыму и следам на снегу.",
+   tags:["Установлена","v4.1","92.7 ГБ","Выживание"]},
+  {id:"orbita", t:"Орбита 7",         sub:"Космосим · качается",    pal:P.orbit,  size:"36.0 ГБ", state:"dl", pct:66, seed:8802,
+   blurb:"Семь станций на разных высотах. Топливо конечно, окно стыковки — 90 секунд, а напарник дышит вам в наушник.",
+   tags:["Качается","v5.2","36.0 ГБ","Симулятор"]},
+  {id:"thresh", t:"Тихий Порог",      sub:"История · 9 ч",          pal:P.thresh, size:"11.8 ГБ", state:"ready", seed:6127,
+   blurb:"Один дом, одна ночь, шесть голосов. Всё, что вы решите не открывать, останется закрытым навсегда.",
+   tags:["Установлена","v1.1","11.8 ГБ","Нарратив"]},
+  {id:"storm",  t:"Грозовой Фронт",   sub:"Гонки · 17 ч",           pal:P.storm,  size:"53.4 ГБ", state:"ready", seed:1993,
+   blurb:"Трассы переписывает погода. Сухая линия исчезает на втором круге, и держаться приходится за то, чего уже нет.",
+   tags:["Установлена","v2.0","53.4 ГБ","Гонки"]},
+  {id:"halc2",  t:"Хальцион: Эхо",    sub:"Дополнение · качается",  pal:P.neon,   size:"9.4 ГБ",  state:"dl", pct:40, seed:2211,
+   blurb:"Сюжетное дополнение на 12 часов: подземные уровни сети и новая ветка финала.",
+   tags:["Качается","DLC","9.4 ГБ"]},
+  {id:"perigee",t:"Перигей",          sub:"Дополнение · очередь",   pal:P.orbit,  size:"6.8 ГБ",  state:"queue", seed:4747,
+   blurb:"Низкие орбиты, высокая цена ошибки. Четыре новые станции и режим «без сохранений».",
+   tags:["В очереди","DLC","6.8 ГБ"]},
+];
+const byId=id=>GAMES.find(g=>g.id===id);
+GAMES.forEach(g=>{g.cover=makeArt(300,400,g.pal,g.seed,{ridges:2})});
+
+/* ── hero parallax layers ──────────────────────────────────── */
+const hero=$("#hero"), heroG=GAMES[0];
+function paintHero(g){
+  const W=1280,H=720;
+  const sky=document.createElement("canvas");sky.width=W;sky.height=H;
+  paintScene(sky.getContext("2d"),W,H,g.pal,g.seed,{ridges:0,monolith:false,sx:.68,sy:.34});
+  $(".hl.sky",hero).style.backgroundImage=`url(${sky.toDataURL("image/jpeg",.84)})`;
+
+  const mid=document.createElement("canvas");mid.width=W;mid.height=H;
+  const mx=mid.getContext("2d");
+  const rnd=rng32(g.seed+11);
+  for(let r=0;r<2;r++){
+    const base=H*(.60+r*.13),amp=H*(.15-r*.04),ph=rnd()*9;
+    mx.beginPath();mx.moveTo(-4,H+4);
+    for(let x=-4;x<=W+4;x+=W/40){
+      mx.lineTo(x,base+Math.sin(x/W*5.4+ph)*amp*.7+Math.sin(x/W*13+ph*2)*amp*.3);
+    }
+    mx.lineTo(W+4,H+4);mx.closePath();
+    mx.fillStyle=r===0?"rgba(5,5,9,.80)":"#020205";mx.fill();
+    mx.save();mx.globalCompositeOperation="screen";mx.strokeStyle=g.pal.hot;
+    mx.globalAlpha=.5-r*.18;mx.lineWidth=1.6;mx.shadowColor=g.pal.hot;mx.shadowBlur=16;mx.stroke();mx.restore();
+  }
+  $(".hl.mid",hero).style.backgroundImage=`url(${mid.toDataURL("image/png")})`;
+
+  const sub=document.createElement("canvas");sub.width=W;sub.height=H;
+  const sx2=sub.getContext("2d"), r2=rng32(g.seed+29);
+  // a lone figure on a ledge — foreground scale + narrative
+  sx2.save();sx2.globalCompositeOperation="screen";
+  const gg=sx2.createRadialGradient(W*.70,H*.70,0,W*.70,H*.70,W*.22);
+  gg.addColorStop(0,g.pal.hot2);gg.addColorStop(.4,g.pal.hot);gg.addColorStop(1,"rgba(0,0,0,0)");
+  sx2.globalAlpha=.45;sx2.fillStyle=gg;sx2.fillRect(W*.4,H*.4,W*.6,H*.6);sx2.restore();
+  sx2.fillStyle="#010104";
+  sx2.beginPath();sx2.moveTo(W*.50,H+4);
+  sx2.lineTo(W*.545,H*.815);sx2.lineTo(W*.74,H*.795);sx2.lineTo(W*.86,H*.86);sx2.lineTo(W+4,H*.845);sx2.lineTo(W+4,H+4);
+  sx2.closePath();sx2.fill();
+  const fx=W*.695,fy=H*.795,s=H*.105;
+  sx2.beginPath();
+  sx2.ellipse(fx,fy-s*.86,s*.10,s*.12,0,0,7);sx2.fill();
+  sx2.beginPath();sx2.moveTo(fx-s*.15,fy-s*.74);sx2.lineTo(fx+s*.17,fy-s*.74);
+  sx2.lineTo(fx+s*.22,fy);sx2.lineTo(fx-s*.20,fy);sx2.closePath();sx2.fill();
+  // drifting motes
+  sx2.save();sx2.globalCompositeOperation="screen";
+  for(let i=0;i<70;i++){
+    const a=r2()*.5;sx2.fillStyle=`rgba(255,235,200,${a})`;
+    const rr=r2()*2.1+.5;sx2.beginPath();sx2.arc(r2()*W,H*.35+r2()*H*.62,rr,0,7);sx2.fill();
+  }
+  sx2.restore();
+  $(".hl.sub",hero).style.backgroundImage=`url(${sub.toDataURL("image/png")})`;
+}
+paintHero(heroG);
+
+/* ── render shelves / rows ─────────────────────────────────── */
+function cardHTML(g){
+  const badge = g.state==="dl"  ? `<span class="badge dl">${g.pct}% · качается</span>`
+              : g.state==="queue"? `<span class="badge">в очереди</span>`
+              : g.id==="thresh" ? `<span class="badge new">новое</span>` : "";
+  const prog = g.state==="dl" ? `<div class="prog"><i style="width:${g.pct}%"></i></div>` : "";
+  return `<button class="card" data-id="${g.id}">
+    <div class="art" style="background-image:url(${g.cover})">${badge}<div class="sheen"></div>${prog}</div>
+    <div class="lab"><div class="n">${g.t}</div><div class="s">${g.sub}</div></div>
+  </button>`;
+}
+$("#shelf").innerHTML  = GAMES.filter(g=>g.state==="ready").map(cardHTML).join("");
+$("#shelf2").innerHTML = GAMES.filter(g=>g.state!=="ready").map(cardHTML).join("");
+$("#libCount").textContent = GAMES.filter(g=>g.state==="ready").length + " установлено";
+$("#contRows").innerHTML = ["depth","crimson","wolf"].map(id=>{const g=byId(id);
+  return `<button class="row" data-id="${g.id}">
+    <span class="thumb" style="background-image:url(${g.cover})"></span>
+    <span class="t"><span class="n">${g.t}</span><span class="s">${g.sub.split("·")[1].trim()} · вчера в 23:40</span></span>
+    <span class="go"><svg><use href="#i-play"/></svg></span>
+  </button>`}).join("");
+
+/* ── downloads ─────────────────────────────────────────────── */
+const TOR=[
+  {g:"orbita", name:"orbita-7 · Полное издание [RU+ENG] (2026) v5.2 + 3 DLC", path:"D:\\Игры\\Orbita7\\ · 24 файла · rutracker-6904761",
+   pct:40,size:"11.5 ГБ / 28.8 ГБ",dn:"592 КБ/с",up:"1.6 МБ/с",peak:"7.0 МБ/с",seeds:27,peers:31,eta:"осталось 4 ч 12 мин",cool:false},
+  {g:"halc2", name:"neon-halcyon-echo · дополнение «Эхо» v1.0", path:"D:\\Игры\\NeonHalcyon\\dlc · 6 файлов · rutracker-6913022",
+   pct:66,size:"6.2 ГБ / 9.4 ГБ",dn:"1.03 МБ/с",up:"340 КБ/с",peak:"11.0 МБ/с",seeds:81,peers:82,eta:"осталось 51 мин",cool:true},
+];
+$("#torrents").innerHTML = TOR.map(t=>`
+  <div class="tor">
+    <div class="tor-t">
+      <span class="thumb" style="width:40px;height:52px;border-radius:8px;background:var(--raised) center/cover;background-image:url(${byId(t.g).cover});border:1px solid var(--line);flex:0 0 auto"></span>
+      <span class="nm"><span class="n">${t.name}</span><span class="path">${t.path}</span></span>
+      <span class="tor-act">
+        <button class="ico" aria-label="Пауза"><svg><use href="#i-pause"/></svg></button>
+        <button class="ico go" aria-label="Открыть папку"><svg><use href="#i-folder"/></svg></button>
+        <button class="ico stop" aria-label="Отменить"><svg><use href="#i-x"/></svg></button>
+      </span>
+    </div>
+    <div class="stats">
+      <span class="st"><svg><use href="#i-speed"/></svg>приём<b>${t.dn}</b></span>
+      <span class="st"><svg><use href="#i-seed"/></svg>отдача<b>${t.up}</b></span>
+      <span class="st"><svg><use href="#i-disk"/></svg>пик<b>${t.peak}</b></span>
+      <span class="st"><svg><use href="#i-peers"/></svg>сиды<b>${t.seeds}</b> · пиры<b>${t.peers}</b></span>
+    </div>
+    <div class="bar${t.cool?" c":""}"><i style="width:${t.pct}%"></i></div>
+    <div class="tor-f"><span>${t.size} · ${t.eta}</span><span class="pc">${t.pct}%</span></div>
+  </div>`).join("");
+
+// heat grid — 2 rows × 32 of swarm activity
+(() => {
+  const el=$("#heat"),rnd=rng32(4242),cells=[];
+  for(let i=0;i<64;i++){const d=document.createElement("i");el.appendChild(d);cells.push(d)}
+  const hues=["var(--hot-1)","var(--hot-2)","var(--cool)","var(--arc)"];
+  function tick(){
+    cells.forEach((c,i)=>{
+      const v=rnd();
+      if(v>.80){c.style.background=hues[(i+((Date.now()/700)|0))%4];c.style.opacity=(.35+rnd()*.65).toFixed(2);c.style.boxShadow="0 0 6px currentColor"}
+      else if(v>.55){c.style.background="rgba(255,255,255,.14)";c.style.opacity="1";c.style.boxShadow="none"}
+      else{c.style.background="var(--line-soft)";c.style.opacity="1";c.style.boxShadow="none"}
+    });
+  }
+  tick(); if(!RM) setInterval(tick,900);
+})();
+
+// live sparkline + rate readout
+(() => {
+  const svg=$("#spark"),W=600,H=74,N=60;
+  const hist=Array.from({length:N},(_,i)=>1.2+Math.sin(i/5)*.5+Math.random()*.9);
+  const area=document.createElementNS("http://www.w3.org/2000/svg","path");
+  const line=document.createElementNS("http://www.w3.org/2000/svg","path");
+  const tipC=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  const grid=document.createElementNS("http://www.w3.org/2000/svg","path");
+  const defs=document.createElementNS("http://www.w3.org/2000/svg","defs");
+  defs.innerHTML=`<linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--hot-1)" stop-opacity=".42"/>
+      <stop offset="1" stop-color="var(--hot-1)" stop-opacity="0"/></linearGradient>`;
+  grid.setAttribute("stroke","var(--line-soft)");grid.setAttribute("stroke-width","1");grid.setAttribute("fill","none");
+  grid.setAttribute("d",`M0 ${H*.25}H${W}M0 ${H*.5}H${W}M0 ${H*.75}H${W}`);
+  area.setAttribute("fill","url(#sg)");
+  line.setAttribute("fill","none");line.setAttribute("stroke","var(--hot-2)");line.setAttribute("stroke-width","1.8");
+  line.setAttribute("stroke-linejoin","round");line.setAttribute("vector-effect","non-scaling-stroke");
+  line.setAttribute("style","filter:drop-shadow(0 0 6px rgb(var(--glow-hot)/.8))");
+  tipC.setAttribute("r","3");tipC.setAttribute("fill","#fff");
+  tipC.setAttribute("style","filter:drop-shadow(0 0 8px var(--hot-2))");
+  svg.append(defs,grid,area,line,tipC);
+  function draw(){
+    const max=Math.max(2.4,...hist)*1.12;
+    const pt=i=>[i/(N-1)*W, H-2-(hist[i]/max)*(H-8)];
+    let d="";hist.forEach((_,i)=>{const[x,y]=pt(i);d+=(i?"L":"M")+x.toFixed(1)+" "+y.toFixed(1)});
+    line.setAttribute("d",d);
+    area.setAttribute("d",d+`L${W} ${H}L0 ${H}Z`);
+    const[lx,ly]=pt(N-1);tipC.setAttribute("cx",lx-1);tipC.setAttribute("cy",ly);
+    const v=hist[N-1];
+    $("#bigRate").innerHTML=v.toFixed(2)+"<u>МБ/с</u>";
+    $("#netRate").textContent=v.toFixed(1)+" МБ/с";
+    $("#kUp").textContent=(380+Math.random()*420|0)+" КБ/с";
+  }
+  draw();
+  if(!RM) setInterval(()=>{hist.push(clamp(hist[N-1]+(Math.random()-.48)*.7,.25,4.2));hist.shift();draw()},1100);
+})();
+
+/* ── saves timeline ────────────────────────────────────────── */
+const SAVES=[
+  {n:"Пепельный Предел · Глава 5 «Кузня Сумерек»",t:"6 минут назад",now:true,dev:[["sync","выгружено"],["pc","КУЗНЯ"]],note:"автосохранение · 148 МБ"},
+  {n:"Красный Меридиан · Кампания «Излом», ход 42",t:"1 ч 20 мин назад",dev:[["sync","выгружено"],["pc","КУЗНЯ"]],note:"ручное · 22 МБ"},
+  {n:"Глубина 9 · Уровень 6, кислород 41 %",t:"вчера, 23:41",dev:[["conf","конфликт версий"],["lap","ДОРОГА"]],note:"две ветки · выберите, какую оставить"},
+  {n:"Волчья Тропа · Зимовье у Чёрной реки",t:"вчера, 19:08",dev:[["sync","выгружено"],["lap","ДОРОГА"]],note:"автосохранение · 310 МБ"},
+  {n:"Стеклянный Сад · Комната 88",t:"3 дня назад",dev:[["sync","выгружено"],["pc","КУЗНЯ"]],note:"ручное · 4 МБ"},
+];
+$("#timeline").innerHTML=SAVES.map(s=>`
+  <div class="ev${s.now?" now":""}">
+    <div class="ev-h"><span class="n">${s.n}</span><span class="t">${s.t}</span></div>
+    <div class="ev-d">
+      ${s.dev.map(([k,l])=>`<span class="dev ${k==="sync"?"sync":k==="conf"?"conf":""}"><svg><use href="#i-${k==="sync"?"cloud":k==="conf"?"info":k}"/></svg>${l}</span>`).join("")}
+      <span class="dev" style="border:0;color:var(--ink-4);padding-left:2px">${s.note}</span>
+    </div>
+  </div>`).join("");
+
+/* ── routing ───────────────────────────────────────────────── */
+const NAMES={library:"Библиотека",downloads:"Загрузки",saves:"Сохранения",settings:"Настройки"};
+const ORDER=["library","downloads","saves","settings"];
+let cur="library";
+function go(id){
+  if(!NAMES[id])return; cur=id;
+  $$(".screen").forEach(s=>s.classList.toggle("on",s.id==="sc-"+id));
+  $$(".rbtn[data-go]").forEach(b=>b.setAttribute("aria-current",String(b.dataset.go===id)));
+  $("#crumb").textContent=NAMES[id];
+  const sc=$("#sc-"+id); if(sc) sc.scrollTop=0;
+}
+$$(".rbtn[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+
+/* ── detail sheet ──────────────────────────────────────────── */
+const ACH=[
+  [1,"Первый выдох","Пережить вступительную главу"],
+  [1,"Тихий шаг","Пройти уровень, не подняв тревогу"],
+  [1,"Собиратель","Найти 40 из 60 реликвий"],
+  [0,"Без единой царапины","Победить Кузнеца, не получив урона"],
+  [0,"Полный круг","Завершить все побочные линии"],
+];
+const FR=[["АК","Антон К.","в игре · 2 ч"],["МС","Мира С.","в сети"],["ДР","Дан Р.","играл вчера"]];
+const sheet=$("#sheet");
+function openSheet(g){
+  $("#shArt").style.backgroundImage=`url(${makeArt(1100,420,g.pal,g.seed+3,{ridges:2,sx:.6,sy:.4})})`;
+  $("#shTitle").textContent=g.t;
+  $("#shEye").textContent = g.state==="dl"?`Качается · ${g.pct}%` : g.state==="queue"?"В очереди на загрузку":"В библиотеке";
+  $("#shMeta").innerHTML=g.tags.map((t,i)=>`<span class="chip${i===0?" hot":""}">${t}</span>`).join("");
+  $("#shBlurb").textContent=g.blurb;
+  $("#shSize").textContent=g.size;
+  $("#shAchCount").textContent="3 из 5";
+  $("#shAch").innerHTML=ACH.map(([got,n,d])=>`
+    <div class="ach${got?" got":""}"><span class="ic"><svg><use href="#i-trophy"/></svg></span>
+    <span class="tx"><span class="n">${n}</span><span class="d">${d}</span></span></div>`).join("");
+  $("#shFriends").innerHTML=FR.map(([ini,n,s],i)=>`
+    <div class="frow"><span class="av" style="background:${["linear-gradient(140deg,var(--hot-2),var(--hot-1))","linear-gradient(140deg,var(--cool),#1b6f8a)","linear-gradient(140deg,var(--arc),#5a2fa8)"][i]}">${ini}</span>
+    <span class="fn">${n}</span><span class="fs">${s}</span></div>`).join("");
+  sheet.classList.add("on");
+}
+document.addEventListener("click",e=>{
+  const c=e.target.closest("[data-id]"); if(c){openSheet(byId(c.dataset.id));return}
+  if(e.target.closest("[data-open]")) openSheet(GAMES[+e.target.closest("[data-open]").dataset.open]);
+});
+$("#shX").onclick=()=>sheet.classList.remove("on");
+sheet.onclick=e=>{if(e.target===sheet)sheet.classList.remove("on")};
+
+/* ── command palette ───────────────────────────────────────── */
+const cmd=$("#cmd"),cmdI=$("#cmdI"),cmdL=$("#cmdL");
+let cSel=0,cRes=[];
+const ACTIONS=[
+  {t:"Открыть загрузки",s:"раздел · 2 активных",go:"downloads"},
+  {t:"Открыть сохранения",s:"раздел · 1 конфликт",go:"saves"},
+  {t:"Настройки эффектов",s:"раздел",go:"settings"},
+  {t:"Сменить тему на Nebula",s:"команда",skin:"nebula"},
+  {t:"Сменить тему на Cryo",s:"команда",skin:"cryo"},
+  {t:"Сменить тему на Magma",s:"команда",skin:"magma"},
+];
+function cmdRender(q=""){
+  const n=q.trim().toLowerCase();
+  const games=GAMES.filter(g=>!n||g.t.toLowerCase().includes(n)).map(g=>({g,t:g.t,s:g.sub,cover:g.cover}));
+  const acts=ACTIONS.filter(a=>!n||a.t.toLowerCase().includes(n));
+  cRes=[...games,...acts].slice(0,9); cSel=0;
+  cmdL.innerHTML=cRes.map((r,i)=>`<button class="ci" data-i="${i}" data-sel="${i===0?1:0}">
+    ${r.cover?`<span class="ct" style="background-image:url(${r.cover})"></span>`:`<span class="ct" style="display:grid;place-items:center;background:var(--surface)"><svg style="width:15px;height:15px;color:var(--ink-4)"><use href="#i-arrow"/></svg></span>`}
+    <span class="cb"><span class="cn">${r.t}</span><span class="cs">${r.s}</span></span>
+    <span class="ck">${r.g?"↵ открыть":"↵ выполнить"}</span></button>`).join("")
+    || `<div style="padding:22px;text-align:center;color:var(--ink-4);font-family:var(--font-mono);font-size:12px">ничего не найдено</div>`;
+}
+function cmdOpen(){cmd.classList.add("on");cmdI.value="";cmdRender();setTimeout(()=>cmdI.focus(),40)}
+function cmdClose(){cmd.classList.remove("on");cmdI.blur()}
+function cmdMove(d){if(!cRes.length)return;cSel=(cSel+d+cRes.length)%cRes.length;
+  $$(".ci",cmdL).forEach((e,i)=>e.dataset.sel=i===cSel?1:0);
+  $$(".ci",cmdL)[cSel]?.scrollIntoView({block:"nearest"})}
+function cmdRun(i,shift){
+  const r=cRes[i]; if(!r)return; cmdClose();
+  if(r.g){ if(shift) launch(r.g); else openSheet(r.g); }
+  else if(r.go) go(r.go);
+  else if(r.skin) setSkin(r.skin);
+}
+$("#openCmd").onclick=cmdOpen;
+cmd.onclick=e=>{if(e.target===cmd)cmdClose()};
+cmdI.oninput=()=>cmdRender(cmdI.value);
+cmdL.onclick=e=>{const b=e.target.closest(".ci");if(b)cmdRun(+b.dataset.i,e.shiftKey)};
+cmdI.onkeydown=e=>{
+  if(e.key==="ArrowDown"){e.preventDefault();cmdMove(1)}
+  else if(e.key==="ArrowUp"){e.preventDefault();cmdMove(-1)}
+  else if(e.key==="Enter"){e.preventDefault();cmdRun(cSel,e.shiftKey)}
+};
+
+/* ── skins ─────────────────────────────────────────────────── */
+function setSkin(s){
+  document.documentElement.dataset.skin=s;
+  $$(".skin").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.skin===s)));
+  readThemeColors();
+}
+$$(".skin").forEach(b=>b.onclick=()=>setSkin(b.dataset.skin));
+$$(".sw").forEach(b=>b.onclick=()=>{
+  const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",String(on));
+  const k=b.dataset.fx;
+  if(k==="bg"){FLAGS.bg=on;$("#gl").style.display=on?"":"none"}
+  if(k==="sparks"){FLAGS.sparks=on;$("#fx").style.display=on?"":"none"}
+  if(k==="para")FLAGS.para=on;
+  if(k==="grain")$("#grain").style.display=on?"":"none";
+  if(k==="ritual")FLAGS.ritual=on;
+  if(k==="hold")FLAGS.hold=on;
+});
+$$("#qseg button").forEach((b,i)=>b.onclick=()=>{
+  $$("#qseg button").forEach(x=>x.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true");FLAGS.q=[0.5,1,1.6][i];resizeGL();
+});
+const FLAGS={bg:!RM,sparks:!RM,para:!RM,ritual:!RM,hold:true,q:1};
+
+/* ── grain tile ────────────────────────────────────────────── */
+(() => {
+  const c=document.createElement("canvas");c.width=c.height=128;
+  const x=c.getContext("2d"),d=x.createImageData(128,128);
+  for(let i=0;i<128*128;i++){const v=110+Math.random()*90|0;d.data[i*4]=d.data[i*4+1]=d.data[i*4+2]=v;d.data[i*4+3]=255}
+  x.putImageData(d,0,0);$("#grain").style.backgroundImage=`url(${c.toDataURL()})`;
+})();
+
+/* ── ambient WebGL plume ───────────────────────────────────── */
+let THEME={hot:[1,.48,.09],hot2:[1,.76,.30],cool:[.37,.91,1]};
+function css(v){const s=getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const m=s.match(/^#?([0-9a-f]{6})$/i); if(!m)return null;
+  const n=parseInt(m[1],16);return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]}
+function readThemeColors(){
+  THEME.hot=css("--hot-1")||THEME.hot; THEME.hot2=css("--hot-2")||THEME.hot2; THEME.cool=css("--cool")||THEME.cool;
+}
+readThemeColors();
+
+const glc=$("#gl");
+let gl=null,prog=null,U={},t0=performance.now(),mx=.5,my=.4,tmx=.5,tmy=.4;
+function initGL(){
+  gl=glc.getContext("webgl",{alpha:true,antialias:false,premultipliedAlpha:false})||glc.getContext("experimental-webgl");
+  if(!gl){glc.style.display="none";document.body.style.background=
+    "radial-gradient(70% 90% at 72% 12%, rgba(255,122,24,.13), transparent 60%), var(--void)";return false}
+  const vs=`attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}`;
+  const fs=`
+precision highp float;
+varying vec2 v;
+uniform vec2 uRes; uniform float uT; uniform vec2 uM;
+uniform vec3 cHot, cHot2, cCool;
+float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float n(vec2 p){
+  vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
+  return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);
+}
+float fbm(vec2 p){
+  float s=0.,a=.5;
+  for(int i=0;i<5;i++){s+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}
+  return s;
+}
+void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*uRes)/uRes.y;
+  vec2 par=(uM-.5)*.22;
+  uv+=par;
+  float t=uT*.028;
+  // rising plume: bias the domain upward over time
+  vec2 p=uv*1.5+vec2(0.,-t*2.2);
+  vec2 q=vec2(fbm(p+vec2(0.,t)),fbm(p+vec2(5.2,1.3)-t));
+  vec2 r=vec2(fbm(p+3.4*q+vec2(1.7,9.2)+t*.6),fbm(p+3.4*q+vec2(8.3,2.8)-t*.4));
+  float f=fbm(p+3.0*r);
+  // vertical falloff — dense at the bottom, thinning as it rises
+  float rise=smoothstep(-.95,.75,uv.y);
+  float body=pow(clamp(f*1.25,0.,1.),1.6)*(1.-rise*.86);
+  vec3 col=mix(cHot*.55,cHot2,clamp(r.x*1.25,0.,1.));
+  col=mix(col,cCool,clamp(q.y*.85-.15,0.,1.)*.55);
+  // hot core near the vent
+  float core=exp(-length(uv-vec2(.16,-.62))*2.3);
+  col+=cHot2*core*.55;
+  float a=body*.62+core*.22;
+  // subtle scanning band to keep it alive without being busy
+  a*=.82+.18*sin(uv.y*7.+uT*.35);
+  a*=smoothstep(1.25,.05,length(uv*vec2(.72,1.)));
+  gl_FragColor=vec4(col*a*1.5,a*.92);
+}`;
+  const mk=(t,s)=>{const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh};
+  prog=gl.createProgram();gl.attachShader(prog,mk(gl.VERTEX_SHADER,vs));gl.attachShader(prog,mk(gl.FRAGMENT_SHADER,fs));
+  gl.linkProgram(prog);
+  if(!gl.getProgramParameter(prog,gl.LINK_STATUS)){glc.style.display="none";return false}
+  gl.useProgram(prog);
+  const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(prog,"p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  ["uRes","uT","uM","cHot","cHot2","cCool"].forEach(k=>U[k]=gl.getUniformLocation(prog,k));
+  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  return true;
+}
+function resizeGL(){
+  if(!gl)return;
+  const s=clamp(.55*FLAGS.q,.3,1)*Math.min(devicePixelRatio||1,2);
+  glc.width=Math.max(2,innerWidth*s|0);glc.height=Math.max(2,innerHeight*s|0);
+  gl.viewport(0,0,glc.width,glc.height);
+}
+const okGL=initGL(); resizeGL();
+
+/* ── ember particles ───────────────────────────────────────── */
+const fxc=$("#fx"),fx=fxc.getContext("2d");
+let parts=[];
+function resizeFX(){
+  const d=Math.min(devicePixelRatio||1,2);
+  fxc.width=innerWidth*d|0;fxc.height=innerHeight*d|0;fx.setTransform(d,0,0,d,0,0);
+  const want=Math.round(clamp(innerWidth/17,34,104)*FLAGS.q);
+  parts=Array.from({length:want},()=>spawn(true));
+}
+function spawn(any){
+  return{x:Math.random()*innerWidth,y:any?innerHeight*(.30+Math.random()*.72):innerHeight+12,
+    vy:-(.16+Math.random()*.55),vx:(Math.random()-.5)*.14,
+    r:.5+Math.random()*1.7,life:0,max:340+Math.random()*560,
+    ph:Math.random()*7,sw:.28+Math.random()*.7,cool:Math.random()<.24};
+}
+function drawFX(dt){
+  fx.clearRect(0,0,innerWidth,innerHeight);
+  if(!FLAGS.sparks)return;
+  const H=THEME.hot2,C=THEME.cool;
+  for(let i=0;i<parts.length;i++){
+    const p=parts[i];p.life+=dt;
+    if(p.life>p.max||p.y<-20){parts[i]=spawn(false);continue}
+    p.ph+=dt*.0024;
+    p.x+=p.vx+Math.sin(p.ph)*p.sw*.5;p.y+=p.vy*(1+p.life/p.max*.8);
+    const k=p.life/p.max, a=Math.sin(Math.PI*Math.min(1,k*1.15))*.42;
+    const c=p.cool?C:H;
+    const rr=p.r*(1-k*.35);
+    const g=fx.createRadialGradient(p.x,p.y,0,p.x,p.y,rr*5.5);
+    g.addColorStop(0,`rgba(${c[0]*255|0},${c[1]*255|0},${c[2]*255|0},${a})`);
+    g.addColorStop(.35,`rgba(${c[0]*255|0},${c[1]*255|0},${c[2]*255|0},${a*.28})`);
+    g.addColorStop(1,"rgba(0,0,0,0)");
+    fx.fillStyle=g;fx.beginPath();fx.arc(p.x,p.y,rr*5.5,0,7);fx.fill();
+    fx.fillStyle=`rgba(255,246,230,${a*.9})`;fx.beginPath();fx.arc(p.x,p.y,rr*.55,0,7);fx.fill();
+  }
+}
+resizeFX();
+addEventListener("resize",()=>{resizeGL();resizeFX()});
+
+/* ── pointer → parallax + shader ───────────────────────────── */
+addEventListener("pointermove",e=>{tmx=e.clientX/innerWidth;tmy=e.clientY/innerHeight},{passive:true});
+
+let last=performance.now(),acc=0;
+function frame(now){
+  const dt=Math.min(64,now-last);last=now;
+  mx+=(tmx-mx)*.055; my+=(tmy-my)*.055;
+  if(okGL&&FLAGS.bg){
+    gl.useProgram(prog);
+    gl.uniform2f(U.uRes,glc.width,glc.height);
+    gl.uniform1f(U.uT,(now-t0)/1000);
+    gl.uniform2f(U.uM,mx,1-my);
+    gl.uniform3fv(U.cHot,THEME.hot);gl.uniform3fv(U.cHot2,THEME.hot2);gl.uniform3fv(U.cCool,THEME.cool);
+    gl.drawArrays(gl.TRIANGLES,0,3);
+  }
+  drawFX(dt);
+  if(FLAGS.para){
+    const ox=(mx-.5), oy=(my-.5);
+    $$(".hl,[data-d]",hero).forEach(el=>{
+      const d=+el.dataset.d||0;
+      el.style.transform=`translate3d(${(-ox*d).toFixed(2)}px,${(-oy*d*.55).toFixed(2)}px,0)`;
+    });
+  }
+  requestAnimationFrame(frame);
+}
+if(RM){ drawFX(16); if(okGL&&FLAGS.bg){gl.uniform2f(U.uRes,glc.width,glc.height);gl.uniform1f(U.uT,8);
+  gl.uniform2f(U.uM,.5,.5);gl.uniform3fv(U.cHot,THEME.hot);gl.uniform3fv(U.cHot2,THEME.hot2);
+  gl.uniform3fv(U.cCool,THEME.cool);gl.drawArrays(gl.TRIANGLES,0,3);} }
+else requestAnimationFrame(frame);
+
+/* ── PLAY: hold to charge ──────────────────────────────────── */
+const playWrap=$("#playWrap"),playBtn=$("#playBtn"),chRect=$("#chRect");
+let holdT=null,holdStart=0,HOLD=620;
+function chargeTo(p){chRect.style.strokeDashoffset=String(100-100*p)}
+function startHold(e){
+  if(e.button!==undefined&&e.button!==0)return;
+  if(!FLAGS.hold){launch(GAMES[0]);return}
+  playWrap.classList.add("charging");holdStart=performance.now();
+  hero.style.filter="url(#shimmer)";
+  const step=()=>{
+    const p=clamp((performance.now()-holdStart)/HOLD,0,1);chargeTo(p);
+    if(p>=1){endHold(true);launch(GAMES[0]);return}
+    holdT=requestAnimationFrame(step);
+  };
+  holdT=requestAnimationFrame(step);
+}
+function endHold(done){
+  cancelAnimationFrame(holdT);playWrap.classList.remove("charging");
+  if(!done)chargeTo(0); hero.style.filter="";
+}
+playBtn.addEventListener("pointerdown",startHold);
+["pointerup","pointerleave","pointercancel"].forEach(ev=>playBtn.addEventListener(ev,()=>endHold(false)));
+playBtn.addEventListener("keydown",e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();if(!holdT)startHold({})}});
+playBtn.addEventListener("keyup",()=>endHold(false));
+
+/* ── the launch ritual ─────────────────────────────────────── */
+const LOGS=["монтирование тома…","проверка целостности 118 421 файла","инициализация графического слоя","загрузка шейдерного кэша · 2 148","синхронизация сохранений с облаком","передача управления"];
+const STAGES=["Подготовка среды","Проверка файлов","Графический слой","Шейдерный кэш","Облако сохранений","Запуск"];
+let launching=false;
+function launch(g){
+  if(launching)return; launching=true;
+  const L=$("#launch"),bar=$("#lBar"),ring=$("#lRing");
+  $(".l-t",L).innerHTML=g.t.split(" ").length>1
+    ? g.t.split(" ").slice(0,-1).join(" ")+" <b>"+g.t.split(" ").slice(-1)+"</b>"
+    : "<b>"+g.t+"</b>";
+  L.classList.add("on");L.setAttribute("aria-hidden","false");
+  if(!FLAGS.ritual){setTimeout(()=>{L.classList.remove("on");launching=false},900);return}
+  // burst the embers upward — the UI "evaporates"
+  parts.forEach(p=>{p.vy=-(1.4+Math.random()*2.6);p.vx=(Math.random()-.5)*1.5;p.r*=1.5;p.life=0;p.max=1400});
+  let i=0;
+  const t0=performance.now(),DUR=2600;
+  (function step(now){
+    const p=clamp((now-t0)/DUR,0,1);
+    bar.style.width=(p*100).toFixed(1)+"%";
+    ring.style.strokeDashoffset=String(100-100*p);
+    const s=Math.min(STAGES.length-1,(p*STAGES.length)|0);
+    if(s!==i){i=s;$("#lStage").textContent=STAGES[s];$("#lLog").textContent=LOGS[s]}
+    if(p<1)requestAnimationFrame(step);
+    else{
+      $("#flash").classList.add("go");
+      $("#shock").classList.add("go");
+      const ir=$("#iris"); let k=0;
+      (function iris(){k+=.022;ir.style.setProperty("--ir",(k*100)+"%");
+        if(k<1.3)requestAnimationFrame(iris);
+        else setTimeout(()=>{
+          L.classList.remove("on");L.setAttribute("aria-hidden","true");
+          $("#flash").classList.remove("go");$("#shock").classList.remove("go");
+          ir.style.setProperty("--ir","0%");bar.style.width="0";
+          ring.style.strokeDashoffset="100";$("#lStage").textContent=STAGES[0];
+          resizeFX();launching=false;
+        },420);
+      })();
+    }
+  })(performance.now());
+}
+
+/* ── keyboard ──────────────────────────────────────────────── */
+addEventListener("keydown",e=>{
+  const typing=e.target.tagName==="INPUT";
+  if(e.key==="Escape"){
+    if(cmd.classList.contains("on"))cmdClose();
+    else if(sheet.classList.contains("on"))sheet.classList.remove("on");
+    return;
+  }
+  if(typing)return;
+  if(e.key==="/"||((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k")){e.preventDefault();cmdOpen();return}
+  if(e.ctrlKey&&e.key==="Tab"){e.preventDefault();
+    go(ORDER[(ORDER.indexOf(cur)+(e.shiftKey?-1:1)+ORDER.length)%ORDER.length]);return}
+  if(e.key>="1"&&e.key<="4"){go(ORDER[+e.key-1])}
+});
+
+/* keep republished views alive where the platform supports it */
+try{window.claude?.hot?.snapshot?.(()=>({skin:document.documentElement.dataset.skin||"magma",cur}))}catch(_){}
+try{
+  const boot=st=>{ if(st?.skin)setSkin(st.skin); if(st?.cur)go(st.cur); };
+  window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data??{});
+}catch(_){}
+})();
+</script>
