@@ -1,30 +1,84 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:evaporate_design/main.dart';
+import 'package:evaporate_design/design/theme.dart';
+import 'package:evaporate_design/design/tokens.dart';
+import 'package:evaporate_design/widgets/ev_play_button.dart';
+
+Widget _host(Widget child, {EvSkin skin = EvSkin.magma}) => MaterialApp(
+  theme: buildEvTheme(skin: skin),
+  home: Scaffold(body: Center(child: child)),
+);
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('токены доходят до виджетов через ThemeExtension', (tester) async {
+    late EvTheme ev;
+    await tester.pumpWidget(
+      _host(
+        Builder(
+          builder: (context) {
+            ev = context.ev;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    // Расширение должно находиться: поле с именем `type` когда-то перекрывало
+    // ключ ThemeExtension.type и ломало этот поиск.
+    expect(ev.colors.hot1, EvColors.magma.hot1);
+    expect(ev.radii.pill, EvRadii.tight.pill, reason: 'по умолчанию потолок 8 px');
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('облик меняет палитру, не трогая виджеты', (tester) async {
+    late EvColors c;
+    await tester.pumpWidget(
+      _host(
+        Builder(
+          builder: (context) {
+            c = context.evc;
+            return const SizedBox();
+          },
+        ),
+        skin: EvSkin.cryo,
+      ),
+    );
+    expect(c.hot1, EvColors.cryo.hot1);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('нажатие не запускает игру — кнопку нужно удержать', (tester) async {
+    var launched = 0;
+    await tester.pumpWidget(
+      _host(EvPlayButton(onLaunch: () => launched++)),
+    );
+
+    // короткое нажатие: заряд не добран
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byType(EvPlayButton)),
+    );
+    await tester.pump(const Duration(milliseconds: 200));
+    await gesture.up();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(launched, 0, reason: 'защита от случайного старта');
+
+    // удержание дольше 620 мс
+    final hold = await tester.startGesture(
+      tester.getCenter(find.byType(EvPlayButton)),
+    );
+    // первый кадр после forward() только заводит тикер: elapsed на нём = 0
     await tester.pump();
+    await tester.pump(EvMotion.hold + const Duration(milliseconds: 40));
+    expect(launched, 1);
+    await hold.up();
+    await tester.pump(const Duration(milliseconds: 200));
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('с выключенным удержанием кнопка срабатывает сразу', (tester) async {
+    var launched = 0;
+    await tester.pumpWidget(
+      _host(EvPlayButton(requireHold: false, onLaunch: () => launched++)),
+    );
+    await tester.tap(find.byType(EvPlayButton));
+    await tester.pump();
+    expect(launched, 1);
   });
 }

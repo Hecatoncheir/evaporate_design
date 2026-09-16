@@ -1,0 +1,320 @@
+import 'dart:ui' as ui;
+
+import 'package:flutter/widgets.dart';
+
+import '../design/theme.dart';
+import '../design/tokens.dart';
+import 'ev_icon.dart';
+
+/// Кнопка запуска — единственный насыщенный объект на экране.
+///
+/// Собрана из пяти слоёв, имитирующих подповерхностное рассеивание: свет
+/// рождается внутри оболочки, а не лежит на ней.
+///
+/// * −1 — ядро: радиальный белый в янтарь, размытие 6, дышит 3.6 с;
+/// * 0 — оболочка: линейный градиент 115°;
+/// * внутрь — светлая кромка сверху и тёплая тень снизу;
+/// * +1 — спекулярный блик, проходит за 1.05 с при наведении;
+/// * наружу — свечение на фон.
+///
+/// Нажатие не запускает игру: кнопку нужно **удерживать** 620 мс. Это защита
+/// от случайного старта и заодно момент, ради которого всё остальное затевалось.
+class EvPlayButton extends StatefulWidget {
+  const EvPlayButton({
+    super.key,
+    required this.onLaunch,
+    this.label = 'Играть',
+    this.icon = EvIcons.play,
+    this.requireHold = true,
+    this.height = 56,
+  });
+
+  final VoidCallback onLaunch;
+  final String label;
+  final String icon;
+
+  /// Выключается в настройках — тогда кнопка срабатывает по нажатию.
+  final bool requireHold;
+
+  final double height;
+
+  @override
+  State<EvPlayButton> createState() => _EvPlayButtonState();
+}
+
+class _EvPlayButtonState extends State<EvPlayButton>
+    with TickerProviderStateMixin {
+  late final AnimationController _hold = AnimationController(
+    vsync: this,
+    duration: EvMotion.hold,
+    reverseDuration: const Duration(milliseconds: 160),
+  )..addStatusListener(_onHold);
+
+  late final AnimationController _breathe = AnimationController(
+    vsync: this,
+    duration: EvMotion.breathe,
+  );
+
+  late final AnimationController _sweep = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1050),
+  );
+
+  bool _hover = false;
+  bool _down = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Дыхание ядра — единственная бесконечная анимация в системе. При
+    // «уменьшить анимацию» она останавливается: иначе окно перерисовывается
+    // вечно, а тесты не досчитываются до покоя.
+    final reduced = MediaQuery.disableAnimationsOf(context);
+    if (reduced) {
+      _breathe.stop();
+      _breathe.value = 0.5;
+    } else if (!_breathe.isAnimating) {
+      _breathe.repeat(reverse: true);
+    }
+  }
+
+  void _onHold(AnimationStatus s) {
+    if (s == AnimationStatus.completed) {
+      _hold.value = 0;
+      setState(() => _down = false);
+      widget.onLaunch();
+    }
+  }
+
+  @override
+  void dispose() {
+    _hold.dispose();
+    _breathe.dispose();
+    _sweep.dispose();
+    super.dispose();
+  }
+
+  void _press() {
+    if (!widget.requireHold) {
+      widget.onLaunch();
+      return;
+    }
+    setState(() => _down = true);
+    _hold.forward();
+  }
+
+  void _release() {
+    if (!_down) return;
+    setState(() => _down = false);
+    _hold.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ev = context.ev;
+    final c = ev.colors;
+    final r = ev.radii.pill.clamp(0.0, widget.height / 2);
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) {
+        setState(() => _hover = true);
+        _sweep.forward(from: 0);
+      },
+      onExit: (_) {
+        setState(() => _hover = false);
+        _release();
+      },
+      child: Listener(
+        onPointerDown: (_) => _press(),
+        onPointerUp: (_) => _release(),
+        onPointerCancel: (_) => _release(),
+        child: Semantics(
+          button: true,
+          label: widget.requireHold
+              ? '${widget.label}. Удерживайте, чтобы запустить'
+              : widget.label,
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_hold, _breathe, _sweep]),
+            builder: (context, _) {
+              final lift = _hover && !_down ? -2.0 : 0.0;
+              return Transform.translate(
+                offset: Offset(0, lift),
+                child: CustomPaint(
+                  foregroundPainter: _ChargeRingPainter(
+                    progress: _hold.value,
+                    color: c.hot2,
+                    radius: r,
+                    inset: -11,
+                  ),
+                  child: Container(
+                    height: widget.height,
+                    padding: const EdgeInsets.only(left: 22, right: 26),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(r),
+                      gradient: c.playFill,
+                      boxShadow: [
+                        BoxShadow(
+                          color: c.hot1.withValues(alpha: _hover ? 0.55 : 0.42),
+                          blurRadius: _hover ? 46 : 34,
+                          offset: Offset(0, _hover ? 16 : 10),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: c.hot1.withValues(alpha: _hover ? 0.5 : 0.35),
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(r),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // −1 · ядро: свет изнутри оболочки
+                          Positioned.fill(child: _core(c)),
+                          // внутрь · светлая кромка сверху
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: 1,
+                            child: ColoredBox(
+                              color: c.ink.withValues(alpha: 0.55),
+                            ),
+                          ),
+                          // +1 · спекулярный блик
+                          if (_sweep.isAnimating)
+                            Positioned.fill(child: _specular()),
+                          _content(ev),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _core(EvColors c) {
+    final t = Curves.easeInOut.transform(_breathe.value);
+    return ImageFiltered(
+      imageFilter: ui.ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+      child: Opacity(
+        opacity: 0.75 + 0.25 * t,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(-0.56, 0),
+              radius: 0.9 + 0.05 * t,
+              colors: [
+                const Color(0xFFFFFFFF).withValues(alpha: 0.85),
+                const Color(0xFFFFD278).withValues(alpha: 0.35),
+                const Color(0x00000000),
+              ],
+              stops: const [0, 0.4, 0.72],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _specular() {
+    final x = -0.9 + 2.2 * Curves.easeOut.transform(_sweep.value);
+    return Transform(
+      transform: Matrix4.skewX(-0.32),
+      alignment: Alignment.center,
+      child: FractionallySizedBox(
+        widthFactor: 0.38,
+        alignment: Alignment(x, 0),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                const Color(0x00FFFFFF),
+                const Color(0xFFFFFFFF).withValues(alpha: 0.55),
+                const Color(0x00FFFFFF),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _content(EvTheme ev) {
+    const onFill = Color(0xFF170800);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        EvIcon(widget.icon, size: 19, color: onFill),
+        const SizedBox(width: 13),
+        Text(
+          widget.label,
+          style: ev.text.title.copyWith(
+            color: onFill,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (widget.requireHold) ...[
+          const SizedBox(width: 13),
+          Text(
+            'УДЕРЖАТЬ',
+            style: ev.text.data.copyWith(
+              color: onFill.withValues(alpha: 0.62),
+              fontSize: 10,
+              letterSpacing: 1.4,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Кольцо заряда обходит кнопку за 620 мс. Рисуется поверх, с отступом
+/// наружу, чтобы не спорить с кромкой.
+class _ChargeRingPainter extends CustomPainter {
+  _ChargeRingPainter({
+    required this.progress,
+    required this.color,
+    required this.radius,
+    required this.inset,
+  });
+
+  final double progress;
+  final Color color;
+  final double radius;
+  final double inset;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height).deflate(inset);
+    final rrect = RRect.fromRectAndRadius(
+      rect,
+      Radius.circular(radius - inset),
+    );
+    final path = Path()..addRRect(rrect);
+
+    final metrics = path.computeMetrics().toList();
+    if (metrics.isEmpty) return;
+    final m = metrics.first;
+    final drawn = m.extractPath(0, m.length * progress.clamp(0.0, 1.0));
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round
+      ..color = color
+      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.solid, 3);
+    canvas.drawPath(drawn, paint);
+  }
+
+  @override
+  bool shouldRepaint(_ChargeRingPainter old) =>
+      old.progress != progress || old.color != color || old.radius != radius;
+}
