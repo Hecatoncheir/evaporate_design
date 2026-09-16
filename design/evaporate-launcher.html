@@ -895,6 +895,146 @@ h1.title b{font-weight:800;display:block}
 .pill.dead{color:var(--bad);border-color:rgb(255 77 94/.38);background:rgb(255 77 94/.07)}
 .pill.dead .dot{background:var(--bad);box-shadow:0 0 9px var(--bad);animation:none}
 
+
+/* ═══ 1280×720 — минимальное окно ══════════════════════════════
+   Герой в полный рост съедал полку: на 720 от «Библиотеки» был
+   виден только заголовок. На низких окнах герой ужимается, а
+   «Продолжить» складывается — герой и есть кнопка «продолжить».
+   ══════════════════════════════════════════════════════════════ */
+@media (max-height:800px){
+  :root{--pad:18px}
+  .hero{height:300px}
+  h1.title{font-size:clamp(28px,3.4vw,44px)}
+  .hero-body{gap:11px;bottom:18px;left:clamp(18px,2.6vw,32px);right:clamp(18px,2.6vw,32px)}
+  .blurb{font-size:13px}
+  .hero-cta{margin-top:2px}
+  .play,.ghost,.running{height:50px}
+  .sec{margin-top:20px}
+  .sec-h{margin-bottom:12px}
+  #secContinue{display:none}
+  .card{width:152px}
+  .shelf{padding-bottom:12px}
+  .topbar{padding-top:11px;padding-bottom:10px}
+  .hero-body.tall-cta .blurb,
+  .hero-body.has-note .blurb{display:none}
+  .hero-body.tall-cta h1.title b{display:inline}
+  .hero-body.tall-cta h1.title{font-size:clamp(26px,3vw,38px)}
+  .instal{padding:12px 14px;gap:8px}
+  .empty{gap:15px;min-height:70%}
+  .empty-mk{width:78px;height:78px}
+  .empty-mk svg{width:48px;height:48px}
+  .drop{padding:16px}
+  .sk-hero{height:300px}
+  .demo-b{max-height:0}
+  .demo.open .demo-b{max-height:min(54vh,400px)}
+  .ovl-body{gap:11px}
+  .ovl-card{padding:14px}
+  .fps .v{font-size:34px}
+}
+@media (max-height:800px) and (max-width:1120px){
+  .card{width:134px}
+}
+
+/* ═══ ДОБАВЛЕНИЕ РАЗДАЧИ ═══════════════════════════════════════ */
+.dlg{
+  position:fixed;inset:0;z-index:65;display:grid;place-items:center;
+  padding:clamp(12px,3vh,36px) clamp(12px,3vw,36px);
+  background:rgba(4,4,8,.74);backdrop-filter:blur(16px) saturate(.8);
+  opacity:0;visibility:hidden;transition:opacity .28s var(--ease),visibility .28s;
+}
+.dlg.on{opacity:1;visibility:visible}
+.dlg-in{
+  width:min(660px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;
+  border:1px solid var(--line);border-radius:var(--r-4);background:var(--surface);
+  box-shadow:0 40px 110px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.04);
+  transform:translateY(14px) scale(.985);transition:transform .38s var(--ease-out);
+}
+.dlg.on .dlg-in{transform:none}
+.dlg-h{display:flex;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line-soft)}
+.dlg-h .t{font-family:var(--font-dsp);font-weight:600;font-size:12px;letter-spacing:.18em;text-transform:uppercase;flex:1}
+.dlg-b{overflow:auto;padding:18px}
+.dlg-f{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:13px 18px;border-top:1px solid var(--line-soft);background:rgba(255,255,255,.015);
+}
+.dlg-f .hash{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);flex:1;min-width:120px}
+
+.torhead{display:flex;gap:15px;align-items:flex-start}
+.torhead .cv{
+  width:76px;aspect-ratio:3/4;border-radius:10px;flex:0 0 auto;
+  background:var(--raised) center/cover;border:1px solid var(--line);
+  box-shadow:0 10px 24px rgba(0,0,0,.55);
+}
+.torhead .tx{flex:1;min-width:0}
+.torhead .nm{font-family:var(--font-dsp);font-weight:300;font-size:22px;letter-spacing:-.02em;line-height:1.05}
+.torhead .nm b{font-weight:800}
+.torhead .sl{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);margin-top:7px;word-break:break-all}
+.torhead .cs{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+
+.pick-h{display:flex;align-items:baseline;gap:10px;margin:20px 0 9px}
+.pick-h .lb{font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-4)}
+.pick-h .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line-soft),transparent)}
+.pick-h .sum{font-family:var(--font-mono);font-size:11px;color:var(--hot-2);font-variant-numeric:tabular-nums}
+.filerow{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  padding:9px 11px;border-radius:var(--r-2);transition:background .18s;
+}
+.filerow:hover{background:rgba(255,255,255,.04)}
+.filerow .bx{
+  width:17px;height:17px;border-radius:5px;border:1px solid var(--line);flex:0 0 auto;
+  display:grid;place-items:center;color:transparent;transition:.2s var(--ease);
+}
+.filerow .bx svg{width:11px;height:11px}
+.filerow[aria-pressed="true"] .bx{
+  background:linear-gradient(150deg,var(--hot-2),var(--hot-1));border-color:transparent;color:#1a0a00;
+  box-shadow:0 0 14px rgb(var(--glow-hot)/.5);
+}
+.filerow[aria-pressed="false"] .n{color:var(--ink-4)}
+.filerow[aria-pressed="false"] .sz{color:var(--ink-4)}
+.filerow .n{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.filerow .n em{font-style:normal;font-family:var(--font-mono);font-size:10px;color:var(--ink-4);margin-left:8px}
+.filerow .sz{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.filerow.locked{cursor:default}
+.filerow.locked:hover{background:none}
+
+.dest{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:12px 13px;border:1px solid var(--line);border-radius:var(--r-2);
+  background:rgba(255,255,255,.02);
+}
+.dest .pathv{display:flex;align-items:center;gap:9px;font-family:var(--font-mono);font-size:12.5px}
+.dest .pathv svg{width:15px;height:15px;color:var(--ink-3)}
+.dest .free{margin-left:auto;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);text-align:right}
+.dest .free b{color:var(--ok);font-weight:500}
+
+/* ═══ СЦЕНАРИЙ ═════════════════════════════════════════════════ */
+.flow{
+  position:fixed;left:50%;bottom:16px;translate:-50% 0;z-index:75;
+  width:min(620px,calc(100vw - 24px));
+  border:1px solid rgb(var(--glow-hot)/.35);border-radius:var(--r-4);overflow:hidden;
+  background:rgba(14,15,22,.94);backdrop-filter:blur(18px) saturate(1.1);
+  box-shadow:0 24px 64px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04),0 0 40px rgb(var(--glow-hot)/.12);
+  opacity:0;visibility:hidden;transform:translateY(12px);
+  transition:opacity .3s var(--ease-out),visibility .3s,transform .34s var(--ease-out);
+}
+.flow.on{opacity:1;visibility:visible;transform:none}
+.flow-p{height:2px;background:rgba(255,255,255,.07)}
+.flow-p i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--hot-1),var(--hot-2));
+  box-shadow:0 0 12px rgb(var(--glow-hot)/.8);transition:width .42s var(--ease-out)}
+.flow-b{display:flex;align-items:center;gap:13px;padding:12px 14px}
+.flow-n{
+  width:30px;height:30px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+  font-family:var(--font-mono);font-size:11px;color:var(--hot-2);
+  border:1px solid rgb(var(--glow-hot)/.4);background:rgb(var(--glow-hot)/.1);
+  font-variant-numeric:tabular-nums;
+}
+.flow-t{flex:1;min-width:0}
+.flow-t .h{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flow-t .d{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);margin-top:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flow-a{display:flex;gap:7px;flex:0 0 auto}
+@media (max-width:560px){.flow-t .d{display:none}}
+
 </style>
 
 <!-- ── SVG defs: filters + the icon system ─────────────────────── -->
@@ -1063,7 +1203,7 @@ h1.title b{font-weight:800;display:block}
           </div>
         </div>
 
-        <div class="sec">
+        <div class="sec" id="secContinue">
           <div class="sec-h"><h2>Продолжить</h2><span class="count">3 сессии</span><span class="rule"></span></div>
           <div class="strip" id="contRows"></div>
         </div>
@@ -1073,7 +1213,7 @@ h1.title b{font-weight:800;display:block}
           <div class="shelf" id="shelf"></div>
         </div>
 
-        <div class="sec">
+        <div class="sec" id="secSoon">
           <div class="sec-h"><h2>Скоро на диске</h2><span class="count">качается</span><span class="rule"></span></div>
           <div class="shelf" id="shelf2"></div>
         </div>
@@ -1432,6 +1572,84 @@ h1.title b{font-weight:800;display:block}
   </button>
   <div class="demo-b"><div class="demo-g" id="demoList"></div></div>
   <div class="demo-f">Панель прототипа · клавиша S</div>
+</div>
+
+<!-- ── добавление раздачи ───────────────────────────────────── -->
+<div class="dlg" id="addDlg" role="dialog" aria-modal="true" aria-label="Добавить раздачу">
+  <div class="dlg-in">
+    <div class="dlg-h">
+      <span class="t">Добавить раздачу</span>
+      <button class="ico" id="addX" aria-label="Закрыть"><svg><use href="#i-x"/></svg></button>
+    </div>
+    <div class="dlg-b">
+      <div class="torhead">
+        <span class="cv" id="addCv"></span>
+        <span class="tx">
+          <div class="nm">Пепельный <b>Предел</b></div>
+          <div class="sl">magnet:?xt=urn:btih:9f2c4d18ab77e0c35b1f6ea2c90d84b3ff17a41b&amp;dn=ashen-verge-2.4.1</div>
+          <div class="cs">
+            <span class="chip hot">27 сидов · 31 пир</span>
+            <span class="chip">v2.4.1</span>
+            <span class="chip">RU + ENG</span>
+            <span class="chip">118 421 файл</span>
+          </div>
+        </span>
+      </div>
+
+      <div class="pick-h">
+        <span class="lb">Что скачать</span><span class="rule"></span>
+        <span class="sum" id="addSum">68.4 ГБ</span>
+      </div>
+      <button class="filerow locked" aria-pressed="true" data-sz="54.2">
+        <span class="bx"><svg><use href="#i-check"/></svg></span>
+        <span class="n">Игра<em>обязательно</em></span><span class="sz">54.2 ГБ</span>
+      </button>
+      <button class="filerow" aria-pressed="true" data-sz="8.1">
+        <span class="bx"><svg><use href="#i-check"/></svg></span>
+        <span class="n">Русская озвучка</span><span class="sz">8.1 ГБ</span>
+      </button>
+      <button class="filerow" aria-pressed="true" data-sz="6.1">
+        <span class="bx"><svg><use href="#i-check"/></svg></span>
+        <span class="n">Текстуры 4K</span><span class="sz">6.1 ГБ</span>
+      </button>
+      <button class="filerow" aria-pressed="false" data-sz="7.8">
+        <span class="bx"><svg><use href="#i-check"/></svg></span>
+        <span class="n">Английская озвучка</span><span class="sz">7.8 ГБ</span>
+      </button>
+      <button class="filerow" aria-pressed="false" data-sz="2.4">
+        <span class="bx"><svg><use href="#i-check"/></svg></span>
+        <span class="n">Саундтрек FLAC</span><span class="sz">2.4 ГБ</span>
+      </button>
+
+      <div class="pick-h"><span class="lb">Куда</span><span class="rule"></span></div>
+      <div class="dest">
+        <span class="pathv"><svg><use href="#i-drive"/></svg>D:\Игры\AshenVerge</span>
+        <button class="mini"><svg><use href="#i-folder"/></svg>Изменить</button>
+        <span class="free">свободно 214 ГБ<br>останется <b id="addLeft">146 ГБ</b></span>
+      </div>
+    </div>
+    <div class="dlg-f">
+      <span class="hash">btih 9f2c4d18…ff17a41b · проверено</span>
+      <button class="mini" id="addCancel">Отмена</button>
+      <button class="play" style="height:44px" id="addGo">
+        <svg><use href="#i-dl"/></svg><span>Скачать</span><span class="hold" id="addGoSz">68.4 ГБ</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── сценарий первого запуска ─────────────────────────────── -->
+<div class="flow" id="flow" role="status" aria-live="polite">
+  <div class="flow-p"><i id="flowP"></i></div>
+  <div class="flow-b">
+    <span class="flow-n" id="flowN">1/8</span>
+    <span class="flow-t"><span class="h" id="flowH"></span><span class="d" id="flowD"></span></span>
+    <span class="flow-a">
+      <button class="mini" id="flowPrev" aria-label="Назад"><svg><use href="#i-chev"/></svg></button>
+      <button class="keep" id="flowNext">Дальше<svg><use href="#i-arrow"/></svg></button>
+      <button class="ico" id="flowX" aria-label="Выйти из сценария"><svg><use href="#i-x"/></svg></button>
+    </span>
+  </div>
 </div>
 
 <div class="flash" id="flash" aria-hidden="true"></div>
@@ -2138,6 +2356,7 @@ function setHero(c){
   $(".meta", heroBody).innerHTML      = c.chips
     .map(([t, hot]) => `<span class="chip${hot ? " hot" : ""}">${t}</span>`).join("");
   const showPlay = c.cta === "play";
+  heroBody.classList.toggle("tall-cta", !showPlay);
   playWrap.hidden = !showPlay;
   ghostBtn.hidden = !showPlay;
   ctaAlt.hidden   = showPlay;
@@ -2146,6 +2365,7 @@ function setHero(c){
 function setNote(html){
   ctaNote.hidden = !html;
   ctaNote.innerHTML = html || "";
+  heroBody.classList.toggle("has-note", !!html);
 }
 
 const HERO = {
@@ -2353,6 +2573,7 @@ function resetAll(){
   closeOvl();
 }
 function applyState(id){
+  if(!id || !STATES.some(s => s.id === id)) return;
   resetAll();
   const [scope] = id.split("-");
   switch(id){
@@ -2506,7 +2727,7 @@ $("#demoH").onclick = () => {
   $("#demoH").setAttribute("aria-expanded", String(open));
 };
 $("#demoList").onclick = e => {
-  const b = e.target.closest(".demo-i");
+  const b = e.target.closest(".demo-i[data-st]");
   if(b) applyState(b.dataset.st);
 };
 
@@ -2521,6 +2742,164 @@ addEventListener("keydown", e => {
     const open = demo.classList.toggle("open");
     $("#demoH").setAttribute("aria-expanded", String(open));
   }
+});
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ПЕРВЫЙ ЗАПУСК — восемь шагов от пустой библиотеки до игры
+   ═══════════════════════════════════════════════════════════════ */
+
+/* the library can be narrowed to a subset — the first run shows one game */
+const shelfHTML  = $("#shelf").innerHTML;
+const shelf2HTML = $("#shelf2").innerHTML;
+const contHTML   = $("#contRows").innerHTML;
+const libCount   = $("#libCount").textContent;
+function setLibrary(ids){
+  if(!ids){
+    $("#shelf").innerHTML = shelfHTML;
+    $("#shelf2").innerHTML = shelf2HTML;
+    $("#contRows").innerHTML = contHTML;
+    $("#libCount").textContent = libCount;
+    $("#secContinue").hidden = false;
+    $("#secSoon").hidden = false;
+    return;
+  }
+  const list = ids.map(byId);
+  $("#shelf").innerHTML = list.map(cardHTML).join("");
+  $("#libCount").textContent = list.length === 1 ? "1 установлена" : list.length + " установлено";
+  $("#secContinue").hidden = true;
+  $("#secSoon").hidden = true;
+}
+
+/* ── диалог добавления раздачи ─────────────────────────────── */
+const addDlg = $("#addDlg");
+$("#addCv").style.backgroundImage = `url(${byId("ashen").cover})`;
+function addSum(){
+  let gb = 0;
+  $$(".filerow", addDlg).forEach(r => { if(r.getAttribute("aria-pressed") === "true") gb += +r.dataset.sz; });
+  const s = gb.toFixed(1).replace(".", ",") + " ГБ";
+  $("#addSum").textContent = s;
+  $("#addGoSz").textContent = s.toUpperCase();
+  $("#addLeft").textContent = Math.round(214 - gb) + " ГБ";
+  return gb;
+}
+$$(".filerow", addDlg).forEach(r => r.onclick = () => {
+  if(r.classList.contains("locked")) return;
+  r.setAttribute("aria-pressed", String(r.getAttribute("aria-pressed") !== "true"));
+  addSum();
+});
+addSum();
+function openAdd(){ addDlg.classList.add("on"); }
+function closeAdd(){ addDlg.classList.remove("on"); }
+$("#addX").onclick = closeAdd;
+$("#addCancel").onclick = closeAdd;
+addDlg.onclick = e => { if(e.target === addDlg) closeAdd(); };
+$("#addGo").onclick = () => { closeAdd(); flowGo(2); };
+
+/* ── торрент первой игры, три фазы ─────────────────────────── */
+const FIRST = {
+  g:"ashen", name:"ashen-verge · Пепельный Предел v2.4.1 [RU+ENG]",
+  path:"D:\\Игры\\AshenVerge\\ · 118 421 файл · magnet 9f2c…a41b",
+  peak:"2.1 МБ/с", seeds:27, peers:31
+};
+const FIRST_START = mix(FIRST, {pct:0, dn:"218 КБ/с", up:"0 Б/с",
+  size:"0.3 ГБ / 68.4 ГБ", eta:"оцениваем скорость"});
+const FIRST_MID = mix(FIRST, {pct:41, dn:"1.42 МБ/с", up:"612 КБ/с",
+  size:"28.0 ГБ / 68.4 ГБ", eta:"осталось 4 ч 12 мин"});
+const FIRST_VERIFY = mix(FIRST, {pct:88, state:"arc", barClass:"arc",
+  dn:"1.10 МБ/с", up:"1.9 МБ/с", size:"60.2 ГБ / 68.4 ГБ", eta:"проверка 88 %",
+  alert:{kind:"arc", icon:"verified", h:"Проверяем целостность",
+    d:"Хеши сходятся на 88 %. Проверка идёт параллельно с докачкой — ждать отдельно не придётся.",
+    acts:[{label:"Журнал", icon:"info"}]}});
+
+/* ── шаги ──────────────────────────────────────────────────── */
+const FLOW = [
+  {h:"Лаунчер только что установлен", d:"библиотека пуста · движок готов", run(){
+    applyState("lib-empty"); setLibrary(null); closeAdd();
+  }},
+  {h:"Вставили magnet-ссылку", d:"движок разобрал раздачу и показал, что внутри", run(){
+    applyState("lib-empty"); openAdd();
+  }},
+  {h:"Загрузка встала в очередь", d:"первые части пошли, скорость ещё оценивается", run(){
+    closeAdd(); applyState("dl-default"); renderDL([FIRST_START]);
+    pills[0].innerHTML = `<span class="dot busy"></span>218 КБ/с`;
+    pills[1].innerHTML = `<span class="dot busy"></span>Разгоняемся`;
+  }},
+  {h:"Качается", d:"41 % · 28.0 ГБ из 68.4 ГБ · осталось 4 ч 12 мин", run(){
+    closeAdd(); applyState("dl-default"); renderDL([FIRST_MID]);
+  }},
+  {h:"Проверка файлов", d:"хеши сходятся, докачка идёт параллельно", run(){
+    closeAdd(); applyState("dl-default"); renderDL([FIRST_VERIFY]);
+    pills[1].innerHTML = `<span class="dot busy"></span>Проверка 88 %`;
+  }},
+  {h:"Установка на диск", d:"распаковка 41 % · можно свернуть окно", run(){
+    closeAdd(); applyState("lib-install"); setLibrary(["ashen"]);
+  }},
+  {h:"Первая игра в библиотеке", d:"герой появился, кнопка ждёт удержания", run(){
+    closeAdd();
+    applyState("lib-default"); setLibrary(["ashen"]);
+    setHero({
+      eyebrow:"Готово · установлена только что",
+      title:"Пепельный<b>Предел</b>",
+      blurb:"Первая игра в вашей библиотеке. Удерживайте «Играть» — 620 мс, чтобы запустить её не случайно.",
+      chips:[["Новое",1],["v2.4.1"],["68.4 ГБ"],["Action-RPG"]],
+      cta:"play"
+    });
+    pills[1].innerHTML = `<span class="dot"></span>Движок готов`;
+  }},
+  {h:"Первый запуск", d:"ритуал · шесть стадий · интерфейс испаряется", run(){
+    closeAdd(); setLibrary(["ashen"]); applyState("ritual");
+  }}
+];
+
+const flow = $("#flow");
+let flowI = -1;
+function flowGo(i){
+  flowI = clamp(i, 0, FLOW.length - 1);
+  const s = FLOW[flowI];
+  flow.classList.add("on");
+  $("#flowN").textContent = (flowI + 1) + "/" + FLOW.length;
+  $("#flowH").textContent = s.h;
+  $("#flowD").textContent = s.d;
+  $("#flowP").style.width = ((flowI + 1) / FLOW.length * 100) + "%";
+  $("#flowPrev").disabled = flowI === 0;
+  $("#flowPrev").style.opacity = flowI === 0 ? ".35" : "";
+  $("#flowNext").innerHTML = flowI === FLOW.length - 1
+    ? `Заново<svg><use href="#i-retry"/></svg>` : `Дальше<svg><use href="#i-arrow"/></svg>`;
+  s.run();
+}
+function flowExit(){
+  flow.classList.remove("on"); flowI = -1;
+  closeAdd(); setLibrary(null); applyState("lib-default");
+}
+$("#flowNext").onclick = () => flowGo(flowI >= FLOW.length - 1 ? 0 : flowI + 1);
+$("#flowPrev").onclick = () => flowGo(flowI - 1);
+$("#flowX").onclick = flowExit;
+
+/* the empty state's two entry points are the real start of the flow */
+$(".empty .play").onclick = () => flowGo(1);
+$(".empty .ghost").onclick = () => flowGo(1);
+$(".drop").onclick = () => flowGo(1);
+
+/* ── сценарий как пункт панели состояний ───────────────────── */
+(() => {
+  const list = $("#demoList");
+  const head = document.createElement("div");
+  head.className = "gl"; head.textContent = "Сценарий";
+  const btn = document.createElement("button");
+  btn.className = "demo-i"; btn.id = "demoFlow";
+  btn.innerHTML = `<span class="k" style="background:var(--hot-2);box-shadow:0 0 8px var(--hot-2)"></span>
+    <span class="tx"><span class="n">Первый запуск</span><span class="d">8 шагов · пусто → игра</span></span>`;
+  btn.onclick = () => flowGo(0);
+  list.insertBefore(head, list.firstChild);
+  list.insertBefore(btn, head.nextSibling);
+})();
+
+addEventListener("keydown", e => {
+  if(e.target.tagName === "INPUT") return;
+  if(!flow.classList.contains("on")) return;
+  if(e.key === "ArrowRight"){ e.preventDefault(); flowGo(flowI + 1); }
+  if(e.key === "ArrowLeft"){ e.preventDefault(); flowGo(flowI - 1); }
 });
 
 /* keep republished views alive where the platform supports it */
