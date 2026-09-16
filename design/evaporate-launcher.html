@@ -920,6 +920,8 @@ h1.title b{font-weight:800;display:block}
   .hero-body.tall-cta h1.title b{display:inline}
   .hero-body.tall-cta h1.title{font-size:clamp(26px,3vw,38px)}
   .instal{padding:12px 14px;gap:8px}
+  .savept{padding:7px 10px 7px 7px;gap:10px}
+  .savept .th{width:38px;height:28px}
   .empty{gap:15px;min-height:70%}
   .empty-mk{width:78px;height:78px}
   .empty-mk svg{width:48px;height:48px}
@@ -1034,6 +1036,148 @@ h1.title b{font-weight:800;display:block}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .flow-a{display:flex;gap:7px;flex:0 0 auto}
 @media (max-width:560px){.flow-t .d{display:none}}
+
+
+/* ═══ ВОЗВРАЩЕНИЕ ══════════════════════════════════════════════
+   Первый запуск отвечает «что это». Второй отвечает «что было,
+   пока меня не было, и где я остановился». Дайджест закрывает
+   первый вопрос, точка сохранения — второй.
+   ══════════════════════════════════════════════════════════════ */
+
+/* точка сохранения — то, чего не может быть при первом запуске */
+.savept{
+  display:flex;align-items:center;gap:12px;padding:9px 12px 9px 9px;
+  border:1px solid var(--line);border-radius:var(--r-3);
+  background:rgba(10,11,17,.66);backdrop-filter:blur(10px);
+  max-width:min(460px,100%);
+}
+.savept .th{
+  width:42px;height:32px;border-radius:7px;flex:0 0 auto;
+  background:var(--raised) center/cover;border:1px solid var(--line);
+  position:relative;overflow:hidden;
+}
+.savept .th::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.savept .tx{min-width:0;flex:1;display:flex;flex-direction:column}
+.savept .tx .h{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.savept .tx .d{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);margin-top:3px}
+.savept .alt{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--ink-3);
+  padding:5px 9px;border-radius:99px;border:1px solid var(--line);flex:0 0 auto;transition:.22s var(--ease);
+}
+.savept .alt:hover{color:var(--hot-2);border-color:rgb(var(--glow-hot)/.5)}
+
+/* дайджест */
+.digest{
+  border:1px solid var(--line);border-radius:var(--r-4);overflow:hidden;
+  background:rgba(14,15,22,.9);backdrop-filter:blur(20px) saturate(1.1);
+  box-shadow:0 26px 70px rgba(0,0,0,.66),0 0 0 1px rgba(255,255,255,.04);
+}
+.digest-h{display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid var(--line-soft)}
+.digest-h .t{font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);flex:1}
+.digest-h .n{
+  font-family:var(--font-mono);font-size:10px;padding:2px 7px;border-radius:99px;
+  color:var(--hot-2);border:1px solid rgb(var(--glow-hot)/.4);background:rgb(var(--glow-hot)/.1);
+}
+.digest-l{max-height:min(46vh,380px);overflow:auto}
+.dg{
+  display:flex;align-items:flex-start;gap:11px;padding:11px 14px;
+  border-bottom:1px solid var(--line-soft);
+}
+.dg:last-child{border-bottom:0}
+.dg .di{
+  width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:0 0 auto;
+  border:1px solid var(--line);color:var(--ink-3);
+}
+.dg .di svg{width:13px;height:13px}
+.dg.ok  .di{color:var(--ok);border-color:rgb(59 227 155/.4);background:rgb(59 227 155/.09)}
+.dg.hot .di{color:var(--hot-2);border-color:rgb(var(--glow-hot)/.4);background:rgb(var(--glow-hot)/.09)}
+.dg.warn .di{color:var(--warn);border-color:rgb(255 194 77/.4);background:rgb(255 194 77/.09)}
+.dg.arc .di{color:var(--arc);border-color:rgb(166 107 255/.4);background:rgb(166 107 255/.09)}
+.dg .dt{flex:1;min-width:0;display:flex;flex-direction:column}
+.dg .dt .h{font-size:12.8px;line-height:1.35}
+.dg .dt .d{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);margin-top:4px}
+.dg .da{
+  flex:0 0 auto;align-self:center;font-size:11.5px;color:var(--ink-3);
+  padding:5px 11px;border-radius:99px;border:1px solid var(--line);transition:.22s var(--ease);white-space:nowrap;
+}
+.dg .da:hover{color:var(--hot-2);border-color:rgb(var(--glow-hot)/.5);box-shadow:0 0 18px rgb(var(--glow-hot)/.2)}
+.digest-f{padding:11px 14px;border-top:1px solid var(--line-soft)}
+.digest-f .done{
+  width:100%;justify-content:center;display:flex;align-items:center;gap:8px;height:36px;
+  border-radius:99px;border:1px solid var(--line);color:var(--ink-2);font-size:12.5px;transition:.24s var(--ease);
+}
+.digest-f .done:hover{color:var(--hot-2);border-color:rgb(var(--glow-hot)/.5);background:rgb(var(--glow-hot)/.07)}
+.digest-f .done svg{width:13px;height:13px}
+
+/* узкое окно — дайджест висит справа под топбаром и закрывается */
+#digestFloat{
+  position:fixed;right:var(--pad);top:70px;width:min(360px,calc(100vw - 32px));z-index:50;
+  opacity:0;visibility:hidden;transform:translateY(-8px) scale(.99);
+  transition:opacity .3s var(--ease-out),visibility .3s,transform .34s var(--ease-out);
+}
+#digestFloat.on{opacity:1;visibility:visible;transform:none}
+#digestFloat.gone{opacity:0;visibility:hidden;transform:translateY(-16px) scale(.96)}
+
+/* свёрнутый дайджест живёт плашкой в топбаре */
+.pill.news{color:var(--hot-2);border-color:rgb(var(--glow-hot)/.4);background:rgb(var(--glow-hot)/.09);cursor:pointer}
+.pill.news .dot{background:var(--hot-2);box-shadow:0 0 9px var(--hot-2);animation:none}
+
+/* ═══ 2560 — вторая колонка вместо растянутого героя ═══════════
+   На 2560 герой превращался в полосу 4.7 : 1 и обложка обрезалась
+   по вертикали. Ширина уходит в правую колонку, а не в пустоту.
+   ══════════════════════════════════════════════════════════════ */
+.side-rail{display:none}
+@media (min-width:1800px){
+  :root{--pad:clamp(30px,2.2vw,44px)}
+  #sc-library{
+    display:grid;grid-template-columns:minmax(0,1fr) 384px;
+    column-gap:var(--pad);align-content:start;padding-right:var(--pad);
+  }
+  #sc-library > .hero{grid-column:1;margin-right:0}
+  #sc-library > .sec{grid-column:1;padding-right:0}
+  #sc-library > .empty,
+  #sc-library > .skel{grid-column:1 / -1}
+  .side-rail{
+    display:flex;flex-direction:column;gap:14px;
+    grid-column:2;grid-row:1 / span 40;margin-top:var(--pad);align-self:start;
+  }
+  #digestFloat{display:none}
+
+  .hero{height:clamp(520px,42vh,660px)}
+  h1.title{font-size:clamp(56px,3.6vw,82px)}
+  .hero-body{max-width:min(760px,64%)}
+  .blurb{font-size:15.5px;max-width:52ch}
+  .card{width:206px}
+  .strip{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+
+  /* загрузки: две колонки вместо строк во всю ширину */
+  #torrents{display:grid;grid-template-columns:1fr 1fr;gap:13px;align-items:start}
+  .tor + .tor{margin-top:0}
+  .dl-head{grid-template-columns:1.2fr 1fr}
+  .heat{grid-template-columns:repeat(48,1fr)}
+  .tl{max-width:1100px}
+}
+@media (min-width:2200px){
+  #sc-library{grid-template-columns:minmax(0,1fr) 420px}
+  .side-rail{grid-column:2}
+  .card{width:224px}
+  .hero-body{max-width:min(840px,58%)}
+}
+
+.rail-card{
+  border:1px solid var(--line-soft);border-radius:var(--r-4);padding:15px;
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.006));
+}
+.rail-card .p-lab{margin-bottom:10px}
+.rail-mini{display:flex;align-items:center;gap:10px;padding:7px 0}
+.rail-mini + .rail-mini{border-top:1px solid var(--line-soft)}
+.rail-mini .th{width:30px;height:39px;border-radius:6px;background:var(--raised) center/cover;border:1px solid var(--line);flex:0 0 auto}
+.rail-mini .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.rail-mini .tx .n{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rail-mini .tx .d{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);margin-top:3px}
+
+.screen.is-empty .side-rail,
+.screen.is-skel .side-rail{display:none}
 
 </style>
 
@@ -1217,6 +1361,26 @@ h1.title b{font-weight:800;display:block}
           <div class="sec-h"><h2>Скоро на диске</h2><span class="count">качается</span><span class="rule"></span></div>
           <div class="shelf" id="shelf2"></div>
         </div>
+
+        <!-- вторая колонка · только на широких окнах -->
+        <aside class="side-rail">
+          <div id="digestRail"></div>
+          <div class="rail-card">
+            <div class="p-lab">Друзья · 4 в сети</div>
+            <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--hot-2),var(--hot-1))">АК</span><span class="fn">Антон К.</span><span class="fs">Пепельный Предел</span></div>
+            <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--cool),#1b6f8a)">МС</span><span class="fn">Мира С.</span><span class="fs">Красный Меридиан</span></div>
+            <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--arc),#5a2fa8)">ДР</span><span class="fn">Дан Р.</span><span class="fs">в сети</span></div>
+            <div class="frow"><span class="av" style="background:linear-gradient(140deg,#3be39b,#146c48)">ЛП</span><span class="fn">Лена П.</span><span class="fs">Волчья Тропа</span></div>
+          </div>
+          <div class="rail-card">
+            <div class="p-lab">Качается сейчас</div>
+            <div class="rail-mini" id="railT1"><span class="th"></span><span class="tx"><span class="n">Орбита 7</span><span class="d">41 % · 592 КБ/с</span></span></div>
+            <div class="bar" style="margin-top:9px"><i style="width:41%"></i></div>
+            <div class="rail-mini" id="railT2" style="margin-top:8px"><span class="th"></span><span class="tx"><span class="n">Хальцион: Эхо</span><span class="d">66 % · 1.03 МБ/с</span></span></div>
+            <div class="bar c" style="margin-top:9px"><i style="width:66%"></i></div>
+            <div class="tor-f" style="margin-top:12px"><span>приём 1.62 МБ/с</span><span class="pc">2 / 3</span></div>
+          </div>
+        </aside>
       </section>
 
       <!-- ══ DOWNLOADS ════════════════════════════════════════ -->
@@ -1651,6 +1815,8 @@ h1.title b{font-weight:800;display:block}
     </span>
   </div>
 </div>
+
+<div id="digestFloat"></div>
 
 <div class="flash" id="flash" aria-hidden="true"></div>
 
@@ -2568,6 +2734,9 @@ function resetAll(){
   svTimeline.parentElement.hidden = false;
   pills[0].className = "pill"; pills[0].innerHTML = `<span class="dot busy"></span><span id="netRate">1.6 МБ/с</span>`;
   pills[1].className = "pill"; pills[1].innerHTML = `<span class="dot"></span>Движок готов`;
+  pills[1].onclick = null;
+  digestFloat.classList.remove("on");
+  digestRail.style.display = "none";
   renderDL(DL.default);
   setNote(null);
   closeOvl();
@@ -2578,6 +2747,11 @@ function applyState(id){
   const [scope] = id.split("-");
   switch(id){
     case "lib-default":  setHero(HERO.ready); break;
+    case "lib-return":
+      setHero(HERO.ret); setNote(HERO.ret.note);
+      $("#savePtTh").style.backgroundImage = `url(${byId("ashen").cover})`;
+      openDigest();
+      break;
     case "lib-empty":
       scLib.classList.add("is-empty");
       pills[1].innerHTML = `<span class="dot"></span>Каталог пуст`;
@@ -2855,16 +3029,17 @@ const FLOW = [
 const flow = $("#flow");
 let flowI = -1;
 function flowGo(i){
-  flowI = clamp(i, 0, FLOW.length - 1);
-  const s = FLOW[flowI];
+  const steps = SCEN[scenKey] || FLOW;
+  flowI = clamp(i, 0, steps.length - 1);
+  const s = steps[flowI];
   flow.classList.add("on");
-  $("#flowN").textContent = (flowI + 1) + "/" + FLOW.length;
+  $("#flowN").textContent = (flowI + 1) + "/" + steps.length;
   $("#flowH").textContent = s.h;
   $("#flowD").textContent = s.d;
-  $("#flowP").style.width = ((flowI + 1) / FLOW.length * 100) + "%";
+  $("#flowP").style.width = ((flowI + 1) / steps.length * 100) + "%";
   $("#flowPrev").disabled = flowI === 0;
   $("#flowPrev").style.opacity = flowI === 0 ? ".35" : "";
-  $("#flowNext").innerHTML = flowI === FLOW.length - 1
+  $("#flowNext").innerHTML = flowI === steps.length - 1
     ? `Заново<svg><use href="#i-retry"/></svg>` : `Дальше<svg><use href="#i-arrow"/></svg>`;
   s.run();
 }
@@ -2872,7 +3047,7 @@ function flowExit(){
   flow.classList.remove("on"); flowI = -1;
   closeAdd(); setLibrary(null); applyState("lib-default");
 }
-$("#flowNext").onclick = () => flowGo(flowI >= FLOW.length - 1 ? 0 : flowI + 1);
+$("#flowNext").onclick = () => flowGo(flowI >= (SCEN[scenKey] || FLOW).length - 1 ? 0 : flowI + 1);
 $("#flowPrev").onclick = () => flowGo(flowI - 1);
 $("#flowX").onclick = flowExit;
 
@@ -2890,7 +3065,7 @@ $(".drop").onclick = () => flowGo(1);
   btn.className = "demo-i"; btn.id = "demoFlow";
   btn.innerHTML = `<span class="k" style="background:var(--hot-2);box-shadow:0 0 8px var(--hot-2)"></span>
     <span class="tx"><span class="n">Первый запуск</span><span class="d">8 шагов · пусто → игра</span></span>`;
-  btn.onclick = () => flowGo(0);
+  btn.onclick = () => { scenKey = "first"; flowGo(0); };
   list.insertBefore(head, list.firstChild);
   list.insertBefore(btn, head.nextSibling);
 })();
@@ -2901,6 +3076,156 @@ addEventListener("keydown", e => {
   if(e.key === "ArrowRight"){ e.preventDefault(); flowGo(flowI + 1); }
   if(e.key === "ArrowLeft"){ e.preventDefault(); flowGo(flowI - 1); }
 });
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ВОЗВРАЩЕНИЕ — то, чего не бывает при первом запуске
+   ═══════════════════════════════════════════════════════════════ */
+
+/* burst — частицы разлетаются из прямоугольника. Дайджест буквально
+   испаряется, когда его разобрали. */
+function burst(rect, n){
+  if(!FLAGS.sparks || RM) return;
+  const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+  for(let i = 0; i < n; i++){
+    const p = parts[i % parts.length];
+    const a = Math.random() * 6.283, r = Math.random();
+    p.x = rect.left + Math.random() * rect.width;
+    p.y = rect.top + Math.random() * rect.height;
+    p.vx = Math.cos(a) * (.5 + r * 2.4) * .6;
+    p.vy = -(.8 + Math.random() * 2.6);
+    p.r = .7 + Math.random() * 2.2;
+    p.life = 0; p.max = 700 + Math.random() * 700;
+    p.cool = Math.random() < .3;
+  }
+}
+
+/* ── дайджест ──────────────────────────────────────────────── */
+const NEWS = [
+  {k:"ok",   ic:"dl",       h:"«Орбита 7» докачана",              d:"28.8 ГБ · проверка пройдена", a:"Установить", go:"lib-install"},
+  {k:"hot",  ic:"boost",    h:"Обновление 2.4.2 установлено",     d:"ночью · 1.8 ГБ · вылет на Кузне починен", a:"Что нового"},
+  {k:"arc",  ic:"trophy",   h:"Антон К. прошёл Кузню Сумерек",    d:"3 часа назад · вы на той же главе", a:"Посмотреть"},
+  {k:"ok",   ic:"cloud",    h:"2 сохранения выгружены",           d:"конфликтов нет"},
+  {k:"warn", ic:"seed",     h:"«Грозовой фронт» остановился",     d:"нет раздающих 6 часов", a:"Показать", go:"dl-noseeds"}
+];
+function digestHTML(){
+  return `<div class="digest">
+    <div class="digest-h">
+      <span class="t">Пока вас не было</span>
+      <span class="n">${NEWS.length}</span>
+      <button class="ico" data-news="close" aria-label="Свернуть"><svg><use href="#i-x"/></svg></button>
+    </div>
+    <div class="digest-l">
+      ${NEWS.map((e, i) => `<div class="dg ${e.k}">
+        <span class="di"><svg><use href="#i-${e.ic}"/></svg></span>
+        <span class="dt"><span class="h">${e.h}</span><span class="d">${e.d}</span></span>
+        ${e.a ? `<button class="da" data-news="${i}">${e.a}</button>` : ""}
+      </div>`).join("")}
+    </div>
+    <div class="digest-f">
+      <button class="done" data-news="close"><svg><use href="#i-check"/></svg>Всё понятно</button>
+    </div>
+  </div>`;
+}
+const digestFloat = $("#digestFloat"), digestRail = $("#digestRail");
+function renderDigest(){
+  const h = digestHTML();
+  digestFloat.innerHTML = h;
+  digestRail.innerHTML = h;
+}
+renderDigest();
+digestRail.style.display = "none";
+let newsSeen = false;
+function openDigest(){
+  if(newsSeen) return;
+  renderDigest();
+  digestFloat.classList.remove("gone");
+  digestFloat.classList.add("on");
+  digestRail.style.display = "";
+}
+function dismissDigest(){
+  newsSeen = true;
+  const vis = digestFloat.classList.contains("on") ? digestFloat : digestRail;
+  const r = vis.getBoundingClientRect();
+  if(r.width) burst(r, 90);
+  digestFloat.classList.remove("on");
+  digestFloat.classList.add("gone");
+  digestRail.style.display = "none";
+  newsPill();
+}
+function newsPill(){
+  pills[1].className = "pill news";
+  pills[1].innerHTML = `<span class="dot"></span>Пока вас не было · ${NEWS.length}`;
+  pills[1].onclick = () => { newsSeen = false; pills[1].onclick = null; openDigest(); };
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-news]");
+  if(!b) return;
+  if(b.dataset.news === "close"){ dismissDigest(); return; }
+  const item = NEWS[+b.dataset.news];
+  if(item && item.go){ dismissDigest(); applyState(item.go); }
+});
+
+/* ── герой возвращения ─────────────────────────────────────── */
+const savePt = `<div class="savept">
+  <span class="th" id="savePtTh"></span>
+  <span class="tx">
+    <span class="h">Сохранение 02:14 · Глава 5, Кузня Сумерек</span>
+    <span class="d">41 минуту назад · выгружено · 148 МБ</span>
+  </span>
+  <button class="alt">Другое</button>
+</div>`;
+HERO.ret = {
+  eyebrow:"Вы остановились 41 минуту назад",
+  title:"Пепельный<b>Предел</b>",
+  blurb:"Перед вторым горном. Сохранение цело и выгружено — продолжите с той же секунды, на которой закрыли игру.",
+  chips:[["Установлена",1],["v2.4.2 · обновлена"],["Глава 5"],["68.4 ГБ"]],
+  cta:"play",
+  note:savePt
+};
+
+/* ── состояние и сценарий ──────────────────────────────────── */
+STATES.push({g:"Возвращение", id:"lib-return", n:"Второй запуск", d:"дайджест и точка сохранения"});
+(() => {
+  const list = $("#demoList");
+  const head = document.createElement("div");
+  head.className = "gl"; head.textContent = "Возвращение";
+  const b1 = document.createElement("button");
+  b1.className = "demo-i"; b1.dataset.st = "lib-return";
+  b1.innerHTML = `<span class="k"></span><span class="tx"><span class="n">Второй запуск</span><span class="d">дайджест и точка сохранения</span></span>`;
+  const b2 = document.createElement("button");
+  b2.className = "demo-i"; b2.id = "demoRet";
+  b2.innerHTML = `<span class="k" style="background:var(--hot-2);box-shadow:0 0 8px var(--hot-2)"></span>
+    <span class="tx"><span class="n">Сценарий: возвращение</span><span class="d">4 шага · новости → продолжение</span></span>`;
+  b2.onclick = () => { scenKey = "ret"; flowGo(0); };
+  list.append(head, b1, b2);
+})();
+
+const RETURN_FLOW = [
+  {h:"Открыли на следующий день", d:"пять событий за ночь · герой помнит точку остановки", run(){
+    closeAdd(); setLibrary(null); newsSeen = false; pills[1].onclick = null;
+    applyState("lib-return");
+  }},
+  {h:"Поставили докачанную игру", d:"одно действие прямо из дайджеста", run(){
+    closeAdd(); setLibrary(null); applyState("lib-install");
+    dismissDigest();
+  }},
+  {h:"Дайджест разобран", d:"свернулся в плашку топбара · можно вернуть", run(){
+    closeAdd(); setLibrary(null); applyState("lib-return");
+    dismissDigest();
+  }},
+  {h:"Продолжили с того же места", d:"удержание · ритуал · Глава 5, 02:14", run(){
+    closeAdd(); setLibrary(null); applyState("lib-return"); dismissDigest();
+    setTimeout(() => launch(GAMES[0]), 140);
+  }}
+];
+const SCEN = {first: FLOW, ret: RETURN_FLOW};
+let scenKey = "first";
+
+/* the rail's thumbnails share the generated covers */
+$("#savePtTh").style.backgroundImage = `url(${byId("ashen").cover})`;
+$("#railT1 .th").style.backgroundImage = `url(${byId("orbita").cover})`;
+$("#railT2 .th").style.backgroundImage = `url(${byId("halc2").cover})`;
 
 /* keep republished views alive where the platform supports it */
 try{window.claude?.hot?.snapshot?.(()=>({skin:document.documentElement.dataset.skin||"magma",cur}))}catch(_){}
