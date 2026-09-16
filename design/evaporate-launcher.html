@@ -1461,6 +1461,178 @@ h1.title b{font-weight:800;display:block}
 /* офлайн */
 .fr-offline .fnow,.fr-offline .seedrow{opacity:.42;filter:saturate(.3)}
 
+/* ═══ НАСТРОЙКИ ════════════════════════════════════════════════
+   Раньше это была плоская сетка панелей, которая росла пристройками.
+   Теперь — липкая навигация, поиск по строкам и разделы, которые
+   можно назвать вслух.
+   ══════════════════════════════════════════════════════════════ */
+.set-wrap{display:grid;grid-template-columns:212px minmax(0,1fr);gap:var(--pad);padding:var(--pad)}
+@media(max-width:880px){.set-wrap{grid-template-columns:1fr}.set-nav{position:static!important}}
+.set-nav{position:sticky;top:var(--pad);align-self:start;display:flex;flex-direction:column;gap:14px}
+.set-find{
+  display:flex;align-items:center;gap:9px;height:38px;padding:0 12px;
+  border:1px solid var(--line);border-radius:var(--r-2);background:rgba(255,255,255,.025);
+  transition:border-color .22s var(--ease);
+}
+.set-find:focus-within{border-color:rgb(var(--glow-hot)/.5);box-shadow:0 0 20px rgb(var(--glow-hot)/.16)}
+.set-find svg{width:15px;height:15px;color:var(--ink-4);flex:0 0 auto}
+.set-find input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--ink);font:inherit;font-size:13px}
+.set-find input::placeholder{color:var(--ink-4)}
+#setNav{display:flex;flex-direction:column;gap:2px}
+.snav{
+  display:flex;align-items:center;gap:11px;padding:8px 11px;border-radius:var(--r-2);
+  color:var(--ink-3);font-size:13px;text-align:left;transition:.2s var(--ease);position:relative;
+}
+.snav svg{width:15px;height:15px;flex:0 0 auto;opacity:.8}
+.snav:hover{color:var(--ink);background:rgba(255,255,255,.045)}
+.snav.on{color:var(--ink);background:rgb(var(--glow-hot)/.1)}
+.snav.on::before{
+  content:"";position:absolute;left:0;top:50%;translate:0 -50%;width:2px;height:17px;border-radius:0 2px 2px 0;
+  background:linear-gradient(180deg,var(--hot-2),var(--hot-1));box-shadow:0 0 10px rgb(var(--glow-hot)/.9);
+}
+.snav.on svg{color:var(--hot-2);opacity:1}
+.snav[hidden]{display:none!important}
+.set-ver{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);line-height:1.7;padding:0 11px}
+
+.set-body{display:flex;flex-direction:column;gap:30px;min-width:0}
+.set-sec{scroll-margin-top:var(--pad)}
+.set-sec[hidden]{display:none!important}
+.set-sec .panel + .panel{margin-top:13px}
+.set-h{display:flex;align-items:baseline;gap:14px;margin-bottom:14px}
+.set-h h2{margin:0;font-family:var(--font-dsp);font-weight:300;font-size:clamp(20px,2.4vw,28px);letter-spacing:-.025em}
+.set-h .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.reset{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4);transition:color .2s}
+.reset:hover{color:var(--hot-2)}
+.setnote{font-size:12.5px;color:var(--ink-4);margin:8px 0 14px;max-width:62ch}
+.opt[hidden]{display:none!important}
+.opt mark{background:rgb(var(--glow-hot)/.26);color:var(--hot-2);border-radius:3px;padding:0 2px}
+.set-empty{
+  display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:60px 20px;
+  border:1px dashed var(--line-soft);border-radius:var(--r-4);color:var(--ink-3);
+}
+.set-empty svg{width:24px;height:24px;color:var(--ink-4)}
+.set-empty .h{font-size:14px;color:var(--ink-2)}
+.set-empty .d{font-family:var(--font-mono);font-size:11px;color:var(--ink-4)}
+
+/* папки с играми */
+.folders{display:flex;flex-direction:column;gap:9px}
+.folder{
+  display:flex;align-items:center;gap:12px;padding:11px 13px;
+  border:1px solid var(--line-soft);border-radius:var(--r-2);background:rgba(255,255,255,.022);
+}
+.folder > svg{width:17px;height:17px;color:var(--ink-3);flex:0 0 auto}
+.folder .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.folder .p{font-family:var(--font-mono);font-size:12.5px}
+.folder .s{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);margin-top:4px}
+.fbar{display:block;height:4px;border-radius:99px;background:rgba(255,255,255,.07);margin-top:8px;overflow:hidden}
+.fbar i{display:block;height:100%;background:linear-gradient(90deg,var(--hot-deep),var(--hot-2))}
+.fbar i.warn{background:linear-gradient(90deg,#4a3410,var(--warn))}
+.folder .free{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-4);text-align:right;line-height:1.6;flex:0 0 auto}
+.folder .free b{color:var(--ok);font-weight:500;font-size:12px}
+
+/* расписание скорости — 24 часа, красится курсором */
+.sched{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;user-select:none}
+.sched button{
+  height:42px;border-radius:5px;background:rgba(255,255,255,.07);position:relative;
+  transition:background .18s,box-shadow .18s;
+  font-family:var(--font-mono);font-size:8.5px;color:var(--ink-4);
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;
+}
+.sched button:hover{background:rgba(255,255,255,.13)}
+.sched button[aria-pressed="true"]{
+  background:linear-gradient(180deg,var(--hot-1),var(--hot-deep));color:#2a1000;
+  box-shadow:0 0 14px rgb(var(--glow-hot)/.4),inset 0 1px 0 rgba(255,255,255,.3);
+}
+.sched button.now::after{
+  content:"";position:absolute;left:50%;top:-6px;translate:-50% 0;width:4px;height:4px;border-radius:50%;
+  background:var(--cool);box-shadow:0 0 8px var(--cool);
+}
+.sched-lg{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:12px;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4)}
+.sched-lg span{display:flex;align-items:center;gap:7px}
+.sched-lg i{width:11px;height:11px;border-radius:3px;background:rgba(255,255,255,.1)}
+.sched-lg i.full{background:linear-gradient(180deg,var(--hot-1),var(--hot-deep))}
+.sched-lg .sp{flex:1}
+.sched-lg .now{color:var(--cool)}
+@media(max-width:700px){.sched button{height:34px;font-size:0;padding:0}}
+
+/* клавиши */
+.keys{display:flex;flex-direction:column;margin-top:10px}
+.krow{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line-soft)}
+.krow:last-child{border-bottom:0}
+.krow .kn{flex:1;min-width:0;font-size:13px}
+.krow .kd{font-size:12px;color:var(--ink-4);margin-top:3px}
+.krow .kt{display:flex;flex-direction:column;flex:1;min-width:0}
+.krow .kk{display:flex;gap:5px;flex:0 0 auto}
+.krow .kk em{
+  font-style:normal;font-family:var(--font-mono);font-size:10.5px;padding:4px 8px;border-radius:5px;
+  background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--ink-2);
+}
+.krow:hover .kk em{border-color:rgb(var(--glow-hot)/.45);color:var(--hot-2)}
+
+/* ═══ ПРОФИЛЬ ══════════════════════════════════════════════════
+   Для торрент-лаунчера репутация — это рейтинг раздачи, а не
+   «уровень». Поэтому он стоит четвёртой плашкой и повторяется
+   отдельной панелью, а год игры нарисован тепловой картой —
+   тем же приёмом, что активность роя в загрузках.
+   ══════════════════════════════════════════════════════════════ */
+.me{position:relative}
+.me[aria-current="true"]{box-shadow:0 0 0 2px var(--void),0 0 0 4px rgb(var(--glow-hot)/.7),0 6px 20px rgb(var(--glow-hot)/.4)}
+.me .tip{
+  position:absolute;left:52px;top:50%;translate:0 -50%;padding:5px 10px;border-radius:var(--r-1);
+  white-space:nowrap;background:var(--raised);border:1px solid var(--line);
+  font-family:var(--font-ui);font-size:12px;font-weight:400;color:var(--ink-2);
+  opacity:0;pointer-events:none;transition:opacity .18s;z-index:20;
+}
+.me:hover .tip{opacity:1}
+@media(max-width:760px){.me .tip{display:none}}
+
+.me-head{position:relative;margin:var(--pad) var(--pad) 0;border-radius:var(--r-5);overflow:hidden;border:1px solid var(--line)}
+.me-art{position:absolute;inset:0;background-size:cover;background-position:center}
+.me-head::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--sub) 2%,rgba(10,11,17,.86) 42%,rgba(10,11,17,.3))}
+.me-body{position:relative;z-index:2;display:flex;align-items:center;gap:clamp(16px,2.4vw,26px);padding:clamp(20px,3vw,32px);flex-wrap:wrap}
+.me-av{
+  width:84px;height:84px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+  font-family:var(--font-dsp);font-size:26px;font-weight:600;color:#0b0b10;
+  background:conic-gradient(from 200deg,var(--hot-2),var(--hot-1),var(--arc),var(--hot-2));
+  box-shadow:0 0 0 2px rgba(255,255,255,.16),0 12px 40px rgb(var(--glow-hot)/.4);
+}
+.me-tx{flex:1;min-width:0}
+.me-acts{display:flex;flex-direction:column;gap:8px;flex:0 0 auto}
+
+.me-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:var(--r-4);overflow:hidden}
+.mstat{background:var(--surface);padding:16px 18px}
+.mstat .k{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)}
+.mstat .v{font-family:var(--font-dsp);font-weight:300;font-size:clamp(26px,3vw,36px);line-height:1;letter-spacing:-.03em;margin-top:10px;font-variant-numeric:tabular-nums}
+.mstat .v u{text-decoration:none;font-family:var(--font-mono);font-size:.38em;color:var(--ink-4);margin-left:6px}
+.mstat .s{font-family:var(--font-mono);font-size:10px;color:var(--ink-3);margin-top:9px}
+.mstat.hot{background:linear-gradient(160deg,rgb(var(--glow-hot)/.1),var(--surface) 62%)}
+.mstat.hot .v{color:var(--hot-2)}
+
+/* год игры */
+.year{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,1fr);gap:3px;overflow-x:auto;padding-bottom:4px}
+.year i{width:11px;height:11px;border-radius:2.5px;background:rgba(255,255,255,.05)}
+.year i.l1{background:rgb(var(--glow-hot)/.28)}
+.year i.l2{background:rgb(var(--glow-hot)/.5)}
+.year i.l3{background:rgb(var(--glow-hot)/.75)}
+.year i.l4{background:var(--hot-2);box-shadow:0 0 7px rgb(var(--glow-hot)/.65)}
+.year-lg{display:flex;align-items:center;gap:7px;margin-top:14px;font-family:var(--font-mono);font-size:10px;color:var(--ink-4);flex-wrap:wrap}
+.year-lg i{width:11px;height:11px;border-radius:2.5px;background:rgba(255,255,255,.05)}
+.year-lg i.l1{background:rgb(var(--glow-hot)/.28)}
+.year-lg i.l2{background:rgb(var(--glow-hot)/.5)}
+.year-lg i.l3{background:rgb(var(--glow-hot)/.75)}
+.year-lg i.l4{background:var(--hot-2)}
+.year-lg .sp{flex:1;min-width:14px}
+
+/* часы по играм */
+.tophrs{display:flex;align-items:center;gap:12px;padding:9px 0}
+.tophrs + .tophrs{border-top:1px solid var(--line-soft)}
+.tophrs .cv{width:30px;height:39px;border-radius:6px;background:var(--raised) center/cover;border:1px solid var(--line);flex:0 0 auto}
+.tophrs .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.tophrs .n{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tophrs .hb{height:5px;border-radius:99px;background:rgba(255,255,255,.07);margin-top:8px;overflow:hidden}
+.tophrs .hb i{display:block;height:100%;background:linear-gradient(90deg,var(--hot-deep),var(--hot-2));box-shadow:0 0 10px rgb(var(--glow-hot)/.4)}
+.tophrs .h{font-family:var(--font-mono);font-size:12.5px;color:var(--ink-2);flex:0 0 auto;font-variant-numeric:tabular-nums}
+
 </style>
 
 <!-- ── SVG defs: filters + the icon system ─────────────────────── -->
@@ -1552,7 +1724,7 @@ h1.title b{font-weight:800;display:block}
     </nav>
     <div class="rail-sp"></div>
     <button class="rbtn" data-go="friends"><svg><use href="#i-friends"/></svg><span class="tip">Друзья · 6 в сети</span></button>
-    <div class="me">ВВ</div>
+    <button class="me" data-go="profile" aria-label="Профиль"><span>ВВ</span><span class="tip">Профиль · Виталий В.</span></button>
   </aside>
 
   <!-- ── stage ─────────────────────────────────────────────── -->
@@ -1795,72 +1967,223 @@ h1.title b{font-weight:800;display:block}
 
       <!-- ══ SETTINGS ═════════════════════════════════════════ -->
       <section class="screen" id="sc-settings">
-        <div class="dl-head" style="grid-template-columns:1fr">
-          <div class="panel">
-            <div class="glowcorner"></div>
-            <div class="p-lab">Облик</div>
-            <div style="font-family:var(--font-dsp);font-weight:300;font-size:26px;letter-spacing:-.02em;margin-top:6px">Тема оформления</div>
-            <div class="skins">
-              <button class="skin" data-skin="magma" aria-pressed="true">
-                <div class="swatch" style="background:linear-gradient(120deg,#06060a,#3a1403 45%,#ff7a18 78%,#ffc24d)"></div>
-                <div class="nm">Magma</div><div class="ds">янтарь · плазма</div>
-              </button>
-              <button class="skin" data-skin="nebula" aria-pressed="false">
-                <div class="swatch" style="background:linear-gradient(120deg,#07050d,#2c0a50 45%,#c15bff 76%,#ff4fd8)"></div>
-                <div class="nm">Nebula</div><div class="ds">фиалка · магента</div>
-              </button>
-              <button class="skin" data-skin="cryo" aria-pressed="false">
-                <div class="swatch" style="background:linear-gradient(120deg,#04070d,#0b3f8f 45%,#3b82f6 76%,#22d3ee)"></div>
-                <div class="nm">Cryo</div><div class="ds">лёд · искра</div>
-              </button>
+        <div class="set-wrap">
+          <aside class="set-nav">
+            <div class="set-find">
+              <svg><use href="#i-search"/></svg>
+              <input id="setQ" placeholder="Найти настройку" autocomplete="off" spellcheck="false">
             </div>
-          </div>
-        </div>
+            <nav id="setNav">
+              <button class="snav on" data-sec="look"><svg><use href="#i-set"/></svg>Облик</button>
+              <button class="snav" data-sec="fx"><svg><use href="#i-boost"/></svg>Эффекты</button>
+              <button class="snav" data-sec="snd"><svg><use href="#i-sound"/></svg>Звук</button>
+              <button class="snav" data-sec="lib"><svg><use href="#i-lib"/></svg>Библиотека</button>
+              <button class="snav" data-sec="net"><svg><use href="#i-dl"/></svg>Загрузки</button>
+              <button class="snav" data-sec="seed"><svg><use href="#i-seed"/></svg>Раздача</button>
+              <button class="snav" data-sec="sv"><svg><use href="#i-save"/></svg>Сохранения</button>
+              <button class="snav" data-sec="start"><svg><use href="#i-power"/></svg>Запуск</button>
+              <button class="snav" data-sec="keys"><svg><use href="#i-arrow"/></svg>Клавиши</button>
+              <button class="snav" data-sec="about"><svg><use href="#i-info"/></svg>О программе</button>
+            </nav>
+            <div class="set-ver">Evaporate 3.1.0<br>движок раздач 2.8.4</div>
+          </aside>
 
-        <div class="sec">
-          <div class="sec-h"><h2>Эффекты и производительность</h2><span class="rule"></span></div>
-          <div class="set-grid">
-            <div class="panel">
-              <div class="p-lab">Атмосфера</div>
-              <div style="margin-top:6px">
-                <div class="opt"><div class="txt"><div class="n">Живой фон (шейдер)</div><div class="d">Объёмный плюм пара за интерфейсом</div></div><button class="sw" data-fx="bg" aria-pressed="true" aria-label="Живой фон"></button></div>
-                <div class="opt"><div class="txt"><div class="n">Искры и частицы</div><div class="d">Восходящие угли, аддитивное смешивание</div></div><button class="sw" data-fx="sparks" aria-pressed="true" aria-label="Искры"></button></div>
-                <div class="opt"><div class="txt"><div class="n">Параллакс обложек</div><div class="d">Четыре слоя глубины, реакция на курсор</div></div><button class="sw" data-fx="para" aria-pressed="true" aria-label="Параллакс"></button></div>
-                <div class="opt"><div class="txt"><div class="n">Плёночное зерно</div><div class="d">5 % перекрытия, убирает бандинг</div></div><button class="sw" data-fx="grain" aria-pressed="true" aria-label="Зерно"></button></div>
-              </div>
+          <div class="set-body" id="setBody">
+            <div class="set-empty" id="setEmpty" hidden>
+              <svg><use href="#i-search"/></svg>
+              <span class="h">Ничего не нашлось</span>
+              <span class="d">Попробуйте «скорость», «порт», «облако» или «ритуал»</span>
             </div>
-            <div class="panel">
-              <div class="p-lab">Качество</div>
-              <div style="margin-top:6px">
-                <div class="opt"><div class="txt"><div class="n">Уровень эффектов</div><div class="d">Влияет на плотность частиц и разрешение шейдера</div></div>
-                  <div class="seg" id="qseg"><button aria-pressed="false">Эко</button><button aria-pressed="true">Полное</button><button aria-pressed="false">Макс</button></div></div>
-                <div class="opt"><div class="txt"><div class="n">Ритуал запуска</div><div class="d">Испарение интерфейса и ударная волна при старте</div></div><button class="sw" data-fx="ritual" aria-pressed="true" aria-label="Ритуал запуска"></button></div>
-                <div class="opt"><div class="txt"><div class="n">Удержание кнопки «Играть»</div><div class="d">Защита от случайного запуска · 620 мс</div></div><button class="sw" data-fx="hold" aria-pressed="true" aria-label="Удержание"></button></div>
-                <div class="opt"><div class="txt"><div class="n">Ограничить до 30 к/с в фоне</div><div class="d">Экономит батарею, когда окно неактивно</div></div><button class="sw" data-fx="idle" aria-pressed="true" aria-label="Ограничение кадров"></button></div>
+
+            <!-- ── облик ── -->
+            <section class="set-sec" id="set-look">
+              <div class="set-h"><h2>Облик</h2><span class="rule"></span></div>
+              <div class="panel">
+                <div class="glowcorner"></div>
+                <div class="p-lab">Тема оформления</div>
+                <div class="skins">
+                  <button class="skin" data-skin="magma" aria-pressed="true">
+                    <div class="swatch" style="background:linear-gradient(120deg,#06060a,#3a1403 45%,#ff7a18 78%,#ffc24d)"></div>
+                    <div class="nm">Magma</div><div class="ds">янтарь · плазма</div>
+                  </button>
+                  <button class="skin" data-skin="nebula" aria-pressed="false">
+                    <div class="swatch" style="background:linear-gradient(120deg,#07050d,#2c0a50 45%,#c15bff 76%,#ff4fd8)"></div>
+                    <div class="nm">Nebula</div><div class="ds">фиалка · магента</div>
+                  </button>
+                  <button class="skin" data-skin="cryo" aria-pressed="false">
+                    <div class="swatch" style="background:linear-gradient(120deg,#04070d,#0b3f8f 45%,#3b82f6 76%,#22d3ee)"></div>
+                    <div class="nm">Cryo</div><div class="ds">лёд · искра</div>
+                  </button>
+                </div>
+                <div style="margin-top:8px">
+                  <div class="opt"><div class="txt"><div class="n">Плотность интерфейса</div><div class="d">Влияет на высоту строк и размер обложек</div></div>
+                    <div class="seg"><button aria-pressed="false">Плотно</button><button aria-pressed="true">Обычно</button><button aria-pressed="false">Просторно</button></div></div>
+                  <div class="opt"><div class="txt"><div class="n">Язык интерфейса</div><div class="d">Названия игр остаются как в раздаче</div></div><span class="chip hot">Русский</span></div>
+                </div>
               </div>
-            </div>
-            <div class="panel">
-              <div class="p-lab">Движок загрузок</div>
-              <div style="margin-top:6px">
-                <div class="opt"><div class="txt"><div class="n">Предел приёма</div><div class="d">0 — без ограничения</div></div><span class="chip">0 МБ/с</span></div>
-                <div class="opt"><div class="txt"><div class="n">Предел отдачи</div><div class="d">Держим рой живым</div></div><span class="chip">2 МБ/с</span></div>
-                <div class="opt"><div class="txt"><div class="n">Порт входящих</div><div class="d">UPnP · проброс подтверждён</div></div><span class="chip hot">51413</span></div>
-                <div class="opt"><div class="txt"><div class="n">Шифрование протокола</div><div class="d">Требовать у всех пиров</div></div><button class="sw" data-fx="enc" aria-pressed="true" aria-label="Шифрование"></button></div>
+            </section>
+
+            <!-- ── эффекты ── -->
+            <section class="set-sec" id="set-fx">
+              <div class="set-h"><h2>Эффекты</h2><span class="rule"></span><button class="reset">Сбросить</button></div>
+              <div class="panel">
+                <div class="p-lab">Атмосфера</div>
+                <div style="margin-top:6px">
+                  <div class="opt"><div class="txt"><div class="n">Живой фон (шейдер)</div><div class="d">Объёмный плюм пара за интерфейсом</div></div><button class="sw" data-fx="bg" aria-pressed="true" aria-label="Живой фон"></button></div>
+                  <div class="opt"><div class="txt"><div class="n">Искры и частицы</div><div class="d">Восходящие угли, аддитивное смешивание</div></div><button class="sw" data-fx="sparks" aria-pressed="true" aria-label="Искры"></button></div>
+                  <div class="opt"><div class="txt"><div class="n">Параллакс обложек</div><div class="d">Четыре слоя глубины, реакция на курсор</div></div><button class="sw" data-fx="para" aria-pressed="true" aria-label="Параллакс"></button></div>
+                  <div class="opt"><div class="txt"><div class="n">Плёночное зерно</div><div class="d">5 % перекрытия, убирает бандинг на градиентах</div></div><button class="sw" data-fx="grain" aria-pressed="true" aria-label="Зерно"></button></div>
+                </div>
               </div>
-            </div>
-            <div class="panel">
-              <div class="p-lab">Звук</div>
-              <div style="margin-top:6px">
-                <div class="opt"><div class="txt"><div class="n">Звуковой слой</div><div class="d">Выключен по умолчанию: лаунчер не должен шуметь на первом запуске</div></div><button class="sw" id="sndOn" aria-pressed="false" aria-label="Звук"></button></div>
-                <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Громкость</div><div class="d">Ритуал запуска на 6 дБ громче интерфейса</div></div>
-                  <div class="seg" id="sndVol"><button aria-pressed="false">Тихо</button><button aria-pressed="true">Средне</button><button aria-pressed="false">Громко</button></div></div>
-                <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Интерфейс</div><div class="d">Наведение и нажатие · 200 Гц – 4 кГц · до 120 мс</div></div><button class="sw" data-snd-cat="ui" aria-pressed="true" aria-label="Звуки интерфейса"></button></div>
-                <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">События</div><div class="d">Готово, ошибка, испарение дайджеста · до 400 мс</div></div><button class="sw" data-snd-cat="evt" aria-pressed="true" aria-label="Звуки событий"></button></div>
-                <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Удержание и ритуал</div><div class="d">Всё ниже 120 Гц принадлежит запуску</div></div><button class="sw" data-snd-cat="ritual" aria-pressed="true" aria-label="Звук ритуала"></button></div>
-                <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Фоновая отдушина</div><div class="d">Тихий дышащий шум ниже 210 Гц, пока окно активно</div></div><button class="sw" id="sndAmb" aria-pressed="false" aria-label="Фоновый звук"></button></div>
-                <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Проверить</div><div class="d">Все голоса синтезируются на месте, ни одного файла</div></div><button class="mini" id="sndTest"><svg><use href="#i-sound"/></svg>Сыграть</button></div>
+              <div class="panel">
+                <div class="p-lab">Качество и запуск</div>
+                <div style="margin-top:6px">
+                  <div class="opt"><div class="txt"><div class="n">Уровень эффектов</div><div class="d">Плотность частиц и разрешение шейдера</div></div>
+                    <div class="seg" id="qseg"><button aria-pressed="false">Эко</button><button aria-pressed="true">Полное</button><button aria-pressed="false">Макс</button></div></div>
+                  <div class="opt"><div class="txt"><div class="n">Ритуал запуска</div><div class="d">Испарение интерфейса и ударная волна при старте</div></div><button class="sw" data-fx="ritual" aria-pressed="true" aria-label="Ритуал запуска"></button></div>
+                  <div class="opt"><div class="txt"><div class="n">Удержание кнопки «Играть»</div><div class="d">Защита от случайного запуска · 620 мс</div></div><button class="sw" data-fx="hold" aria-pressed="true" aria-label="Удержание"></button></div>
+                  <div class="opt"><div class="txt"><div class="n">Ограничить до 30 к/с в фоне</div><div class="d">Экономит батарею, когда окно неактивно</div></div><button class="sw" data-fx="idle" aria-pressed="true" aria-label="Ограничение кадров"></button></div>
+                </div>
               </div>
-            </div>
+            </section>
+
+            <!-- ── звук ── -->
+            <section class="set-sec" id="set-snd">
+              <div class="set-h"><h2>Звук</h2><span class="rule"></span></div>
+              <div class="panel">
+                <div class="p-lab">Слой и классы</div>
+                <div style="margin-top:6px">
+                  <div class="opt"><div class="txt"><div class="n">Звуковой слой</div><div class="d">Выключен по умолчанию: лаунчер не должен шуметь на первом запуске</div></div><button class="sw" id="sndOn" aria-pressed="false" aria-label="Звук"></button></div>
+                  <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Громкость</div><div class="d">Ритуал запуска на 6 дБ громче интерфейса</div></div>
+                    <div class="seg" id="sndVol"><button aria-pressed="false">Тихо</button><button aria-pressed="true">Средне</button><button aria-pressed="false">Громко</button></div></div>
+                  <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Интерфейс</div><div class="d">Наведение и нажатие · 200 Гц – 4 кГц · до 120 мс</div></div><button class="sw" data-snd-cat="ui" aria-pressed="true" aria-label="Звуки интерфейса"></button></div>
+                  <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">События</div><div class="d">Готово, ошибка, испарение дайджеста · до 400 мс</div></div><button class="sw" data-snd-cat="evt" aria-pressed="true" aria-label="Звуки событий"></button></div>
+                  <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Удержание и ритуал</div><div class="d">Всё ниже 120 Гц принадлежит запуску</div></div><button class="sw" data-snd-cat="ritual" aria-pressed="true" aria-label="Звук ритуала"></button></div>
+                  <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Фоновая отдушина</div><div class="d">Тихий дышащий шум ниже 210 Гц, пока окно активно</div></div><button class="sw" id="sndAmb" aria-pressed="false" aria-label="Фоновый звук"></button></div>
+                  <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Проверить</div><div class="d">Все девять голосов синтезируются на месте, ни одного файла</div></div><button class="mini" id="sndTest"><svg><use href="#i-sound"/></svg>Сыграть</button></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ── библиотека ── -->
+            <section class="set-sec" id="set-lib">
+              <div class="set-h"><h2>Библиотека</h2><span class="rule"></span></div>
+              <div class="panel">
+                <div class="p-lab">Где лежат игры</div>
+                <div class="folders" style="margin-top:12px">
+                  <div class="folder"><svg><use href="#i-drive"/></svg>
+                    <span class="tx"><span class="p">D:\Игры</span><span class="s">8 игр · 284 ГБ · сюда ставится новое</span>
+                      <span class="fbar"><i style="width:57%"></i></span></span>
+                    <span class="free">свободно<br><b>214 ГБ</b></span>
+                    <button class="ico" aria-label="Убрать папку"><svg><use href="#i-x"/></svg></button></div>
+                  <div class="folder"><svg><use href="#i-drive"/></svg>
+                    <span class="tx"><span class="p">E:\Архив\Игры</span><span class="s">4 игры · 96 ГБ · только чтение</span>
+                      <span class="fbar"><i style="width:88%" class="warn"></i></span></span>
+                    <span class="free">свободно<br><b>52 ГБ</b></span>
+                    <button class="ico" aria-label="Убрать папку"><svg><use href="#i-x"/></svg></button></div>
+                </div>
+                <button class="mini" style="margin-top:12px"><svg><use href="#i-plus"/></svg>Добавить папку</button>
+                <div style="margin-top:8px">
+                  <div class="opt"><div class="txt"><div class="n">Сканировать при запуске</div><div class="d">Ищет новые игры в папках выше · 1–2 секунды</div></div><button class="sw" aria-pressed="true" aria-label="Сканировать"></button></div>
+                  <div class="opt"><div class="txt"><div class="n">Обложки</div><div class="d">Если в раздаче нет картинки — рисуем свою</div></div>
+                    <div class="seg"><button aria-pressed="false">Из раздачи</button><button aria-pressed="true">Генерировать</button><button aria-pressed="false">Без обложек</button></div></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ── загрузки ── -->
+            <section class="set-sec" id="set-net">
+              <div class="set-h"><h2>Загрузки</h2><span class="rule"></span></div>
+              <div class="panel">
+                <div class="p-lab">Расписание скорости</div>
+                <p class="setnote">Нажмите или проведите по часам. Янтарные — без ограничения, серые — предел 2 МБ/с.</p>
+                <div class="sched" id="sched" role="group" aria-label="Расписание скорости по часам"></div>
+                <div class="sched-lg">
+                  <span><i class="full"></i>без ограничения</span>
+                  <span><i></i>предел 2 МБ/с</span>
+                  <span class="now">сейчас 03:00</span>
+                </div>
+                <div style="margin-top:12px">
+                  <div class="opt"><div class="txt"><div class="n">Предел приёма</div><div class="d">Действует в серые часы</div></div><span class="chip">2 МБ/с</span></div>
+                  <div class="opt"><div class="txt"><div class="n">Одновременных загрузок</div><div class="d">Больше трёх — диск становится узким местом</div></div>
+                    <div class="seg"><button aria-pressed="false">1</button><button aria-pressed="false">2</button><button aria-pressed="true">3</button><button aria-pressed="false">5</button></div></div>
+                  <div class="opt"><div class="txt"><div class="n">Порт входящих</div><div class="d">UPnP · проброс подтверждён 2 минуты назад</div></div><span class="chip hot">51413</span></div>
+                  <div class="opt"><div class="txt"><div class="n">Шифрование протокола</div><div class="d">Требовать у всех пиров</div></div><button class="sw" data-fx="enc" aria-pressed="true" aria-label="Шифрование"></button></div>
+                  <div class="opt"><div class="txt"><div class="n">После докачки</div><div class="d">Проверка целостности всегда обязательна</div></div>
+                    <div class="seg"><button aria-pressed="true">Установить</button><button aria-pressed="false">Спросить</button><button aria-pressed="false">Ничего</button></div></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ── раздача ── -->
+            <section class="set-sec" id="set-seed">
+              <div class="set-h"><h2>Раздача</h2><span class="rule"></span></div>
+              <div class="panel">
+                <div class="p-lab">Сколько отдавать</div>
+                <div style="margin-top:6px">
+                  <div class="opt"><div class="txt"><div class="n">Раздавать до рейтинга</div><div class="d">Ваш текущий — 2.41. Ниже 1.0 рой перестаёт вас любить</div></div>
+                    <div class="seg"><button aria-pressed="false">1.0</button><button aria-pressed="true">2.0</button><button aria-pressed="false">Без предела</button></div></div>
+                  <div class="opt"><div class="txt"><div class="n">Ограничивать отдачу в игре</div><div class="d">Чтобы раздача не ела пинг</div></div><span class="chip">1 МБ/с</span></div>
+                  <div class="opt"><div class="txt"><div class="n">Останавливать раздачу при запуске</div><div class="d">Полностью, а не по лимиту</div></div><button class="sw" aria-pressed="false" aria-label="Останавливать раздачу"></button></div>
+                  <div class="opt"><div class="txt"><div class="n">Раздавать друзьям без ограничений</div><div class="d">Лимит не действует на тех, кто у вас в друзьях</div></div><button class="sw" aria-pressed="true" aria-label="Друзьям без ограничений"></button></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ── сохранения ── -->
+            <section class="set-sec" id="set-sv">
+              <div class="set-h"><h2>Сохранения</h2><span class="rule"></span></div>
+              <div class="panel">
+                <div class="p-lab">Облако и защита</div>
+                <div style="margin-top:6px">
+                  <div class="opt"><div class="txt"><div class="n">Выгружать в облако</div><div class="d">4.1 ГБ из 20 занято</div></div><button class="sw" aria-pressed="true" aria-label="Облако"></button></div>
+                  <div class="opt"><div class="txt"><div class="n">Как часто</div><div class="d">Между точками игра не трогается</div></div>
+                    <div class="seg"><button aria-pressed="false">1 мин</button><button aria-pressed="true">5 мин</button><button aria-pressed="false">15 мин</button></div></div>
+                  <div class="opt"><div class="txt"><div class="n">Шифрование на устройстве</div><div class="d">Ключ не покидает этот компьютер</div></div><span class="chip hot">AES-256</span></div>
+                  <div class="opt"><div class="txt"><div class="n">Сколько точек хранить</div><div class="d">Старые уходят в корзину на 30 дней</div></div>
+                    <div class="seg"><button aria-pressed="false">10</button><button aria-pressed="true">50</button><button aria-pressed="false">Все</button></div></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ── запуск ── -->
+            <section class="set-sec" id="set-start">
+              <div class="set-h"><h2>Запуск</h2><span class="rule"></span></div>
+              <div class="panel">
+                <div class="p-lab">Поведение окна</div>
+                <div style="margin-top:6px">
+                  <div class="opt"><div class="txt"><div class="n">Запускать вместе с системой</div><div class="d">Свёрнутым, чтобы докачки не ждали вас</div></div><button class="sw" aria-pressed="true" aria-label="Автозапуск"></button></div>
+                  <div class="opt"><div class="txt"><div class="n">При закрытии окна</div><div class="d">Движок раздач продолжит работать в трее</div></div>
+                    <div class="seg"><button aria-pressed="true">Свернуть в трей</button><button aria-pressed="false">Выйти</button></div></div>
+                  <div class="opt"><div class="txt"><div class="n">Горячая клавиша оверлея</div><div class="d">Работает поверх запущенной игры</div></div><span class="chip hot">Shift + Tab</span></div>
+                  <div class="opt"><div class="txt"><div class="n">Не гасить экран в игре</div><div class="d">Пока процесс игры жив</div></div><button class="sw" aria-pressed="true" aria-label="Не гасить экран"></button></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ── клавиши ── -->
+            <section class="set-sec" id="set-keys">
+              <div class="set-h"><h2>Клавиши</h2><span class="rule"></span><button class="reset">Сбросить</button></div>
+              <div class="panel">
+                <div class="p-lab">Те же, что в строке подсказок внизу окна</div>
+                <div class="keys" id="keysList"></div>
+              </div>
+            </section>
+
+            <!-- ── о программе ── -->
+            <section class="set-sec" id="set-about">
+              <div class="set-h"><h2>О программе</h2><span class="rule"></span></div>
+              <div class="panel">
+                <div class="p-lab">Версии</div>
+                <div style="margin-top:6px">
+                  <div class="opt"><div class="txt"><div class="n">Evaporate</div><div class="d">Собрано 14 сентября 2026</div></div><span class="chip hot">3.1.0</span></div>
+                  <div class="opt"><div class="txt"><div class="n">Движок раздач</div><div class="d">DHT, PEX, шифрование протокола</div></div><span class="chip">2.8.4</span></div>
+                  <div class="opt"><div class="txt"><div class="n">Обновления</div><div class="d">Ставятся ночью, когда вы не играете</div></div>
+                    <div class="seg"><button aria-pressed="true">Автоматически</button><button aria-pressed="false">Спрашивать</button></div></div>
+                  <div class="opt"><div class="txt"><div class="n">Лицензии зависимостей</div><div class="d">14 открытых компонентов</div></div><button class="mini"><svg><use href="#i-info"/></svg>Открыть</button></div>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </section>
@@ -1916,6 +2239,90 @@ h1.title b{font-weight:800;display:block}
         <div class="sec">
           <div class="sec-h"><h2>Лента</h2><span class="count">за неделю</span><span class="rule"></span></div>
           <div class="tl feed" id="frFeed"></div>
+        </div>
+      </section>
+
+      <!-- ══ PROFILE ══════════════════════════════════════════ -->
+      <section class="screen" id="sc-profile">
+        <div class="me-head">
+          <div class="me-art" id="meArt"></div>
+          <div class="me-body">
+            <div class="me-av">ВВ</div>
+            <div class="me-tx">
+              <div class="eyebrow">В Evaporate 2 года 4 месяца</div>
+              <h1 class="title" style="font-size:clamp(28px,4vw,50px)">Виталий <b>В.</b></h1>
+              <div class="meta" style="margin-top:12px">
+                <span class="chip hot">Код: EVP-8К4М-ТРПЛ</span>
+                <span class="chip">12 друзей</span>
+                <span class="chip">КУЗНЯ · Windows 11</span>
+              </div>
+            </div>
+            <div class="me-acts">
+              <button class="mini"><svg><use href="#i-plus"/></svg>Скопировать код</button>
+              <button class="mini"><svg><use href="#i-set"/></svg>Изменить</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="me-stats">
+            <div class="mstat"><div class="k">Часов в играх</div><div class="v">1 284</div><div class="s">+17 за неделю</div></div>
+            <div class="mstat"><div class="k">Игр в библиотеке</div><div class="v">12</div><div class="s">8 установлено</div></div>
+            <div class="mstat"><div class="k">Достижений</div><div class="v">61<u>/ 140</u></div><div class="s">44 % от всех</div></div>
+            <div class="mstat hot"><div class="k">Рейтинг раздачи</div><div class="v">2,41</div><div class="s">отдано 1.4 ТБ</div></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h2>Год игры</h2><span class="count" id="meYearV"></span><span class="rule"></span></div>
+          <div class="panel">
+            <div class="year" id="meYear"></div>
+            <div class="year-lg">
+              <span>меньше</span><i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i><span>больше</span>
+              <span class="sp"></span><span id="meStreak">Самая длинная серия — 11 дней подряд</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dl-head">
+          <div class="panel">
+            <div class="p-lab">Больше всего часов</div>
+            <div id="meTop" style="margin-top:14px"></div>
+          </div>
+          <div class="panel">
+            <div class="glowcorner"></div>
+            <div class="p-lab">Отдача</div>
+            <div class="big">1,4<u>ТБ отдано</u></div>
+            <div class="ratio" style="margin-top:16px"><i style="width:71%"></i></div>
+            <div class="stats" style="margin-top:12px">
+              <span class="st"><svg><use href="#i-seed"/></svg>отдано<b>1.4 ТБ</b></span>
+              <span class="st"><svg><use href="#i-dl"/></svg>получено<b>581 ГБ</b></span>
+            </div>
+            <div class="cta-note cool" style="margin-top:14px"><svg><use href="#i-peers"/></svg>На каждый скачанный гигабайт вы вернули рою 2.41</div>
+            <div class="p-lab" style="margin-top:20px">Кому отдали больше всего</div>
+            <div style="margin-top:8px" id="meSeeded"></div>
+          </div>
+        </div>
+
+        <div class="dl-head">
+          <div class="panel">
+            <div class="p-lab">Недавние достижения</div>
+            <div class="achgrid" style="margin-top:12px" id="meAch"></div>
+          </div>
+          <div class="panel">
+            <div class="p-lab">Что видят друзья</div>
+            <div style="margin-top:6px">
+              <div class="opt"><div class="txt"><div class="n">Во что я играю сейчас</div><div class="d">Появляется в их разделе «Сейчас в игре»</div></div><button class="sw" aria-pressed="true" aria-label="Показывать игру"></button></div>
+              <div class="opt"><div class="txt"><div class="n">Мои часы и достижения</div><div class="d">Только друзьям, никогда публично</div></div><button class="sw" aria-pressed="true" aria-label="Показывать часы"></button></div>
+              <div class="opt"><div class="txt"><div class="n">Что я раздаю</div><div class="d">Друзья смогут качать у вас напрямую</div></div><button class="sw" aria-pressed="true" aria-label="Показывать раздачу"></button></div>
+              <div class="opt"><div class="txt"><div class="n">Находить меня по коду</div><div class="d">Выключите, и добавить вас сможет только тот, кому вы написали сами</div></div><button class="sw" aria-pressed="true" aria-label="Поиск по коду"></button></div>
+            </div>
+            <div class="p-lab" style="margin-top:20px">Устройства</div>
+            <div style="margin-top:8px">
+              <div class="opt"><svg style="width:18px;height:18px;color:var(--ink-3)"><use href="#i-pc"/></svg><div class="txt"><div class="n">КУЗНЯ</div><div class="d">Этот компьютер · 1 106 часов</div></div><span class="dev sync">активно</span></div>
+              <div class="opt"><svg style="width:18px;height:18px;color:var(--ink-3)"><use href="#i-lap"/></svg><div class="txt"><div class="n">ДОРОГА</div><div class="d">Linux · 178 часов · 2 часа назад</div></div><span class="dev">офлайн</span></div>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -2520,19 +2927,19 @@ $("#timeline").innerHTML=SAVES.map(s=>`
   </div>`).join("");
 
 /* ── routing ───────────────────────────────────────────────── */
-const NAMES={library:"Библиотека",downloads:"Загрузки",saves:"Сохранения",settings:"Настройки",friends:"Друзья"};
-const ORDER=["library","downloads","saves","settings","friends"];
+const NAMES={library:"Библиотека",downloads:"Загрузки",saves:"Сохранения",settings:"Настройки",friends:"Друзья",profile:"Профиль"};
+const ORDER=["library","downloads","saves","settings","friends","profile"];
 let cur="library";
 function go(id){
   if(!NAMES[id])return;
   if(cur!==id) Snd.play("swish");
   cur=id;
   $$(".screen").forEach(s=>s.classList.toggle("on",s.id==="sc-"+id));
-  $$(".rbtn[data-go]").forEach(b=>b.setAttribute("aria-current",String(b.dataset.go===id)));
+  $$("[data-go]").forEach(b=>b.setAttribute("aria-current",String(b.dataset.go===id)));
   $("#crumb").textContent=NAMES[id];
   const sc=$("#sc-"+id); if(sc) sc.scrollTop=0;
 }
-$$(".rbtn[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+$$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
 
 /* ── карточка игры ─────────────────────────────────────────── */
 const sheet = $("#sheet");
@@ -3138,7 +3545,7 @@ addEventListener("keydown",e=>{
   if(e.key==="/"||((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k")){e.preventDefault();cmdOpen();return}
   if(e.ctrlKey&&e.key==="Tab"){e.preventDefault();
     go(ORDER[(ORDER.indexOf(cur)+(e.shiftKey?-1:1)+ORDER.length)%ORDER.length]);return}
-  if(e.key>="1"&&e.key<="5"){go(ORDER[+e.key-1])}
+  if(e.key>="1"&&e.key<="6"){go(ORDER[+e.key-1])}
 });
 
 
@@ -3389,6 +3796,7 @@ function resetAll(){
   digestRail.style.display = "none";
   renderDL(DL.default);
   renderFriends("default"); renderInvite(false);
+  if(setQ.value){ setQ.value = ""; setFilter(""); }
   setNote(null);
   closeOvl();
 }
@@ -3450,6 +3858,13 @@ function applyState(id){
       pills[1].innerHTML = `<span class="dot"></span>Движок простаивает`;
       break;
 
+    case "pr-default":   setHero(HERO.ready); break;
+    case "set-default":  setHero(HERO.ready); break;
+    case "set-find":
+      setHero(HERO.ready);
+      setQ.value = "скорост"; setFilter("скорост");
+      setTimeout(() => setQ.focus(), 320);
+      break;
     case "fr-default":   setHero(HERO.ready); break;
     case "fr-invite":
       setHero(HERO.ready); renderInvite(true);
@@ -3501,7 +3916,8 @@ function applyState(id){
       break;
   }
   const target = scope === "dl" ? "downloads" : scope === "sv" ? "saves"
-               : scope === "fr" ? "friends" : "library";
+               : scope === "fr" ? "friends"   : scope === "pr" ? "profile"
+               : scope === "set" ? "settings" : "library";
   if(id !== "ovl") go(target);
   const cue = {"dl-nospace":"err", "dl-noseeds":"warn", "dl-hash":"warn", "dl-offline":"warn",
                "lib-offline":"warn", "fr-offline":"warn", "sv-conflict":"warn", "sv-nocloud":"warn",
@@ -4282,6 +4698,187 @@ $$("#sndVol button").forEach((b, i) => b.onclick = () => {
   Snd.play("tap");
 });
 $("#sndTest").onclick = () => { Snd.play("evaporate"); };
+
+/* ═══════════════════════════════════════════════════════════════
+   НАСТРОЙКИ — навигация, поиск и расписание
+   ═══════════════════════════════════════════════════════════════ */
+
+/* клавиши — ровно те же, что в строке подсказок внизу окна */
+const KEYS = [
+  ["Навигация по сетке",       "Перемещение между обложками и строками", ["↑","↓","←","→"]],
+  ["Выбрать",                  "Открывает карточку игры",                ["Enter"]],
+  ["Назад",                    "Закрывает карточку, диалог или оверлей", ["Esc"]],
+  ["Следующий раздел",         "По кругу: библиотека → … → профиль",     ["Ctrl","Tab"]],
+  ["Раздел по номеру",         "1 библиотека · 6 профиль",               ["1","…","6"]],
+  ["Поиск и команды",          "Игры, разделы и действия в одном списке",["/"]],
+  ["Запустить выбранное",      "Из поиска, минуя карточку",              ["Shift","Enter"]],
+  ["Оверлей поверх игры",      "Работает, пока игра запущена",           ["Shift","Tab"]],
+  ["Скриншот",                 "Сохраняется рядом с игрой",              ["F12"]],
+  ["Пауза загрузки под курсором","В разделе «Загрузки»",                 ["Space"]]
+];
+$("#keysList").innerHTML = KEYS.map(([n, d, k]) => `
+  <div class="krow"><span class="kt"><span class="kn">${n}</span><span class="kd">${d}</span></span>
+    <span class="kk">${k.map(x => `<em>${x}</em>`).join("")}</span></div>`).join("");
+
+/* расписание: янтарные часы — без ограничения */
+(() => {
+  const el = $("#sched"), NOW = 3;
+  for(let h = 0; h < 24; h++){
+    const b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(h < 8));      /* ночью не жалеем канал */
+    b.setAttribute("aria-label", h + ":00");
+    b.textContent = h % 3 === 0 ? String(h).padStart(2, "0") : "";
+    if(h === NOW) b.classList.add("now");
+    el.appendChild(b);
+  }
+  let paint = null;
+  const set = (b, v) => { b.setAttribute("aria-pressed", String(v)); };
+  el.addEventListener("pointerdown", e => {
+    const b = e.target.closest("button"); if(!b) return;
+    paint = b.getAttribute("aria-pressed") !== "true";
+    set(b, paint); el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener("pointermove", e => {
+    if(paint === null) return;
+    const b = document.elementFromPoint(e.clientX, e.clientY);
+    if(b && b.parentElement === el) set(b, paint);
+  });
+  ["pointerup", "pointercancel"].forEach(ev => el.addEventListener(ev, () => paint = null));
+})();
+
+/* липкая навигация: клик ведёт к разделу, прокрутка подсвечивает */
+const setBody = $("#setBody"), scSet = $("#sc-settings");
+$("#setNav").addEventListener("click", e => {
+  const b = e.target.closest(".snav"); if(!b) return;
+  const t = $("#set-" + b.dataset.sec);
+  if(t) scSet.scrollTo({top: t.offsetTop - 12, behavior: "smooth"});
+});
+scSet.addEventListener("scroll", () => {
+  let cur = null;
+  $$(".set-sec", setBody).forEach(s => {
+    if(s.hidden) return;
+    if(s.offsetTop - 60 <= scSet.scrollTop) cur = s.id.replace("set-", "");
+  });
+  $$(".snav").forEach(b => b.classList.toggle("on", b.dataset.sec === cur));
+}, {passive: true});
+
+/* поиск: прячет строки, потом пустые разделы, потом пункты навигации */
+const setQ = $("#setQ");
+function setFilter(q){
+  const n = q.trim().toLowerCase();
+  let any = false;
+  $$(".set-sec", setBody).forEach(sec => {
+    /* заголовок раздела и подписи панелей тоже ищутся: «скорость» живёт
+       в «Расписании скорости», а не в подписи строки */
+    const head = [$("h2", sec).textContent,
+                  ...$$(".p-lab", sec).map(e => e.textContent),
+                  ...$$(".setnote", sec).map(e => e.textContent)].join(" ").toLowerCase();
+    const titleHit = !!n && head.includes(n);
+    let hits = titleHit;
+    $$(".opt", sec).forEach(o => {
+      const nm = $(".n", o);
+      if(nm && !nm.dataset.orig) nm.dataset.orig = nm.innerHTML;
+      const txt = o.textContent.toLowerCase();
+      const hit = !n || titleHit || txt.includes(n);
+      o.hidden = !hit;
+      if(hit && n && nm && !titleHit){
+        const i = nm.dataset.orig.toLowerCase().indexOf(n);
+        nm.innerHTML = i < 0 ? nm.dataset.orig
+          : nm.dataset.orig.slice(0, i) + "<mark>" + nm.dataset.orig.substr(i, n.length) + "</mark>" + nm.dataset.orig.slice(i + n.length);
+      } else if(nm){ nm.innerHTML = nm.dataset.orig; }
+      if(hit) hits = true;
+    });
+    if(!n) hits = true;
+    sec.hidden = !hits;
+    any = any || hits;
+    const nav = $(`.snav[data-sec="${sec.id.replace("set-", "")}"]`);
+    if(nav) nav.hidden = !hits;
+  });
+  $("#setEmpty").hidden = any;
+}
+setQ.oninput = () => setFilter(setQ.value);
+setQ.onkeydown = e => { if(e.key === "Escape"){ setQ.value = ""; setFilter(""); setQ.blur(); } };
+
+/* ═══════════════════════════════════════════════════════════════
+   ПРОФИЛЬ — репутация здесь измеряется рейтингом раздачи
+   ═══════════════════════════════════════════════════════════════ */
+$("#meArt").style.backgroundImage = `url(${makeArt(1400, 460, GAMES[0].pal, GAMES[0].seed + 17, {ridges:2, sx:.72, sy:.32})})`;
+
+(() => {
+  /* год игры: 52 недели по 7 дней, та же тепловая карта, что у роя */
+  const el = $("#meYear"), r = rng32(20260914);
+  let total = 0, streak = 0, best = 0, days = 0;
+  for(let w = 0; w < 52; w++){
+    const season = .55 + .45 * Math.sin((w / 52) * 6.283 + 1.1);   /* зимой играют больше */
+    for(let d = 0; d < 7; d++){
+      const weekend = d >= 5 ? 1.5 : 1;
+      const v = r() * season * weekend;
+      const lvl = v < .2 ? 0 : v < .38 ? 1 : v < .56 ? 2 : v < .76 ? 3 : 4;
+      const i = document.createElement("i");
+      if(lvl) i.className = "l" + lvl;
+      i.title = lvl ? `${lvl} ч` : "не играли";
+      el.appendChild(i);
+      if(lvl){ total += lvl; days++; streak++; best = Math.max(best, streak); } else streak = 0;
+    }
+  }
+  /* 193 дней / 392 часов — по-русски так не говорят */
+  const plural = (v, a, b, c) => {
+    const t = v % 100, o = v % 10;
+    return v + " " + (t > 10 && t < 20 ? c : o === 1 ? a : o >= 2 && o <= 4 ? b : c);
+  };
+  $("#meYearV").textContent = `${plural(days, "день", "дня", "дней")} · около ${plural(total, "часа", "часов", "часов")}`;
+  $("#meStreak").textContent = `Самая длинная серия — ${plural(best, "день", "дня", "дней")} подряд`;
+  /* итог за всё время считается от года, чтобы плашка и карта не спорили */
+  const life = total + 892;
+  $$(".mstat")[0].querySelector(".v").textContent = life.toLocaleString("ru-RU");
+  $$(".mstat")[0].querySelector(".s").textContent = `${plural(total, "час", "часа", "часов")} за последний год`;
+})();
+
+(() => {
+  const top = [["wolf", 312], ["ashen", 284], ["crimson", 196], ["storm", 148], ["lunar", 92], ["depth", 64]];
+  const mx = top[0][1];
+  $("#meTop").innerHTML = top.map(([id, h]) => {
+    const g = byId(id);
+    return `<div class="tophrs">
+      <span class="cv" style="background-image:url(${g.cover})"></span>
+      <span class="tx"><span class="n">${g.t}</span><span class="hb"><i style="width:${h / mx * 100}%"></i></span></span>
+      <span class="h">${h} ч</span></div>`;
+  }).join("");
+
+  $("#meSeeded").innerHTML = [["АК", "Антон К.", "214 ГБ", 0], ["ЛП", "Лена П.", "168 ГБ", 3], ["НТ", "Ника Т.", "96 ГБ", 1]]
+    .map(([i, n, v, a]) => `<div class="frow">
+      <span class="av" style="background:${AV[a]}">${i}</span>
+      <span class="fn">${n}</span><span class="fs">${v}</span></div>`).join("");
+
+  $("#meAch").innerHTML = [
+    ["Тихий шаг", "Пепельный Предел · 3 часа назад"],
+    ["Без единой царапины", "Красный Меридиан · вчера"],
+    ["Зимовье", "Волчья Тропа · 4 дня назад"],
+    ["Сто двадцать комнат", "Стеклянный Сад · неделю назад"]
+  ].map(([n, d]) => `<div class="ach got"><span class="ic"><svg><use href="#i-trophy"/></svg></span>
+    <span class="tx"><span class="n">${n}</span><span class="d">${d}</span></span></div>`).join("");
+})();
+
+/* ── состояния ─────────────────────────────────────────────── */
+STATES.push(
+  {g:"Профиль",  id:"pr-default",  n:"Моя страница",      d:"год игры · часы · рейтинг"},
+  {g:"Настройки", id:"set-default", n:"Обычное состояние", d:"десять разделов"},
+  {g:"Настройки", id:"set-find",    n:"Поиск по настройкам", d:"фильтр по строкам"}
+);
+(() => {
+  const list = $("#demoList");
+  [["Профиль", ["pr-default"]], ["Настройки", ["set-default", "set-find"]]].forEach(([g, ids]) => {
+    const h = document.createElement("div"); h.className = "gl"; h.textContent = g; list.append(h);
+    ids.forEach(id => {
+      const s = STATES.find(x => x.id === id);
+      const b = document.createElement("button");
+      b.className = "demo-i"; b.dataset.st = id;
+      b.innerHTML = `<span class="k"></span><span class="tx"><span class="n">${s.n}</span><span class="d">${s.d}</span></span>`;
+      list.append(b);
+    });
+  });
+})();
 
 /* keep republished views alive where the platform supports it */
 try{window.claude?.hot?.snapshot?.(()=>({skin:document.documentElement.dataset.skin||"magma",cur}))}catch(_){}
