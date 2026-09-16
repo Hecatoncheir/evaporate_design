@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 
+import 'data/sample_data.dart';
+import 'design/appearance.dart';
 import 'design/theme.dart';
 import 'design/tokens.dart';
-import 'gallery/gallery_page.dart';
+import 'screens/library_page.dart';
+import 'screens/placeholder_page.dart';
+import 'screens/settings_page.dart';
+import 'shell/ev_palette.dart';
+import 'shell/ev_section.dart';
+import 'shell/ev_shell.dart';
+import 'widgets/ev_icon.dart';
+import 'widgets/ev_surfaces.dart';
 
 void main() => runApp(const EvaporateApp());
 
@@ -14,24 +23,91 @@ class EvaporateApp extends StatefulWidget {
 }
 
 class _EvaporateAppState extends State<EvaporateApp> {
-  EvSkin _skin = EvSkin.magma;
-  EvGeometry _geometry = EvGeometry.tight;
+  final _appearance = EvAppearance();
+  final _shell = EvShellController();
+
+  @override
+  void dispose() {
+    _appearance.dispose();
+    _shell.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Evaporate',
-      debugShowCheckedModeBanner: false,
-      theme: buildEvTheme(skin: _skin, geometry: _geometry),
-      // Тема одна — тёмная, по требованию продукта.
-      themeAnimationDuration: EvMotion.screen,
-      themeAnimationCurve: EvMotion.easeOut,
-      home: GalleryPage(
-        skin: _skin,
-        geometry: _geometry,
-        onSkin: (s) => setState(() => _skin = s),
-        onGeometry: (g) => setState(() => _geometry = g),
+    return EvAppearanceScope(
+      appearance: _appearance,
+      child: ListenableBuilder(
+        listenable: _appearance,
+        builder: (context, _) => MaterialApp(
+          title: 'Evaporate',
+          debugShowCheckedModeBanner: false,
+          // Тема одна — тёмная, по требованию продукта.
+          theme: _appearance.theme,
+          themeAnimationDuration: EvMotion.screen,
+          themeAnimationCurve: EvMotion.easeOut,
+          home: _Home(shell: _shell),
+        ),
       ),
+    );
+  }
+}
+
+class _Home extends StatelessWidget {
+  const _Home({required this.shell});
+
+  final EvShellController shell;
+
+  @override
+  Widget build(BuildContext context) {
+    final appearance = EvAppearanceScope.of(context);
+    return EvShell(
+      controller: shell,
+      initials: sampleUserInitials,
+      userName: sampleUserName,
+      friendsOnline: sampleFriendsOnline,
+      downloadsActive: sampleDownloadsActive,
+      status: const [
+        EvPill(sampleRate, status: EvStatus.busy),
+        EvPill('Движок готов'),
+      ],
+      commands: [
+        for (final g in sampleLibrary)
+          EvCommand(
+            title: g.title,
+            subtitle: g.subtitle,
+            cover: (g.palette, g.seed),
+            hint: '↵ к полке',
+            onRun: () => shell.go(EvSection.library),
+          ),
+        for (final s in EvSection.values)
+          EvCommand(
+            title: s.label,
+            subtitle: 'раздел · клавиша ${s.hotkey}',
+            icon: s.icon,
+            hint: '↵ открыть',
+            onRun: () => shell.go(s),
+          ),
+        for (final s in EvSkin.values)
+          EvCommand(
+            title: 'Сменить тему на ${s.label}',
+            subtitle: 'команда · ${s.hint}',
+            icon: EvIcons.settings,
+            onRun: () => appearance.skin = s,
+          ),
+        for (final g in EvGeometry.values)
+          EvCommand(
+            title: 'Радиус скругления · ${g.label}',
+            subtitle: 'команда · потолок радиуса',
+            icon: EvIcons.settings,
+            onRun: () => appearance.geometry = g,
+          ),
+      ],
+      pageBuilder: (context, section) => switch (section) {
+        EvSection.library => const LibraryPage(games: sampleLibrary),
+        EvSection.settings => const SettingsPage(),
+        _ => PlaceholderPage(section: section),
+      },
     );
   }
 }

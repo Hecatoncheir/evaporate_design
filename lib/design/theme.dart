@@ -108,6 +108,24 @@ ThemeData buildEvTheme({
       onSurface: c.ink,
       error: EvColors.bad,
     ),
+    // Полоса прокрутки из прототипа: цвета линии, при наведении ярче,
+    // скругление панели — на тонкой полосе это всегда капсула.
+    scrollbarTheme: ScrollbarThemeData(
+      thickness: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.hovered) ? 9 : 6,
+      ),
+      thumbColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.hovered) || s.contains(WidgetState.dragged)
+            ? c.ink4
+            : c.line,
+      ),
+      radius: Radius.circular(geometry.radii.r4),
+    ),
+    textSelectionTheme: TextSelectionThemeData(
+      cursorColor: c.hot2,
+      selectionColor: c.hot1.withValues(alpha: 0.32),
+      selectionHandleColor: c.hot2,
+    ),
     extensions: [ev],
   );
 }

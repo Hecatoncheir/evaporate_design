@@ -87,7 +87,8 @@ class Win32Window {
   // Retrieves a class instance pointer for |window|
   static Win32Window* GetThisFromHandle(HWND const window) noexcept;
 
-  // Update the window frame's theme to match the system theme.
+  // Paints the window frame dark in the app's own colors, regardless of the
+  // system theme and accent color.
   static void UpdateTheme(HWND const window);
 
   bool quit_on_close_ = false;

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../design/appearance.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
 import '../widgets/ev_controls.dart';
@@ -10,25 +12,30 @@ import '../widgets/ev_surfaces.dart';
 
 /// Галерея компонентов. Не экран продукта, а витрина системы: всё, что уже
 /// перенесено из макетов, на одной странице и в работающем виде.
-class GalleryPage extends StatefulWidget {
-  const GalleryPage({
-    super.key,
-    required this.skin,
-    required this.geometry,
-    required this.onSkin,
-    required this.onGeometry,
-  });
-
-  final EvSkin skin;
-  final EvGeometry geometry;
-  final ValueChanged<EvSkin> onSkin;
-  final ValueChanged<EvGeometry> onGeometry;
+///
+/// Открывается из настроек; облик и радиус переключаются здесь же и
+/// действуют на всё приложение. Esc возвращает назад.
+class GalleryPage extends StatelessWidget {
+  const GalleryPage({super.key});
 
   @override
-  State<GalleryPage> createState() => _GalleryPageState();
+  Widget build(BuildContext context) => CallbackShortcuts(
+    bindings: {
+      const SingleActivator(LogicalKeyboardKey.escape): () =>
+          Navigator.of(context).maybePop(),
+    },
+    child: const Focus(autofocus: true, child: _GalleryBody()),
+  );
 }
 
-class _GalleryPageState extends State<GalleryPage> {
+class _GalleryBody extends StatefulWidget {
+  const _GalleryBody();
+
+  @override
+  State<_GalleryBody> createState() => _GalleryBodyState();
+}
+
+class _GalleryBodyState extends State<_GalleryBody> {
   bool _shader = true;
   bool _sparks = true;
   bool _hold = true;
@@ -54,7 +61,7 @@ class _GalleryPageState extends State<GalleryPage> {
         child: ListView(
           padding: const EdgeInsets.all(EvSpace.gutter),
           children: [
-            _header(ev),
+            _header(context, ev),
             const SizedBox(height: EvSpace.xxl),
 
             const EvSectionHeader('Запуск', count: 'удержание 620 мс'),
@@ -273,11 +280,25 @@ class _GalleryPageState extends State<GalleryPage> {
     );
   }
 
-  Widget _header(EvTheme ev) {
+  Widget _header(BuildContext context, EvTheme ev) {
     final c = ev.colors;
+    final appearance = EvAppearanceScope.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (Navigator.of(context).canPop()) ...[
+          Row(
+            children: [
+              EvMiniButton(
+                label: 'Назад',
+                onPressed: () => Navigator.of(context).maybePop(),
+              ),
+              const SizedBox(width: EvSpace.m),
+              Text('Esc', style: ev.text.data.copyWith(color: c.ink4)),
+            ],
+          ),
+          const SizedBox(height: EvSpace.xl),
+        ],
         Row(
           children: [
             const EvMark(size: 44),
@@ -314,15 +335,15 @@ class _GalleryPageState extends State<GalleryPage> {
             Text('Облик', style: ev.text.label),
             EvSegmented<EvSkin>(
               items: {for (final s in EvSkin.values) s: s.label},
-              value: widget.skin,
-              onChanged: widget.onSkin,
+              value: appearance.skin,
+              onChanged: (s) => appearance.skin = s,
             ),
             const SizedBox(width: EvSpace.s),
             Text('Радиус', style: ev.text.label),
             EvSegmented<EvGeometry>(
               items: {for (final g in EvGeometry.values) g: g.label},
-              value: widget.geometry,
-              onChanged: widget.onGeometry,
+              value: appearance.geometry,
+              onChanged: (g) => appearance.geometry = g,
             ),
           ],
         ),

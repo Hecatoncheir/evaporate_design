@@ -1,0 +1,75 @@
+import 'package:flutter/widgets.dart';
+
+import '../design/theme.dart';
+import '../design/tokens.dart';
+import 'ev_top_bar.dart';
+
+/// Строка клавиатурных подсказок внизу окна — подпись приложения,
+/// перенесённая из работающего продукта. Её нельзя терять при редизайне.
+class EvHintsBar extends StatelessWidget {
+  const EvHintsBar({super.key, this.hints = defaultHints, this.ready = true});
+
+  final List<(String, String)> hints;
+
+  /// Состояние движка справа: готов или занят.
+  final bool ready;
+
+  static const defaultHints = [
+    ('↑↓←→', 'Навигация'),
+    ('Enter', 'Выбрать'),
+    ('Esc', 'Назад'),
+    ('Ctrl+Tab', 'Разделы'),
+    ('/', 'Поиск'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final ev = context.ev;
+    final c = ev.colors;
+    final label = ev.text.data.copyWith(color: c.ink4, fontSize: 10.5);
+    final gutter = EvSpace.gutterFor(MediaQuery.sizeOf(context));
+    return Container(
+      height: EvSpace.hintsHeight,
+      padding: EdgeInsets.symmetric(horizontal: gutter),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: c.lineSoft)),
+        gradient: LinearGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [c.ink.withValues(alpha: 0.018), c.ink.withValues(alpha: 0)],
+        ),
+      ),
+      child: Row(
+        children: [
+          // Подсказки не переносятся: при нехватке места обрезаются справа,
+          // статус движка остаётся видимым всегда.
+          Expanded(
+            // Неподвижный горизонтальный скролл даёт строке бесконечную
+            // ширину: обычный Row внутри ClipRect всё равно ругался бы
+            // на переполнение, а так лишнее просто обрезается.
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const NeverScrollableScrollPhysics(),
+              child: Row(
+                children: [
+                  for (final (key, action) in hints) ...[
+                    EvKey(key),
+                    const SizedBox(width: 7),
+                    Text(action, style: label),
+                    const SizedBox(width: 20),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          Text(
+            ready ? '● ГОТОВ' : '● ЗАНЯТ',
+            style: label.copyWith(color: ready ? EvColors.ok : c.cool),
+          ),
+          const SizedBox(width: 20),
+          Text('© 2026 EVAPORATE', style: label),
+        ],
+      ),
+    );
+  }
+}

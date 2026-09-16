@@ -26,8 +26,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
-  Win32Window::Size size(1280, 720);
-  if (!window.Create(L"evaporate_design", origin, size)) {
+  // Стартовый размер больше минимума: минимум 1280 × 720 задан для
+  // клиентской области и учитывается в WM_GETMINMAXINFO.
+  Win32Window::Size size(1440, 900);
+  if (!window.Create(L"Evaporate", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);

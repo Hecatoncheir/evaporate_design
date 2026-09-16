@@ -16,18 +16,31 @@ namespace {
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
 #endif
 
-constexpr const wchar_t kWindowClassName[] = L"FLUTTER_RUNNER_WIN32_WINDOW";
+// Цвета рамки окна — только Windows 11 (SDK 10.0.22000.0 и новее).
+#ifndef DWMWA_BORDER_COLOR
+#define DWMWA_BORDER_COLOR 34
+#endif
+#ifndef DWMWA_CAPTION_COLOR
+#define DWMWA_CAPTION_COLOR 35
+#endif
+#ifndef DWMWA_TEXT_COLOR
+#define DWMWA_TEXT_COLOR 36
+#endif
 
-/// Registry key for app theme preference.
-///
-/// A value of 0 indicates apps should use dark mode. A non-zero or missing
-/// value indicates apps should use light mode.
-constexpr const wchar_t kGetPreferredBrightnessRegKey[] =
-  L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
-constexpr const wchar_t kGetPreferredBrightnessRegValue[] = L"AppsUseLightTheme";
+constexpr const wchar_t kWindowClassName[] = L"FLUTTER_RUNNER_WIN32_WINDOW";
 
 // The number of Win32Window objects that currently exist.
 static int g_active_window_count = 0;
+
+// Минимальное окно из спецификации: 1280 × 720 полезной площади. На нём
+// проверены все раскладки — герой, полка и строка подсказок помещаются.
+constexpr int kMinClientWidth = 1280;
+constexpr int kMinClientHeight = 720;
+
+// Рамка в цветах приложения: земля, вторая ступень текста, линия.
+constexpr COLORREF kCaptionColor = RGB(0x06, 0x06, 0x0A);
+constexpr COLORREF kCaptionTextColor = RGB(0xA8, 0xAC, 0xBD);
+constexpr COLORREF kBorderColor = RGB(0x22, 0x24, 0x2F);
 
 using EnableNonClientDpiScaling = BOOL __stdcall(HWND hwnd);
 
@@ -207,6 +220,24 @@ Win32Window::MessageHandler(HWND hwnd,
       return 0;
     }
 
+    case WM_GETMINMAXINFO: {
+      // Минимум задан для клиентской области, а система ограничивает внешний
+      // размер окна — рамку и заголовок нужно добавить с учётом DPI монитора.
+      auto info = reinterpret_cast<MINMAXINFO*>(lparam);
+      UINT dpi = GetDpiForWindow(hwnd);
+      if (dpi == 0) {
+        dpi = USER_DEFAULT_SCREEN_DPI;
+      }
+      RECT frame = {0, 0, MulDiv(kMinClientWidth, dpi, USER_DEFAULT_SCREEN_DPI),
+                    MulDiv(kMinClientHeight, dpi, USER_DEFAULT_SCREEN_DPI)};
+      AdjustWindowRectExForDpi(
+          &frame, static_cast<DWORD>(GetWindowLongPtr(hwnd, GWL_STYLE)), FALSE,
+          static_cast<DWORD>(GetWindowLongPtr(hwnd, GWL_EXSTYLE)), dpi);
+      info->ptMinTrackSize.x = frame.right - frame.left;
+      info->ptMinTrackSize.y = frame.bottom - frame.top;
+      return 0;
+    }
+
     case WM_ACTIVATE:
       if (child_content_ != nullptr) {
         SetFocus(child_content_);
@@ -273,16 +304,19 @@ void Win32Window::OnDestroy() {
 }
 
 void Win32Window::UpdateTheme(HWND const window) {
-  DWORD light_mode;
-  DWORD light_mode_size = sizeof(light_mode);
-  LSTATUS result = RegGetValue(HKEY_CURRENT_USER, kGetPreferredBrightnessRegKey,
-                               kGetPreferredBrightnessRegValue,
-                               RRF_RT_REG_DWORD, nullptr, &light_mode,
-                               &light_mode_size);
+  // Evaporate тёмный всегда, поэтому рамка окна не следует ни за темой
+  // Windows, ни за её акцентным цветом: над почти чёрным приложением иначе
+  // висела бы белая или оранжевая полоса.
+  BOOL enable_dark_mode = TRUE;
+  DwmSetWindowAttribute(window, DWMWA_USE_IMMERSIVE_DARK_MODE,
+                        &enable_dark_mode, sizeof(enable_dark_mode));
 
-  if (result == ERROR_SUCCESS) {
-    BOOL enable_dark_mode = light_mode == 0;
-    DwmSetWindowAttribute(window, DWMWA_USE_IMMERSIVE_DARK_MODE,
-                          &enable_dark_mode, sizeof(enable_dark_mode));
-  }
+  // Windows 10 этих атрибутов не знает и вернёт ошибку — там остаётся
+  // тёмный заголовок из вызова выше.
+  DwmSetWindowAttribute(window, DWMWA_CAPTION_COLOR, &kCaptionColor,
+                        sizeof(kCaptionColor));
+  DwmSetWindowAttribute(window, DWMWA_TEXT_COLOR, &kCaptionTextColor,
+                        sizeof(kCaptionTextColor));
+  DwmSetWindowAttribute(window, DWMWA_BORDER_COLOR, &kBorderColor,
+                        sizeof(kBorderColor));
 }

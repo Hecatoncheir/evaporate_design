@@ -217,6 +217,10 @@ abstract final class EvMotion {
   /// Смена раздела.
   static const screen = Duration(milliseconds: 340);
 
+  /// Смена раздела, движение: экран проявляется за [screen], а «доезжает»
+  /// на место ещё сотню миллисекунд — так он садится, а не выскакивает.
+  static const screenSettle = Duration(milliseconds: 440);
+
   /// Удержание кнопки «Играть». Защита от случайного запуска.
   static const hold = Duration(milliseconds: 620);
 
@@ -241,11 +245,27 @@ abstract final class EvSpace {
   static const xl = 24.0;
   static const xxl = 32.0;
 
-  /// Боковое поле экрана.
+  /// Боковое поле экрана — значение по умолчанию, когда размер окна
+  /// неизвестен. В каркасе поле считается по окну: [gutterFor].
   static const gutter = 28.0;
+
+  /// Боковое поле для окна данного размера. Те же ступени, что в прототипе:
+  /// 2,2 % ширины в пределах 16…30; на низких окнах (до 800) — 18, чтобы
+  /// полка помещалась под героем; от 1800 по ширине — 30…44, и это правило
+  /// сильнее высоты, как в CSS, где оно объявлено позже.
+  static double gutterFor(Size window) {
+    final fluid = window.width * 0.022;
+    if (window.width >= 1800) return fluid.clamp(30.0, 44.0).roundToDouble();
+    if (window.height <= 800) return 18;
+    return fluid.clamp(16.0, 30.0).roundToDouble();
+  }
 
   /// Каркас окна.
   static const railWidth = 76.0;
   static const topBarHeight = 58.0;
   static const hintsHeight = 32.0;
+  static const bottomNavHeight = 60.0;
+
+  /// Уже этого окно теряет рейл и строку подсказок: навигация уходит вниз.
+  static const narrowBreakpoint = 760.0;
 }

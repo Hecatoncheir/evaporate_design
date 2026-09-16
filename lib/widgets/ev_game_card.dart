@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import 'ev_focusable.dart';
 import 'ev_surfaces.dart';
 
 /// Палитра одной обложки. Обложки рисуются процедурно: у раздачи картинки
@@ -277,22 +278,29 @@ class EvGameCard extends StatefulWidget {
 
 class _EvGameCardState extends State<EvGameCard> {
   bool _hover = false;
+  bool _focus = false;
 
   @override
   Widget build(BuildContext context) {
     final ev = context.ev;
     final c = ev.colors;
+    // Фокус с клавиатуры поднимает карточку так же, как наведение:
+    // на полке, которую листают стрелками, иначе не видно, где ты.
+    final lifted = _hover || _focus;
+    // Наведение ловится снаружи сдвига: иначе поднятая карточка уходила бы
+    // из-под курсора у нижней кромки и начинала мигать.
     return MouseRegion(
-      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: EvMotion.hover,
-          curve: EvMotion.easeOut,
-          width: widget.width,
-          transform: Matrix4.translationValues(0, _hover ? -8 : 0, 0),
+      child: AnimatedContainer(
+        duration: EvMotion.hover,
+        curve: EvMotion.easeOut,
+        width: widget.width,
+        transform: Matrix4.translationValues(0, lifted ? -8 : 0, 0),
+        child: EvFocusable(
+          onActivate: widget.onTap,
+          radius: ev.radii.r3,
+          onFocusHighlight: (v) => setState(() => _focus = v),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -305,9 +313,9 @@ class _EvGameCardState extends State<EvGameCard> {
                   decoration: BoxDecoration(
                     borderRadius: ev.radii.b3,
                     border: Border.all(
-                      color: _hover ? c.hot1.withValues(alpha: 0.4) : c.line,
+                      color: lifted ? c.hot1.withValues(alpha: 0.4) : c.line,
                     ),
-                    boxShadow: _hover
+                    boxShadow: lifted
                         ? [
                             ...ev.shadowLift,
                             BoxShadow(
@@ -358,7 +366,7 @@ class _EvGameCardState extends State<EvGameCard> {
                               height: 3,
                             ),
                           ),
-                        if (_hover)
+                        if (lifted)
                           Positioned.fill(
                             child: IgnorePointer(
                               child: DecoratedBox(
