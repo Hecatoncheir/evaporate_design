@@ -1523,6 +1523,7 @@ h1.title b{font-weight:800;display:block}
     <symbol id="i-magnet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5.4 4.2v7.6a6.6 6.6 0 0 0 13.2 0V4.2h-4.4v7.6a2.2 2.2 0 0 1-4.4 0V4.2H5.4Z" stroke-linejoin="round"/><path d="M5.4 8.6h4.4M14.2 8.6h4.4"/></symbol>
     <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9.5 6 6 6-6"/></symbol>
     <symbol id="i-retry" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.4 3.6v4.8h-4.8"/></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 9.4h3.1L12 5.6v12.8l-4.4-3.8H4.5V9.4Z"/><path d="M15.4 9.6a3.4 3.4 0 0 1 0 4.8M18 7a7 7 0 0 1 0 10"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.6 4.6L19 6.8"/></symbol>
 
   </defs>
@@ -1845,6 +1846,19 @@ h1.title b{font-weight:800;display:block}
                 <div class="opt"><div class="txt"><div class="n">Предел отдачи</div><div class="d">Держим рой живым</div></div><span class="chip">2 МБ/с</span></div>
                 <div class="opt"><div class="txt"><div class="n">Порт входящих</div><div class="d">UPnP · проброс подтверждён</div></div><span class="chip hot">51413</span></div>
                 <div class="opt"><div class="txt"><div class="n">Шифрование протокола</div><div class="d">Требовать у всех пиров</div></div><button class="sw" data-fx="enc" aria-pressed="true" aria-label="Шифрование"></button></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="p-lab">Звук</div>
+              <div style="margin-top:6px">
+                <div class="opt"><div class="txt"><div class="n">Звуковой слой</div><div class="d">Выключен по умолчанию: лаунчер не должен шуметь на первом запуске</div></div><button class="sw" id="sndOn" aria-pressed="false" aria-label="Звук"></button></div>
+                <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Громкость</div><div class="d">Ритуал запуска на 6 дБ громче интерфейса</div></div>
+                  <div class="seg" id="sndVol"><button aria-pressed="false">Тихо</button><button aria-pressed="true">Средне</button><button aria-pressed="false">Громко</button></div></div>
+                <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Интерфейс</div><div class="d">Наведение и нажатие · 200 Гц – 4 кГц · до 120 мс</div></div><button class="sw" data-snd-cat="ui" aria-pressed="true" aria-label="Звуки интерфейса"></button></div>
+                <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">События</div><div class="d">Готово, ошибка, испарение дайджеста · до 400 мс</div></div><button class="sw" data-snd-cat="evt" aria-pressed="true" aria-label="Звуки событий"></button></div>
+                <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Удержание и ритуал</div><div class="d">Всё ниже 120 Гц принадлежит запуску</div></div><button class="sw" data-snd-cat="ritual" aria-pressed="true" aria-label="Звук ритуала"></button></div>
+                <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Фоновая отдушина</div><div class="d">Тихий дышащий шум ниже 210 Гц, пока окно активно</div></div><button class="sw" id="sndAmb" aria-pressed="false" aria-label="Фоновый звук"></button></div>
+                <div class="opt" data-snd style="opacity:.4"><div class="txt"><div class="n">Проверить</div><div class="d">Все голоса синтезируются на месте, ни одного файла</div></div><button class="mini" id="sndTest"><svg><use href="#i-sound"/></svg>Сыграть</button></div>
               </div>
             </div>
           </div>
@@ -2510,7 +2524,9 @@ const NAMES={library:"Библиотека",downloads:"Загрузки",saves:"
 const ORDER=["library","downloads","saves","settings","friends"];
 let cur="library";
 function go(id){
-  if(!NAMES[id])return; cur=id;
+  if(!NAMES[id])return;
+  if(cur!==id) Snd.play("swish");
+  cur=id;
   $$(".screen").forEach(s=>s.classList.toggle("on",s.id==="sc-"+id));
   $$(".rbtn[data-go]").forEach(b=>b.setAttribute("aria-current",String(b.dataset.go===id)));
   $("#crumb").textContent=NAMES[id];
@@ -2759,8 +2775,9 @@ function openSheet(g){
 
 /* удержание — тот же ритуал, что и в герое */
 function makeHold(btn, ring, done){
-  let raf = null, t0 = 0;
+  let raf = null, t0 = 0, voice = null;
   const stop = ok => { cancelAnimationFrame(raf); raf = null;
+    if(voice){ voice.stop(!!ok); voice = null; }
     btn.parentElement.classList.remove("charging"); if(!ok) ring.style.strokeDashoffset = "100"; };
   const step = () => {
     const p = clamp((performance.now() - t0) / 620, 0, 1);
@@ -2771,7 +2788,8 @@ function makeHold(btn, ring, done){
   const start = e => {
     if(e && e.button !== undefined && e.button !== 0) return;
     if(!FLAGS.hold){ done(); return; }
-    btn.parentElement.classList.add("charging"); t0 = performance.now(); raf = requestAnimationFrame(step);
+    btn.parentElement.classList.add("charging"); t0 = performance.now();
+    voice = Snd.play("chargeStart", 620); raf = requestAnimationFrame(step);
   };
   btn.addEventListener("pointerdown", start);
   ["pointerup", "pointerleave", "pointercancel"].forEach(ev => btn.addEventListener(ev, () => stop(false)));
@@ -3047,6 +3065,7 @@ function startHold(e){
   if(e.button!==undefined&&e.button!==0)return;
   if(!FLAGS.hold){launch(GAMES[0]);return}
   playWrap.classList.add("charging");holdStart=performance.now();
+  chargeVoice = Snd.play("chargeStart", HOLD);
   hero.style.filter="url(#shimmer)";
   const step=()=>{
     const p=clamp((performance.now()-holdStart)/HOLD,0,1);chargeTo(p);
@@ -3057,6 +3076,7 @@ function startHold(e){
 }
 function endHold(done){
   cancelAnimationFrame(holdT);playWrap.classList.remove("charging");
+  if(chargeVoice){ chargeVoice.stop(!!done); chargeVoice = null; }
   if(!done)chargeTo(0); hero.style.filter="";
 }
 playBtn.addEventListener("pointerdown",startHold);
@@ -3070,6 +3090,7 @@ const STAGES=["Подготовка среды","Проверка файлов",
 let launching=false;
 function launch(g){
   if(launching)return; launching=true;
+  Snd.play(FLAGS.ritual ? "ritual" : "ok");
   const L=$("#launch"),bar=$("#lBar"),ring=$("#lRing");
   $(".l-t",L).innerHTML=g.t.split(" ").length>1
     ? g.t.split(" ").slice(0,-1).join(" ")+" <b>"+g.t.split(" ").slice(-1)+"</b>"
@@ -3482,6 +3503,10 @@ function applyState(id){
   const target = scope === "dl" ? "downloads" : scope === "sv" ? "saves"
                : scope === "fr" ? "friends" : "library";
   if(id !== "ovl") go(target);
+  const cue = {"dl-nospace":"err", "dl-noseeds":"warn", "dl-hash":"warn", "dl-offline":"warn",
+               "lib-offline":"warn", "fr-offline":"warn", "sv-conflict":"warn", "sv-nocloud":"warn",
+               "lib-running":"ok"}[id];
+  if(cue) Snd.play(cue);
   $$(".demo-i").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.st === id)));
   $("#demoC").textContent = STATES.find(s => s.id === id)?.n ?? "";
   curState = id;
@@ -3786,6 +3811,7 @@ function openDigest(){
 }
 function dismissDigest(){
   newsSeen = true;
+  Snd.play("evaporate");
   const vis = digestFloat.classList.contains("on") ? digestFloat : digestRail;
   const r = vis.getBoundingClientRect();
   if(r.width) burst(r, 90);
@@ -4019,6 +4045,243 @@ STATES.push(
     list.append(b);
   });
 })();
+
+
+let chargeVoice = null;
+
+/* ═══════════════════════════════════════════════════════════════
+   ЗВУК — та же идея фазового перехода, только слышимая.
+   Ничего не сэмплировано: все голоса синтезируются на месте, как
+   и обложки. Поэтому спецификация здесь и есть реализация.
+
+   Правила:
+   · выключен по умолчанию — десктоп, который шумит на первом
+     запуске, враждебен, и браузер всё равно молчит до жеста;
+   · звук никогда не громче картинки: выключен эффект — выключен
+     и его звук;
+   · интерфейс живёт в 200 Гц – 4 кГц, ритуал владеет всем ниже
+     120 Гц, поэтому они не спорят за одно место;
+   · длительности: интерфейс ≤ 120 мс, событие ≤ 400 мс,
+     ритуал до 2.6 с.
+   ═══════════════════════════════════════════════════════════════ */
+const Snd = (() => {
+  let ctx = null, master = null, bus = null, noiseBuf = null, amb = null;
+  let on = false, vol = .5;
+  const cat = {ui: true, evt: true, ritual: true};
+
+  function boot(){
+    if(ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    ctx = new AC();
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -18; comp.ratio.value = 4; comp.attack.value = .004; comp.release.value = .18;
+    master = ctx.createGain(); master.gain.value = vol;
+    bus = ctx.createGain(); bus.gain.value = 1;
+    bus.connect(comp); comp.connect(master); master.connect(ctx.destination);
+    const n = ctx.sampleRate * 2;
+    noiseBuf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for(let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    return ctx;
+  }
+  const now = () => ctx.currentTime;
+
+  /* один шумовой голос: буфер → фильтр → огибающая */
+  function noise(t, dur, {type = "bandpass", f0 = 900, f1 = f0, q = 1, g = .08, curve = "exp"} = {}){
+    const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = type; f.Q.value = q;
+    f.frequency.setValueAtTime(f0, t);
+    f.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+    const a = ctx.createGain();
+    a.gain.setValueAtTime(.0001, t);
+    a.gain.exponentialRampToValueAtTime(g, t + (curve === "exp" ? dur * .06 : dur * .5));
+    a.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    s.connect(f); f.connect(a); a.connect(bus);
+    s.start(t); s.stop(t + dur + .02);
+    return {f, a, s};
+  }
+  /* один тональный голос */
+  function tone(t, dur, {type = "sine", f0 = 440, f1 = f0, g = .1, det = 0} = {}){
+    const o = ctx.createOscillator(); o.type = type; o.detune.value = det;
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+    const a = ctx.createGain();
+    a.gain.setValueAtTime(.0001, t);
+    a.gain.exponentialRampToValueAtTime(g, t + Math.min(.02, dur * .2));
+    a.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(a); a.connect(bus);
+    o.start(t); o.stop(t + dur + .02);
+    return {o, a};
+  }
+
+  /* ── словарь ────────────────────────────────────────────── */
+  const V = {
+    tick(){ noise(now(), .03, {type:"highpass", f0:2200, g:.035}); },
+    tap(){
+      const t = now();
+      tone(t, .07, {f0:520, f1:300, g:.09});
+      noise(t, .016, {type:"highpass", f0:3200, g:.05});
+    },
+    swish(){ noise(now(), .19, {f0:420, f1:2300, q:1.2, g:.045, curve:"lin"}); },
+    ok(){
+      const t = now();
+      tone(t, .1, {type:"triangle", f0:523, g:.07});
+      tone(t + .07, .16, {type:"triangle", f0:784, g:.06});
+    },
+    warn(){
+      const t = now();
+      tone(t, .22, {type:"triangle", f0:392, f1:294, g:.075});
+    },
+    err(){
+      const t = now();
+      tone(t, .3, {type:"triangle", f0:300, f1:150, g:.085});
+      tone(t, .3, {type:"sine", f0:452, f1:226, g:.035, det:8});
+      noise(t, .05, {type:"highpass", f0:1400, g:.05});
+    },
+    /* испарение: шум уезжает вверх и рассыпается искрами */
+    evaporate(){
+      const t = now();
+      noise(t, .42, {f0:280, f1:5200, q:3, g:.06, curve:"lin"});
+      for(let i = 0; i < 6; i++)
+        tone(t + .05 + Math.random() * .3, .1, {f0: 1400 + Math.random() * 2600, g:.022});
+    },
+    /* заряд: ручка, за которую тянут 620 мс */
+    chargeStart(ms = 620){
+      const t = now(), s = ms / 1000;
+      const src = ctx.createOscillator(), src2 = ctx.createOscillator();
+      src.type = src2.type = "sawtooth";
+      src.frequency.value = 110; src2.frequency.value = 110; src2.detune.value = 7;
+      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.Q.value = 6;
+      f.frequency.setValueAtTime(300, t);
+      f.frequency.exponentialRampToValueAtTime(2600, t + s);
+      const a = ctx.createGain();
+      a.gain.setValueAtTime(.0001, t);
+      a.gain.exponentialRampToValueAtTime(.075, t + s * .8);
+      const sub = ctx.createOscillator(); sub.type = "sine"; sub.frequency.value = 55;
+      const sg = ctx.createGain(); sg.gain.setValueAtTime(.0001, t);
+      sg.gain.exponentialRampToValueAtTime(.055, t + s);
+      src.connect(f); src2.connect(f); f.connect(a); a.connect(bus);
+      sub.connect(sg); sg.connect(bus);
+      src.start(t); src2.start(t); sub.start(t);
+      return {stop(hit){
+        const e = now();
+        f.frequency.cancelScheduledValues(e);
+        a.gain.cancelScheduledValues(e); sg.gain.cancelScheduledValues(e);
+        a.gain.setValueAtTime(Math.max(.0002, a.gain.value), e);
+        sg.gain.setValueAtTime(Math.max(.0002, sg.gain.value), e);
+        const tail = hit ? .06 : .12;
+        if(!hit) f.frequency.exponentialRampToValueAtTime(300, e + tail);
+        a.gain.exponentialRampToValueAtTime(.0001, e + tail);
+        sg.gain.exponentialRampToValueAtTime(.0001, e + tail);
+        src.stop(e + tail + .02); src2.stop(e + tail + .02); sub.stop(e + tail + .02);
+        if(hit){
+          tone(e, .14, {f0:880, f1:220, g:.1});
+          noise(e, .07, {type:"highpass", f0:2600, g:.07});
+        }
+      }};
+    },
+    /* ритуал: всё ниже 120 Гц принадлежит ему */
+    ritual(dur = 2.6){
+      const t = now();
+      tone(t, dur * .95, {type:"sine", f0:30, f1:62, g:.13});
+      noise(t, dur * .95, {f0:180, f1:5400, q:1.1, g:.085, curve:"lin"});
+      for(let i = 1; i < 6; i++)
+        tone(t + dur * (i / 6), .05, {f0:660, f1:440, g:.03});
+      const k = t + dur * .92;                       /* удар */
+      noise(k, .9, {type:"lowpass", f0:9000, f1:130, q:.8, g:.2});
+      tone(k, .7, {type:"sine", f0:92, f1:38, g:.17});
+      tone(k + .02, .3, {type:"triangle", f0:1320, f1:330, g:.05});
+      for(let i = 0; i < 8; i++)                     /* хвост */
+        tone(k + .12 + Math.random() * .5, .5, {f0: 900 + Math.random() * 3200, g:.016});
+    }
+  };
+
+  /* ── фоновая отдушина, по желанию ──────────────────────── */
+  function ambient(state){
+    if(!ctx) return;
+    if(!state){ if(amb){ amb.g.gain.setTargetAtTime(.0001, now(), .3); amb.s.stop(now() + 1.4); amb = null; } return; }
+    if(amb) return;
+    const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 210; f.Q.value = .7;
+    const g = ctx.createGain(); g.gain.value = .0001;
+    const lfo = ctx.createOscillator(); lfo.frequency.value = .06;
+    const lg = ctx.createGain(); lg.gain.value = .008;
+    lfo.connect(lg); lg.connect(g.gain);
+    s.connect(f); f.connect(g); g.connect(bus);
+    s.start(); lfo.start();
+    g.gain.setTargetAtTime(.017, now(), .8);
+    amb = {s, g, f, lfo};
+  }
+
+  /* ── публичный интерфейс ───────────────────────────────── */
+  const api = {
+    get on(){ return on; },
+    enable(v){
+      on = v;
+      if(v){ boot(); if(ctx && ctx.state === "suspended") ctx.resume(); }
+      else { ambient(false); }
+      return on;
+    },
+    volume(v){ vol = v; if(master) master.gain.setTargetAtTime(v, now(), .05); },
+    category(k, v){ cat[k] = v; },
+    ambient(v){ if(on) ambient(v); },
+    play(name, arg){
+      if(!on || !ctx) return null;
+      const group = (name === "tick" || name === "tap" || name === "swish") ? "ui"
+                  : (name === "ritual" || name === "chargeStart") ? "ritual" : "evt";
+      if(!cat[group]) return null;
+      if(ctx.state === "suspended") ctx.resume();
+      return V[name] ? V[name](arg) : null;
+    }
+  };
+  return api;
+})();
+
+/* ── привязки ──────────────────────────────────────────────── */
+let lastTick = 0;
+document.addEventListener("pointerover", e => {
+  if(!Snd.on) return;
+  if(!e.target.closest(".card,.row,.fnow,.demo-i,.ci,.verb,.filerow,.dg")) return;
+  const t = performance.now();
+  if(t - lastTick < 60) return;
+  lastTick = t; Snd.play("tick");
+}, {passive: true});
+
+document.addEventListener("pointerdown", e => {
+  if(!Snd.on) return;
+  const b = e.target.closest("button,.card,.row,.fnow,.ci,.filerow");
+  if(!b) return;
+  if(b.id === "playBtn" || b.id === "shPlay") return;   /* у них свой голос */
+  Snd.play("tap");
+}, {passive: true});
+
+/* ── настройки ─────────────────────────────────────────────── */
+$("#sndOn").onclick = function(){
+  const v = this.getAttribute("aria-pressed") !== "true";
+  this.setAttribute("aria-pressed", String(v));
+  Snd.enable(v);
+  $$("#sc-settings [data-snd]").forEach(el => el.style.opacity = v ? "" : ".4");
+  if(v) Snd.play("ok");
+};
+$$("[data-snd-cat]").forEach(b => b.onclick = function(){
+  const v = this.getAttribute("aria-pressed") !== "true";
+  this.setAttribute("aria-pressed", String(v));
+  Snd.category(this.dataset.sndCat, v);
+  if(v) Snd.play("tap");
+});
+$("#sndAmb").onclick = function(){
+  const v = this.getAttribute("aria-pressed") !== "true";
+  this.setAttribute("aria-pressed", String(v));
+  Snd.ambient(v);
+};
+$$("#sndVol button").forEach((b, i) => b.onclick = () => {
+  $$("#sndVol button").forEach(x => x.setAttribute("aria-pressed", "false"));
+  b.setAttribute("aria-pressed", "true");
+  Snd.volume([.22, .5, .85][i]);
+  Snd.play("tap");
+});
+$("#sndTest").onclick = () => { Snd.play("evaporate"); };
 
 /* keep republished views alive where the platform supports it */
 try{window.claude?.hot?.snapshot?.(()=>({skin:document.documentElement.dataset.skin||"magma",cur}))}catch(_){}

@@ -207,6 +207,52 @@ table{min-width:620px}
 /* ── motion table ───────────────────────────────────────── */
 .curve{display:inline-block;width:52px;height:20px;vertical-align:middle}
 
+/* ── 07 · звук ──────────────────────────────────────────────── */
+.sndbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.sndon{
+  display:flex;align-items:center;gap:10px;height:42px;padding:0 20px 0 17px;border-radius:99px;
+  color:#170800;font-weight:600;font-size:13.5px;
+  background:linear-gradient(115deg,var(--hot-2),var(--hot-1) 58%,var(--hot-deep));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 8px 26px rgb(var(--glow-hot)/.4);
+  transition:transform .2s var(--ease-out);
+}
+.sndon:hover{transform:translateY(-1px)}
+.sndon svg{width:16px;height:16px}
+.sndon[aria-pressed="true"]{
+  background:none;color:var(--ok);border:1px solid rgb(59 227 155/.45);
+  box-shadow:0 0 24px rgb(59 227 155/.18),inset 0 1px 0 rgba(255,255,255,.1);
+}
+.sndnote{font-size:12.5px;color:var(--ink-4);max-width:52ch}
+
+.sndgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(252px,1fr));gap:13px}
+.voice{
+  display:flex;flex-direction:column;gap:9px;text-align:left;
+  border:1px solid var(--line-soft);border-radius:18px;padding:15px;
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.006));
+  transition:border-color .25s var(--ease),box-shadow .3s var(--ease),transform .3s var(--ease-out);
+}
+.voice:hover{transform:translateY(-3px);border-color:rgb(var(--glow-hot)/.45);box-shadow:0 16px 38px rgba(0,0,0,.5),0 0 28px rgb(var(--glow-hot)/.16)}
+.voice:active{transform:translateY(0)}
+.vh{display:flex;align-items:center;gap:10px}
+.vn{font-size:14px;font-weight:500;flex:1}
+.vc{
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  padding:3px 8px;border-radius:99px;border:1px solid var(--line);color:var(--ink-3);
+}
+.vc.e{color:var(--cool);border-color:rgb(var(--glow-cool)/.35)}
+.vc.r{color:var(--hot-2);border-color:rgb(var(--glow-hot)/.4);background:rgb(var(--glow-hot)/.08)}
+.vwave{width:100%;height:58px;display:block;background:#07070c;border-radius:9px;border:1px solid var(--line-soft)}
+.vm{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3)}
+.vm b{color:var(--hot-2);font-weight:500}
+.vs{font-size:12px;color:var(--ink-4);line-height:1.5}
+.vplay{
+  display:flex;align-items:center;gap:8px;margin-top:2px;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);
+}
+.vplay svg{width:12px;height:12px}
+.voice:hover .vplay{color:var(--hot-2)}
+.sndgrid.live .vplay{color:var(--ok)}
+
 .foot{padding-block:44px 0;color:var(--ink-4);font-family:var(--font-mono);font-size:11px;display:flex;gap:20px;flex-wrap:wrap}
 
 @media(prefers-reduced-motion:reduce){
@@ -561,9 +607,36 @@ table{min-width:620px}
   </div>
 </section>
 
-<!-- ══ 07 · моушн ═════════════════════════════════════════════ -->
+<!-- ══ 07 · звук ══════════════════════════════════════════════ -->
 <section>
-  <div class="sh"><span class="no">07</span><h2>Тайминги и <b>кривые</b></h2></div>
+  <div class="sh"><span class="no">07</span><h2>Девять <b>голосов</b></h2></div>
+  <p class="sub">Та же идея фазового перехода, только слышимая. Ничего не сэмплировано — каждый голос синтезируется на месте, как и обложки, поэтому спецификация ниже и есть реализация. Нажмите на любой, чтобы услышать; первое нажатие заодно разбудит звук.</p>
+
+  <div class="sndbar">
+    <button class="sndon" id="sndMaster" aria-pressed="false"><svg><use href="#i-sound"/></svg><span>Включить звук</span></button>
+    <span class="sndnote">Выключен по умолчанию: лаунчер не должен шуметь на первом запуске, и браузер всё равно молчит до жеста</span>
+  </div>
+
+  <div class="sndgrid" id="sndGrid"></div>
+
+  <div class="tw" style="margin-top:18px">
+    <table>
+      <thead><tr><th>Правило</th><th>Почему</th></tr></thead>
+      <tbody>
+        <tr><td class="w">Выключен по умолчанию</td><td class="w">Десктопное приложение, которое шумит на первом запуске, враждебно. Включение — осознанный жест.</td></tr>
+        <tr><td class="w">Звук никогда не громче картинки</td><td class="w">Выключен эффект — выключен и его звук. Пресет «Эко» глушит ритуал вместе с частицами.</td></tr>
+        <tr><td class="w">Интерфейс живёт в 200 Гц – 4 кГц</td><td class="w">Всё ниже 120 Гц принадлежит ритуалу запуска, поэтому они не спорят за одно место в спектре.</td></tr>
+        <tr><td class="w">Длительности: 120 / 400 / 2600 мс</td><td class="w">Интерфейс, событие, ритуал. Голос длиннее своего класса — ошибка, а не выразительность.</td></tr>
+        <tr><td class="w">Пассивные события молчат</td><td class="w">Пока вы в другом разделе, докачка и заявка в друзья не звучат — они ждут в дайджесте.</td></tr>
+        <tr><td class="w">Шина через компрессор</td><td class="w">Порог −18 дБ, 4 : 1. Ритуал не может перекричать интерфейс, даже если они совпали.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ 08 · моушн ═════════════════════════════════════════════ -->
+<section>
+  <div class="sh"><span class="no">08</span><h2>Тайминги и <b>кривые</b></h2></div>
   <p class="sub">Один принцип: всё, что появляется, приходит с ускорением наружу; всё, что исчезает, уходит линейно и быстро. Длительности кратны 40 мс.</p>
   <div class="tw">
     <table>
@@ -581,9 +654,9 @@ table{min-width:620px}
   </div>
 </section>
 
-<!-- ══ 08 · раскладка ═════════════════════════════════════════ -->
+<!-- ══ 09 · раскладка ═════════════════════════════════════════ -->
 <section style="border-bottom:0">
-  <div class="sh"><span class="no">08</span><h2>Сетка, радиусы, <b>тени</b></h2></div>
+  <div class="sh"><span class="no">09</span><h2>Сетка, радиусы, <b>тени</b></h2></div>
   <div class="g g-3" style="margin-top:22px">
     <div class="tile">
       <div class="lab">Радиусы</div>
@@ -844,6 +917,170 @@ function rStart(){rs=performance.now();
 function rStop(){cancelAnimationFrame(rt);rr.style.strokeDashoffset="100"}
 rStage.addEventListener("pointerdown",rStart);
 ["pointerup","pointerleave","pointercancel"].forEach(ev=>rStage.addEventListener(ev,rStop));
+
+
+/* ── 07 · звук ─────────────────────────────────────────────── */
+const Snd = (() => {
+  let ctx = null, bus = null, master = null, nb = null;
+  let on = false;
+  function boot(){
+    if(ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    ctx = new AC();
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -18; comp.ratio.value = 4; comp.attack.value = .004; comp.release.value = .18;
+    master = ctx.createGain(); master.gain.value = .5;
+    bus = ctx.createGain();
+    bus.connect(comp); comp.connect(master); master.connect(ctx.destination);
+    const n = ctx.sampleRate * 2;
+    nb = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = nb.getChannelData(0);
+    for(let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    return ctx;
+  }
+  const now = () => ctx.currentTime;
+  function noise(t, dur, o = {}){
+    const {type = "bandpass", f0 = 900, f1 = f0, q = 1, g = .08, curve = "exp"} = o;
+    const s = ctx.createBufferSource(); s.buffer = nb; s.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = type; f.Q.value = q;
+    f.frequency.setValueAtTime(f0, t);
+    f.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+    const a = ctx.createGain();
+    a.gain.setValueAtTime(.0001, t);
+    a.gain.exponentialRampToValueAtTime(g, t + (curve === "exp" ? dur * .06 : dur * .5));
+    a.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    s.connect(f); f.connect(a); a.connect(bus);
+    s.start(t); s.stop(t + dur + .02);
+  }
+  function tone(t, dur, o = {}){
+    const {type = "sine", f0 = 440, f1 = f0, g = .1, det = 0} = o;
+    const osc = ctx.createOscillator(); osc.type = type; osc.detune.value = det;
+    osc.frequency.setValueAtTime(f0, t);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+    const a = ctx.createGain();
+    a.gain.setValueAtTime(.0001, t);
+    a.gain.exponentialRampToValueAtTime(g, t + Math.min(.02, dur * .2));
+    a.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    osc.connect(a); a.connect(bus);
+    osc.start(t); osc.stop(t + dur + .02);
+  }
+  const V = {
+    tick(){ noise(now(), .03, {type:"highpass", f0:2200, g:.035}); },
+    tap(){ const t = now(); tone(t, .07, {f0:520, f1:300, g:.09}); noise(t, .016, {type:"highpass", f0:3200, g:.05}); },
+    swish(){ noise(now(), .19, {f0:420, f1:2300, q:1.2, g:.045, curve:"lin"}); },
+    ok(){ const t = now(); tone(t, .1, {type:"triangle", f0:523, g:.07}); tone(t + .07, .16, {type:"triangle", f0:784, g:.06}); },
+    warn(){ tone(now(), .22, {type:"triangle", f0:392, f1:294, g:.075}); },
+    err(){ const t = now(); tone(t, .3, {type:"triangle", f0:300, f1:150, g:.085});
+      tone(t, .3, {type:"sine", f0:452, f1:226, g:.035, det:8}); noise(t, .05, {type:"highpass", f0:1400, g:.05}); },
+    evaporate(){ const t = now(); noise(t, .42, {f0:280, f1:5200, q:3, g:.06, curve:"lin"});
+      for(let i = 0; i < 6; i++) tone(t + .05 + Math.random() * .3, .1, {f0:1400 + Math.random() * 2600, g:.022}); },
+    charge(){
+      const t = now(), s = .62;
+      const a = ctx.createOscillator(), b = ctx.createOscillator();
+      a.type = b.type = "sawtooth"; a.frequency.value = 110; b.frequency.value = 110; b.detune.value = 7;
+      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.Q.value = 6;
+      f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(2600, t + s);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(.0001, t);
+      g.gain.exponentialRampToValueAtTime(.075, t + s * .8);
+      g.gain.exponentialRampToValueAtTime(.0001, t + s + .07);
+      const sub = ctx.createOscillator(); sub.type = "sine"; sub.frequency.value = 55;
+      const sg = ctx.createGain(); sg.gain.setValueAtTime(.0001, t);
+      sg.gain.exponentialRampToValueAtTime(.055, t + s);
+      sg.gain.exponentialRampToValueAtTime(.0001, t + s + .07);
+      a.connect(f); b.connect(f); f.connect(g); g.connect(bus); sub.connect(sg); sg.connect(bus);
+      a.start(t); b.start(t); sub.start(t);
+      a.stop(t + s + .1); b.stop(t + s + .1); sub.stop(t + s + .1);
+      tone(t + s, .14, {f0:880, f1:220, g:.1});
+      noise(t + s, .07, {type:"highpass", f0:2600, g:.07});
+    },
+    ritual(){
+      const t = now(), dur = 2.6;
+      tone(t, dur * .95, {type:"sine", f0:30, f1:62, g:.13});
+      noise(t, dur * .95, {f0:180, f1:5400, q:1.1, g:.085, curve:"lin"});
+      for(let i = 1; i < 6; i++) tone(t + dur * (i / 6), .05, {f0:660, f1:440, g:.03});
+      const k = t + dur * .92;
+      noise(k, .9, {type:"lowpass", f0:9000, f1:130, q:.8, g:.2});
+      tone(k, .7, {type:"sine", f0:92, f1:38, g:.17});
+      tone(k + .02, .3, {type:"triangle", f0:1320, f1:330, g:.05});
+      for(let i = 0; i < 8; i++) tone(k + .12 + Math.random() * .5, .5, {f0:900 + Math.random() * 3200, g:.016});
+    }
+  };
+  return {
+    get on(){ return on; },
+    enable(v){ on = v; if(v){ boot(); if(ctx.state === "suspended") ctx.resume(); } return on; },
+    play(n){ if(!on) return; if(ctx.state === "suspended") ctx.resume(); V[n] && V[n](); }
+  };
+})();
+
+const VOICES = [
+  {k:"tick",      n:"Касание",        cls:"интерфейс", dur:30,   f:[2200, 2200], a:.04, d:.96,
+   s:"Шум через highpass 2.2 кГц. Почти подсознательный — его замечаешь, только когда выключишь."},
+  {k:"tap",       n:"Нажатие",        cls:"интерфейс", dur:70,   f:[520, 300],  a:.1,  d:.9,
+   s:"Синус 520 → 300 Гц плюс шумовой транзиент 16 мс. Падение высоты читается как «сработало»."},
+  {k:"swish",     n:"Смена раздела",  cls:"интерфейс", dur:190,  f:[420, 2300], a:.5,  d:.5,
+   s:"Полосовой шум уезжает вверх, Q 1.2. Линейная огибающая — движение, а не удар."},
+  {k:"charge",    n:"Удержание",      cls:"ритуал",    dur:620,  f:[300, 2600], a:.8,  d:.2,
+   s:"Две пилы с расстройкой 7 центов через lowpass, который открывается ровно за 620 мс, плюс саб 55 Гц. В конце — захват."},
+  {k:"ok",        n:"Готово",         cls:"событие",   dur:230,  f:[523, 784],  a:.15, d:.85,
+   s:"Две треугольные ноты вверх, до и соль. Единственный интервал во всей системе."},
+  {k:"warn",      n:"Внимание",       cls:"событие",   dur:220,  f:[392, 294],  a:.12, d:.88,
+   s:"Одна нота вниз. Ждём внешнего — нет сидов, конфликт, облако недоступно."},
+  {k:"err",       n:"Ошибка",         cls:"событие",   dur:300,  f:[300, 150],  a:.1,  d:.9,
+   s:"Падение на октаву с расстроенным дублем и коротким транзитом. Нужно решение человека."},
+  {k:"evaporate", n:"Испарение",      cls:"событие",   dur:420,  f:[280, 5200], a:.5,  d:.5,
+   s:"Шум уезжает вверх через узкий полосовой и рассыпается шестью искрами. Дайджест разобрали."},
+  {k:"ritual",    n:"Ритуал запуска", cls:"ритуал",    dur:2600, f:[30, 5400],  a:.9,  d:.1,
+   s:"Саб 30 → 62 Гц, шумовой подъём, шесть тиков по стадиям, удар на 92 % и хвост из восьми затухающих обертонов."}
+];
+
+(() => {
+  /* огибающая и развёртка частоты — спека, нарисованная числами самой спеки */
+  const W = 240, H = 58;
+  function env(a, d){
+    const ax = 6 + a * (W - 14);
+    return `M4 ${H - 3} L${ax.toFixed(1)} 5 C${(ax + (W - ax) * .3).toFixed(1)} ${5 + 18 * d} ${(ax + (W - ax) * .5).toFixed(1)} ${H - 8} ${W - 4} ${H - 3} Z`;
+  }
+  function sweep(f0, f1){
+    const lg = v => Math.log2(Math.max(20, v));
+    const lo = lg(25), hi = lg(6000);
+    const y = v => H - 5 - (lg(v) - lo) / (hi - lo) * (H - 12);
+    return `M4 ${y(f0).toFixed(1)} C${W * .4} ${y(f0).toFixed(1)} ${W * .6} ${y(f1).toFixed(1)} ${W - 4} ${y(f1).toFixed(1)}`;
+  }
+  document.getElementById("sndGrid").innerHTML = VOICES.map(v => `
+    <button class="voice" data-v="${v.k}">
+      <span class="vh"><span class="vn">${v.n}</span><span class="vc ${v.cls === "ритуал" ? "r" : v.cls === "событие" ? "e" : ""}">${v.cls}</span></span>
+      <svg viewBox="0 0 ${W} ${H}" class="vwave" aria-hidden="true">
+        <path d="${env(v.a, v.d)}" fill="url(#vg)" stroke="var(--hot-2)" stroke-width="1.2"/>
+        <path d="${sweep(v.f[0], v.f[1])}" fill="none" stroke="var(--cool)" stroke-width="1.2" stroke-dasharray="3 4" opacity=".85"/>
+      </svg>
+      <span class="vm"><b>${v.dur} мс</b> · ${v.f[0]} → ${v.f[1]} Гц</span>
+      <span class="vs">${v.s}</span>
+      <span class="vplay"><svg><use href="#i-play"/></svg>Сыграть</span>
+    </button>`).join("");
+
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  defs.setAttribute("style", "position:absolute;width:0;height:0");
+  defs.innerHTML = `<defs><linearGradient id="vg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="var(--hot-1)" stop-opacity=".34"/>
+    <stop offset="1" stop-color="var(--hot-1)" stop-opacity="0"/></linearGradient></defs>`;
+  document.body.appendChild(defs);
+
+  const m = document.getElementById("sndMaster");
+  function setMaster(v){
+    Snd.enable(v);
+    m.setAttribute("aria-pressed", String(v));
+    m.querySelector("span").textContent = v ? "Звук включён" : "Включить звук";
+    document.getElementById("sndGrid").classList.toggle("live", v);
+  }
+  m.onclick = () => setMaster(!Snd.on);
+  document.getElementById("sndGrid").onclick = e => {
+    const b = e.target.closest(".voice"); if(!b) return;
+    if(!Snd.on) setMaster(true);
+    Snd.play(b.dataset.v);
+  };
+})();
 
 // shockwave
 const wStage=$("[data-wave]"),wv=$("#wv");
