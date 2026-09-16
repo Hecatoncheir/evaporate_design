@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import 'ev_focusable.dart';
 import 'ev_icon.dart';
 
 /// Второстепенная кнопка. Стеклянная, без заливки — рядом с «Играть»
@@ -17,7 +18,10 @@ class EvGhostButton extends StatefulWidget {
   });
 
   final String label;
-  final VoidCallback onPressed;
+
+  /// `null` — действия пока нет: кнопка выглядит так же, но не нажимается
+  /// и фокус не получает.
+  final VoidCallback? onPressed;
   final String? icon;
   final double height;
 
@@ -37,11 +41,11 @@ class _EvGhostButtonState extends State<EvGhostButton> {
     final c = ev.colors;
     final accent = widget.danger ? EvColors.bad : c.ink;
     return MouseRegion(
-      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: widget.onPressed,
+      child: EvFocusable(
+        onActivate: widget.onPressed,
+        radius: ev.radii.pill,
         child: AnimatedContainer(
           duration: EvMotion.fast,
           curve: EvMotion.ease,
@@ -67,9 +71,13 @@ class _EvGhostButtonState extends State<EvGhostButton> {
                 ),
                 const SizedBox(width: 9),
               ],
+              // 15 px, как у «Играть»: кнопки одной строки — одним кеглем
               Text(
                 widget.label,
-                style: ev.text.body.copyWith(color: _hover ? accent : c.ink2),
+                style: ev.text.body.copyWith(
+                  fontSize: 15,
+                  color: _hover ? accent : c.ink2,
+                ),
               ),
             ],
           ),

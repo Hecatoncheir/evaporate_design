@@ -79,6 +79,15 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ),
                 EvOption(
+                  title: 'Параллакс обложек',
+                  description: 'Четыре слоя глубины, реакция на курсор',
+                  control: EvSwitch(
+                    value: effects.parallax,
+                    semanticLabel: 'Параллакс',
+                    onChanged: (v) => effects.parallax = v,
+                  ),
+                ),
+                EvOption(
                   title: 'Плёночное зерно',
                   description: '5 % перекрытия, убирает бандинг на градиентах',
                   control: EvSwitch(
@@ -96,6 +105,15 @@ class SettingsPage extends StatelessWidget {
                     },
                     value: effects.quality,
                     onChanged: (q) => effects.quality = q,
+                  ),
+                ),
+                EvOption(
+                  title: 'Удержание кнопки «Играть»',
+                  description: 'Защита от случайного запуска · 620 мс',
+                  control: EvSwitch(
+                    value: effects.holdToPlay,
+                    semanticLabel: 'Удержание',
+                    onChanged: (v) => effects.holdToPlay = v,
                   ),
                 ),
                 EvOption(
@@ -143,7 +161,7 @@ class SettingsPage extends StatelessWidget {
           'Остальные разделы — звук, библиотека, загрузки, раздача, '
           'сохранения, запуск, клавиши, «О программе» — и поиск по настройкам '
           'пока живут в макете design/evaporate-launcher.html. Из эффектов '
-          'там же пока параллакс, ритуал запуска и удержание «Играть».',
+          'там же пока ритуал запуска.',
           style: ev.text.bodySmall.copyWith(color: ev.colors.ink4),
         ),
       ],

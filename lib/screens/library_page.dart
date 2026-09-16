@@ -1,56 +1,231 @@
 import 'package:flutter/widgets.dart';
 
 import '../data/sample_data.dart';
-import '../design/tokens.dart';
+import '../library/ev_hero.dart';
+import '../library/ev_session_row.dart';
+import '../library/ev_side_cards.dart';
+import '../library/library_layout.dart';
 import '../util/plural.dart';
+import '../util/units.dart';
 import '../widgets/ev_game_card.dart';
 import '../widgets/ev_surfaces.dart';
 
-/// Библиотека в каркасе: пока только полка. Герой с кнопкой запуска
-/// переносится следующим — он требует шейдерного фона и ритуала запуска.
+/// Библиотека — направление A, «Витрина»: герой с игрой, на которой вы
+/// остановились, «Продолжить», полка установленного и то, что качается.
+///
+/// Раскладка идёт ступенями прототипа ([EvLibraryLayout]): на окне до 800
+/// по высоте герой ужимается до 300 px, а «Продолжить» складывается; от
+/// 1800 по ширине справа встаёт колонка с друзьями и загрузками.
 class LibraryPage extends StatelessWidget {
-  const LibraryPage({super.key, required this.games});
+  const LibraryPage({
+    super.key,
+    required this.games,
+    required this.hero,
+    required this.sessions,
+    required this.friends,
+    required this.friendsOnline,
+    required this.downloadSlots,
+    this.onLaunch,
+  });
 
   final List<SampleGame> games;
 
+  /// Игра в герое.
+  final SampleGame hero;
+
+  /// Недавние сессии, без игры в герое.
+  final List<SampleGame> sessions;
+
+  final List<EvFriendLine> friends;
+  final int friendsOnline;
+
+  /// Сколько раздач качается одновременно.
+  final int downloadSlots;
+
+  /// Удержание «Играть» в герое дошло до конца.
+  final ValueChanged<SampleGame>? onLaunch;
+
   @override
   Widget build(BuildContext context) {
-    final window = MediaQuery.sizeOf(context);
-    final gutter = EvSpace.gutterFor(window);
-    // Ширина обложки растёт ступенями вместе с окном, как в прототипе.
-    final cardWidth = window.width >= 2200
-        ? 224.0
-        : window.width >= 1800
-        ? 206.0
-        : 178.0;
+    final layout = EvLibraryLayout.of(MediaQuery.sizeOf(context));
+    final installed = [
+      for (final g in games)
+        if (g.state == EvGameState.ready) g,
+    ];
+    final incoming = [
+      for (final g in games)
+        if (g.state != EvGameState.ready) g,
+    ];
+
+    Widget section(String title, String count, Widget child) => Padding(
+      padding: EdgeInsets.only(top: layout.sectionTop),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          EvSectionHeader(title, count: count),
+          SizedBox(height: layout.sectionHeadGap),
+          child,
+        ],
+      ),
+    );
+
+    final main = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(height: layout.gutter),
+        EvHero(
+          layout: layout,
+          palette: hero.palette,
+          seed: hero.seed,
+          eyebrow: 'Продолжить · сыграно ${formatPlayed(hero.played)}',
+          title: hero.title,
+          blurb: hero.blurb,
+          chips: hero.chips,
+          onLaunch: onLaunch == null ? null : () => onLaunch!(hero),
+        ),
+        if (layout.showSessions && sessions.isNotEmpty)
+          section(
+            'Продолжить',
+            '${sessions.length} '
+                '${ruPlural(sessions.length, 'сессия', 'сессии', 'сессий')}',
+            EvSessionGrid(
+              minWidth: layout.sessionMinWidth,
+              children: [
+                for (final g in sessions)
+                  EvSessionRow(
+                    title: g.title,
+                    subtitle: '${formatPlayed(g.played)} · ${g.lastPlayed}',
+                    palette: g.palette,
+                    seed: g.seed,
+                  ),
+              ],
+            ),
+          ),
+        section(
+          'Библиотека',
+          '${installed.length} '
+              '${ruPlural(installed.length, 'установлена', 'установлено', 'установлено')}',
+          _Shelf(games: installed, layout: layout),
+        ),
+        if (incoming.isNotEmpty)
+          section(
+            'Скоро на диске',
+            'качается',
+            _Shelf(games: incoming, layout: layout),
+          ),
+      ],
+    );
+
     return ListView(
       primary: true,
-      padding: EdgeInsets.fromLTRB(gutter, gutter, gutter, 26),
+      padding: EdgeInsets.fromLTRB(layout.gutter, 0, layout.gutter, 26),
       children: [
-        EvSectionHeader(
-          'Все игры',
-          count:
-              '${games.length} ${ruPlural(games.length, 'игра', 'игры', 'игр')}',
-        ),
-        const SizedBox(height: EvSpace.xl),
-        Wrap(
-          spacing: EvSpace.l,
-          runSpacing: EvSpace.xl,
-          children: [
-            for (final g in games)
-              EvGameCard(
-                title: g.title,
-                subtitle: g.subtitle,
-                palette: g.palette,
-                seed: g.seed,
-                state: g.state,
-                progress: g.progress,
-                badge: g.badge,
-                width: cardWidth,
+        if (layout.sideWidth == 0)
+          main
+        else
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: main),
+              SizedBox(width: layout.gutter),
+              SizedBox(
+                width: layout.sideWidth,
+                child: Padding(
+                  padding: EdgeInsets.only(top: layout.gutter),
+                  child: _SideColumn(
+                    friends: friends,
+                    friendsOnline: friendsOnline,
+                    downloading: [
+                      for (final g in games)
+                        if (g.state == EvGameState.downloading) g,
+                    ],
+                    slots: downloadSlots,
+                  ),
+                ),
               ),
-          ],
-        ),
+            ],
+          ),
       ],
     );
   }
+}
+
+/// Полка: ряд обложек с горизонтальной прокруткой. Сверху запас на подъём
+/// карточки при наведении, иначе её кромку срезало бы.
+class _Shelf extends StatelessWidget {
+  const _Shelf({required this.games, required this.layout});
+
+  final List<SampleGame> games;
+  final EvLibraryLayout layout;
+
+  @override
+  Widget build(BuildContext context) => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    // 8 + 16 — те же 24 px, что 6 + 18 в прототипе, но подъём на 8 px
+    // помещается целиком
+    padding: EdgeInsets.only(top: 8, bottom: layout.shelfBottom - 2),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final (i, g) in games.indexed) ...[
+          if (i > 0) const SizedBox(width: 16),
+          EvGameCard(
+            title: g.title,
+            subtitle: g.subtitle,
+            palette: g.palette,
+            seed: g.seed,
+            state: g.state,
+            progress: g.progress,
+            badge: g.badge,
+            width: layout.cardWidth,
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+/// Правая колонка широкого окна: то, что на узком живёт всплывающими
+/// панелями, — друзья и загрузки.
+class _SideColumn extends StatelessWidget {
+  const _SideColumn({
+    required this.friends,
+    required this.friendsOnline,
+    required this.downloading,
+    required this.slots,
+  });
+
+  final List<EvFriendLine> friends;
+  final int friendsOnline;
+  final List<SampleGame> downloading;
+  final int slots;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      EvFriendsCard(friends: friends, online: friendsOnline),
+      if (downloading.isNotEmpty) ...[
+        const SizedBox(height: 14),
+        EvDownloadsNowCard(
+          downloads: [
+            for (final g in downloading)
+              EvDownloadLine(
+                title: g.title,
+                detail:
+                    '${percent(g.progress ?? 0)} % · ${formatRate(g.rateKb ?? 0)}',
+                progress: g.progress ?? 0,
+                palette: g.palette,
+                seed: g.seed,
+                checking: g.checking,
+              ),
+          ],
+          rate: formatRate(
+            downloading.fold(0, (sum, g) => sum + (g.rateKb ?? 0)),
+          ),
+          slots: slots,
+        ),
+      ],
+    ],
+  );
 }

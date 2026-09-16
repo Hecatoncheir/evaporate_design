@@ -10,6 +10,7 @@ import '../design/effects.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
 import 'ember_field.dart';
+import 'ev_pointer.dart';
 import 'static_backdrop.dart';
 
 /// Живая атмосфера за интерфейсом: плюм пара, восходящие угли и плёночное
@@ -17,18 +18,27 @@ import 'static_backdrop.dart';
 ///
 /// Курсор слегка сдвигает плюм (параллакс), поэтому атмосфера оборачивает
 /// содержимое окна, а не лежит отдельным слоем: движение мыши над
-/// интерфейсом доходит и до неё.
+/// интерфейсом доходит и до неё. Тот же сглаженный курсор достаётся
+/// содержимому через [pointerOf] — за ним сдвигаются слои обложки героя.
 ///
 /// Кадры идут, только пока их видно:
 /// * свёрнутое окно или перекрытый маршрут — ни одного кадра;
 /// * неактивное окно — 30 к/с, если это разрешено в настройках;
 /// * «уменьшить движение» — один неподвижный кадр, как в прототипе.
 ///
+/// Без живого фона и искр кадры идут, только пока курсор догоняется и за
+/// ним следит параллакс.
+///
 /// Без [EvEffectsScope] выше по дереву атмосфера неподвижна и пуста.
 class EvAtmosphere extends StatefulWidget {
   const EvAtmosphere({super.key, required this.child});
 
   final Widget child;
+
+  /// Курсор над окном, общий для плюма и параллакса. `null` — атмосферы
+  /// выше по дереву нет.
+  static EvPointer? pointerOf(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<_PointerScope>()?.pointer;
 
   @override
   State<EvAtmosphere> createState() => EvAtmosphereState();
@@ -40,6 +50,7 @@ class EvAtmosphereState extends State<EvAtmosphere>
   late final AppLifecycleListener _lifecycle;
   final _repaint = _Repaint();
   final _scene = _Scene();
+  final _pointer = EvPointer();
   final _clock = Stopwatch();
   Timer? _throttle;
   Duration _lastTick = Duration.zero;
@@ -102,10 +113,8 @@ class EvAtmosphereState extends State<EvAtmosphere>
     _tickerModeEnabled = TickerMode.valuesOf(context).enabled;
     if (_reducedMotion) {
       // неподвижный кадр прототипа: t = 8, курсор в центре
-      _scene
-        ..time = 8
-        ..pointer = const Offset(0.5, 0.5)
-        ..target = const Offset(0.5, 0.5);
+      _scene.time = 8;
+      _pointer.jumpTo(const Offset(0.5, 0.5));
     }
     _syncRunning();
   }
@@ -116,6 +125,7 @@ class EvAtmosphereState extends State<EvAtmosphere>
     _ticker.dispose();
     _lifecycle.dispose();
     _repaint.dispose();
+    _pointer.dispose();
     _plume?.dispose();
     _glowSprite.dispose();
     _grain?.dispose();
@@ -136,7 +146,7 @@ class EvAtmosphereState extends State<EvAtmosphere>
         !_reducedMotion &&
         _tickerModeEnabled &&
         visible &&
-        (effects.livingBackground || effects.sparks);
+        (effects.livingBackground || effects.sparks || _parallaxSettling);
     final throttled =
         wanted &&
         effects.throttleInBackground &&
@@ -176,60 +186,84 @@ class EvAtmosphereState extends State<EvAtmosphere>
     _advance(dt);
   }
 
+  /// Параллакс включён, за курсором следят, а он ещё не догнан.
+  bool get _parallaxSettling =>
+      (_effects?.parallax ?? false) && _pointer.isWatched && _pointer.settling;
+
   void _advance(double dt) {
     final seconds = math.min(dt, 0.1);
     _scene.time += seconds;
-    // Сглаживание курсора из прототипа — 5,5 % пути за кадр при 60 Гц,
-    // пересчитанное во время, чтобы не зависеть от частоты экрана.
-    final k = 1 - math.pow(1 - 0.055, seconds * 60).toDouble();
-    _scene.pointer = Offset.lerp(_scene.pointer, _scene.target, k)!;
-    if (_effects?.sparks ?? false) _scene.embers.step(seconds);
-    _repaint.notify();
+    _pointer.advance(seconds);
+    final effects = _effects;
+    if (effects == null) return;
+    if (effects.sparks) _scene.embers.step(seconds);
+    if (effects.livingBackground || effects.sparks) {
+      _repaint.notify();
+    } else if (!_parallaxSettling) {
+      // кадры шли только ради параллакса, а курсор догнан
+      _syncRunning();
+    }
   }
 
   void _onPointer(PointerEvent event) {
     if (_reducedMotion) return;
     final size = context.size;
     if (size == null || size.isEmpty) return;
-    _scene.target = Offset(
+    _pointer.target = Offset(
       (event.localPosition.dx / size.width).clamp(0.0, 1.0),
       (event.localPosition.dy / size.height).clamp(0.0, 1.0),
     );
+    if (!isAnimating) _syncRunning();
   }
 
   @override
   Widget build(BuildContext context) {
     final c = context.evc;
     final effects = _effects;
-    return Listener(
-      behavior: HitTestBehavior.translucent,
-      onPointerHover: _onPointer,
-      onPointerMove: _onPointer,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          RepaintBoundary(
-            child: CustomPaint(
-              painter: _AtmospherePainter(
-                repaint: _repaint,
-                scene: _scene,
-                colors: c,
-                devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
-                quality: effects?.quality ?? EvEffectsQuality.full,
-                plume: (effects?.livingBackground ?? false) ? _plume : null,
-                staticFallback:
-                    (effects?.livingBackground ?? false) && _plumeUnavailable,
-                sparks: effects?.sparks ?? false,
-                glowSprite: _glowSprite,
-                grain: (effects?.grain ?? false) ? _grain : null,
+    return _PointerScope(
+      pointer: _pointer,
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerHover: _onPointer,
+        onPointerMove: _onPointer,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            RepaintBoundary(
+              child: CustomPaint(
+                painter: _AtmospherePainter(
+                  repaint: _repaint,
+                  scene: _scene,
+                  pointer: _pointer,
+                  colors: c,
+                  devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+                  quality: effects?.quality ?? EvEffectsQuality.full,
+                  plume: (effects?.livingBackground ?? false) ? _plume : null,
+                  staticFallback:
+                      (effects?.livingBackground ?? false) && _plumeUnavailable,
+                  sparks: effects?.sparks ?? false,
+                  glowSprite: _glowSprite,
+                  grain: (effects?.grain ?? false) ? _grain : null,
+                ),
               ),
             ),
-          ),
-          widget.child,
-        ],
+            widget.child,
+          ],
+        ),
       ),
     );
   }
+}
+
+/// Отдаёт курсор атмосферы содержимому окна. Сам курсор не меняется,
+/// поэтому зависимых не пересобирает: они слушают его напрямую.
+class _PointerScope extends InheritedWidget {
+  const _PointerScope({required this.pointer, required super.child});
+
+  final EvPointer pointer;
+
+  @override
+  bool updateShouldNotify(_PointerScope old) => old.pointer != pointer;
 }
 
 /// Загрузка шейдера плюма — один раз на приложение.
@@ -281,8 +315,6 @@ class _Repaint extends ChangeNotifier {
 /// поэтому кадры не пересобирают виджеты.
 class _Scene {
   double time = 0;
-  Offset pointer = const Offset(0.5, 0.4);
-  Offset target = const Offset(0.5, 0.4);
   final embers = EvEmberField();
 }
 
@@ -290,6 +322,7 @@ class _AtmospherePainter extends CustomPainter {
   _AtmospherePainter({
     required Listenable repaint,
     required this.scene,
+    required this.pointer,
     required this.colors,
     required this.devicePixelRatio,
     required this.quality,
@@ -301,6 +334,7 @@ class _AtmospherePainter extends CustomPainter {
   }) : super(repaint: repaint);
 
   final _Scene scene;
+  final EvPointer pointer;
   final EvColors colors;
   final double devicePixelRatio;
   final EvEffectsQuality quality;
@@ -361,7 +395,7 @@ class _AtmospherePainter extends CustomPainter {
       shader,
       frame: frame.size,
       time: scene.time,
-      pointer: scene.pointer,
+      pointer: pointer.value,
       colors: colors,
     );
 

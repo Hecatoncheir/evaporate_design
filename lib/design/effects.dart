@@ -27,19 +27,29 @@ class EvEffects extends ChangeNotifier {
   EvEffects({
     this._livingBackground = true,
     this._sparks = true,
+    this._parallax = true,
     this._grain = true,
     this._quality = EvEffectsQuality.full,
+    this._holdToPlay = true,
     this._throttleInBackground = true,
   });
 
   /// Всё выключено: для превью и тестов, где кадры не должны идти сами.
+  /// Удержание «Играть» остаётся — оно кадров не заводит.
   EvEffects.still()
-    : this(livingBackground: false, sparks: false, grain: false);
+    : this(
+        livingBackground: false,
+        sparks: false,
+        parallax: false,
+        grain: false,
+      );
 
   bool _livingBackground;
   bool _sparks;
+  bool _parallax;
   bool _grain;
   EvEffectsQuality _quality;
+  bool _holdToPlay;
   bool _throttleInBackground;
 
   /// Живой фон: плюм пара на шейдере.
@@ -58,6 +68,14 @@ class EvEffects extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Параллакс обложек: слои героя сдвигаются за курсором на разную глубину.
+  bool get parallax => _parallax;
+  set parallax(bool value) {
+    if (value == _parallax) return;
+    _parallax = value;
+    notifyListeners();
+  }
+
   /// Плёночное зерно поверх фона: 5 %, убирает бандинг на градиентах.
   bool get grain => _grain;
   set grain(bool value) {
@@ -70,6 +88,15 @@ class EvEffects extends ChangeNotifier {
   set quality(EvEffectsQuality value) {
     if (value == _quality) return;
     _quality = value;
+    notifyListeners();
+  }
+
+  /// «Играть» нужно удерживать 620 мс — защита от случайного запуска.
+  /// Выключено — кнопка срабатывает по нажатию.
+  bool get holdToPlay => _holdToPlay;
+  set holdToPlay(bool value) {
+    if (value == _holdToPlay) return;
+    _holdToPlay = value;
     notifyListeners();
   }
 

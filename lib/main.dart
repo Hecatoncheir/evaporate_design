@@ -11,6 +11,7 @@ import 'screens/settings_page.dart';
 import 'shell/ev_palette.dart';
 import 'shell/ev_section.dart';
 import 'shell/ev_shell.dart';
+import 'util/units.dart';
 import 'widgets/ev_icon.dart';
 import 'widgets/ev_surfaces.dart';
 
@@ -79,9 +80,9 @@ class _Home extends StatelessWidget {
       userName: sampleUserName,
       friendsOnline: sampleFriendsOnline,
       downloadsActive: sampleDownloadsActive,
-      status: const [
-        EvPill(sampleRate, status: EvStatus.busy),
-        EvPill('Движок готов'),
+      status: [
+        EvPill(formatRate(sampleRateKb, digits: 1), status: EvStatus.busy),
+        const EvPill('Движок готов'),
       ],
       commands: [
         for (final g in sampleLibrary)
@@ -116,7 +117,14 @@ class _Home extends StatelessWidget {
           ),
       ],
       pageBuilder: (context, section) => switch (section) {
-        EvSection.library => const LibraryPage(games: sampleLibrary),
+        EvSection.library => LibraryPage(
+          games: sampleLibrary,
+          hero: sampleHero,
+          sessions: sampleSessions,
+          friends: sampleFriends,
+          friendsOnline: sampleFriendsOnline,
+          downloadSlots: sampleDownloadSlots,
+        ),
         EvSection.settings => const SettingsPage(),
         _ => PlaceholderPage(section: section),
       },

@@ -23,9 +23,17 @@ void _window(WidgetTester tester, double width, double height) {
   addTearDown(tester.view.reset);
 }
 
-/// Приложение с неподвижной атмосферой: живой фон шёл бы бесконечно,
-/// и pumpAndSettle не дождался бы покоя. Сама атмосфера проверяется
-/// в atmosphere_test.dart.
+/// Досчитать экран до покоя. На библиотеке ядро «Играть» дышит бесконечно,
+/// и pumpAndSettle не дождался бы конца: вместо него секунда — дольше
+/// любого перехода — и кадр после неё.
+Future<void> _settle(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(seconds: 1));
+  await tester.pump();
+}
+
+/// Приложение с неподвижной атмосферой: живой фон шёл бы бесконечно.
+/// Сама атмосфера проверяется в atmosphere_test.dart.
 Widget _app() {
   final effects = EvEffects.still();
   addTearDown(effects.dispose);
@@ -43,7 +51,7 @@ EvSection _section(WidgetTester tester) =>
 
 Future<void> _key(WidgetTester tester, LogicalKeyboardKey key) async {
   await tester.sendKeyEvent(key);
-  await tester.pumpAndSettle();
+  await _settle(tester);
 }
 
 Future<void> _ctrlTab(WidgetTester tester, {bool shift = false}) async {
@@ -52,7 +60,7 @@ Future<void> _ctrlTab(WidgetTester tester, {bool shift = false}) async {
   await tester.sendKeyEvent(LogicalKeyboardKey.tab);
   if (shift) await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
   await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-  await tester.pumpAndSettle();
+  await _settle(tester);
 }
 
 /// Каркас без приложения — для проверок, которым нужен свой экран.
@@ -73,7 +81,7 @@ Future<EvShellController> _bareShell(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  await _settle(tester);
   return controller;
 }
 
@@ -116,7 +124,7 @@ void main() {
   ) async {
     _window(tester, 1280, 720);
     await tester.pumpWidget(_app());
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     expect(tester.getSize(find.byType(EvRail)).width, EvSpace.railWidth);
     expect(tester.getSize(find.byType(EvTopBar)).height, EvSpace.topBarHeight);
@@ -142,16 +150,25 @@ void main() {
     final effects = EvEffects.still();
     addTearDown(effects.dispose);
     await tester.pumpWidget(EvaporateApp(effects: effects));
-    await tester.pumpAndSettle();
+    await _settle(tester);
     await _key(tester, LogicalKeyboardKey.digit4);
 
-    // зерно не заводит кадров, поэтому pumpAndSettle здесь честен
     await tester.tap(find.bySemanticsLabel('Зерно'));
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(effects.grain, isTrue);
 
+    await tester.tap(find.bySemanticsLabel('Параллакс'));
+    await _settle(tester);
+    expect(effects.parallax, isTrue);
+
+    final hold = find.bySemanticsLabel('Удержание');
+    await tester.ensureVisible(hold);
+    await tester.tap(hold);
+    await _settle(tester);
+    expect(effects.holdToPlay, isFalse);
+
     await tester.tap(find.text('Эко'));
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(effects.quality, EvEffectsQuality.eco);
   });
 
@@ -160,26 +177,26 @@ void main() {
   ) async {
     _window(tester, 1440, 900);
     await tester.pumpWidget(_app());
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     await tester.tap(_railItem(EvSection.downloads));
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(_section(tester), EvSection.downloads);
     expect(_crumb('Загрузки'), findsOneWidget);
 
     await tester.tap(_railItem(EvSection.downloads));
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(_section(tester), EvSection.downloads);
 
     await tester.tap(find.byType(EvAvatar));
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(_section(tester), EvSection.profile);
   });
 
   testWidgets('цифры выбирают раздел, Ctrl+Tab идёт по кругу', (tester) async {
     _window(tester, 1440, 900);
     await tester.pumpWidget(_app());
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     await _key(tester, LogicalKeyboardKey.digit3);
     expect(_section(tester), EvSection.saves);
@@ -201,11 +218,11 @@ void main() {
     // смена темы пересобирает всё дерево, включая узел фокуса каркаса
     _window(tester, 1440, 900);
     await tester.pumpWidget(_app());
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     EvAppearanceScope.of(tester.element(find.byType(EvShell))).skin =
         EvSkin.cryo;
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(
       Theme.of(tester.element(find.byType(EvShell)))
           .extension<EvTheme>()!
@@ -284,18 +301,18 @@ void main() {
         .position;
 
     await tester.drag(find.byKey(const Key('page')), const Offset(0, -1500));
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(position().pixels, greaterThan(0));
 
     await tester.tap(_railItem(EvSection.library));
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(position().pixels, 0);
   });
 
   testWidgets('подсказка рейла появляется при наведении', (tester) async {
     _window(tester, 1440, 900);
     await tester.pumpWidget(_app());
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     double opacity() => tester
         .widget<AnimatedOpacity>(
@@ -311,11 +328,11 @@ void main() {
     addTearDown(mouse.removePointer);
     await mouse.addPointer(location: Offset.zero);
     await mouse.moveTo(tester.getCenter(_railItem(EvSection.downloads)));
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(opacity(), 1);
 
     await mouse.moveTo(const Offset(700, 400));
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(opacity(), 0);
   });
 
@@ -324,7 +341,7 @@ void main() {
   ) async {
     _window(tester, 1440, 900);
     await tester.pumpWidget(_app());
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     EvSection? focusedRail() => FocusManager.instance.primaryFocus?.context
         ?.findAncestorWidgetOfExactType<EvRailItem>()
@@ -343,7 +360,7 @@ void main() {
   testWidgets('узкое окно: навигация внизу, подсказок нет', (tester) async {
     _window(tester, 600, 900);
     await tester.pumpWidget(_app());
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     expect(find.byType(EvRail), findsNothing);
     expect(find.byType(EvHintsBar), findsNothing);
@@ -356,7 +373,7 @@ void main() {
         matching: find.bySemanticsLabel('Друзья'),
       ),
     );
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(_crumb('Друзья'), findsOneWidget);
   });
 
@@ -365,7 +382,7 @@ void main() {
   ) async {
     _window(tester, 1440, 900);
     await tester.pumpWidget(_app());
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
     await _key(tester, LogicalKeyboardKey.slash);
     expect(find.byType(EvPalette), findsOneWidget);
@@ -375,7 +392,7 @@ void main() {
     expect(_section(tester), EvSection.library);
 
     await tester.enterText(find.byType(TextField), 'загрузки');
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(
       find.descendant(
         of: find.byType(EvPalette),
@@ -384,7 +401,7 @@ void main() {
       findsOneWidget,
     );
     await tester.testTextInput.receiveAction(TextInputAction.done);
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(find.byType(EvPalette), findsNothing);
     expect(_section(tester), EvSection.downloads);
 
@@ -392,9 +409,9 @@ void main() {
     await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-    await tester.pumpAndSettle();
+    await _settle(tester);
     await tester.enterText(find.byType(TextField), 'хоррор');
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(
       find.descendant(
         of: find.byType(EvPalette),
@@ -408,9 +425,9 @@ void main() {
     // команда меняет облик всего приложения
     await _key(tester, LogicalKeyboardKey.slash);
     await tester.enterText(find.byType(TextField), 'nebula');
-    await tester.pumpAndSettle();
+    await _settle(tester);
     await tester.testTextInput.receiveAction(TextInputAction.done);
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(
       EvAppearanceScope.of(tester.element(find.byType(EvShell))).skin,
       EvSkin.nebula,

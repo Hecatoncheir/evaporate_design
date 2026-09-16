@@ -4,9 +4,10 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../art/ev_art.dart';
+import '../art/key_art.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
-import '../widgets/ev_game_card.dart';
 import '../widgets/ev_icon.dart';
 import 'ev_top_bar.dart' show EvKey;
 
@@ -376,8 +377,9 @@ class _PaletteRow extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: thumbRadius,
                     child: switch (command.cover) {
-                      (final palette, final seed) => CustomPaint(
-                        painter: EvCoverPainter(palette: palette, seed: seed),
+                      (final palette, final seed) => EvCover(
+                        palette: palette,
+                        seed: seed,
                       ),
                       null => Center(
                         child: EvIcon(command.icon, size: 15, color: c.ink4),

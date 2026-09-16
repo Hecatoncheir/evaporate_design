@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../design/theme.dart';
@@ -19,6 +20,10 @@ import 'ev_icon.dart';
 ///
 /// Нажатие не запускает игру: кнопку нужно **удерживать** 620 мс. Это защита
 /// от случайного старта и заодно момент, ради которого всё остальное затевалось.
+///
+/// С клавиатуры — так же, как в прототипе: `Пробел` или `Enter` держат заряд,
+/// отпущенная клавиша сбрасывает его. Рамка фокуса — только в режиме
+/// клавиатуры, как у остальных кнопок.
 class EvPlayButton extends StatefulWidget {
   const EvPlayButton({
     super.key,
@@ -27,6 +32,7 @@ class EvPlayButton extends StatefulWidget {
     this.icon = EvIcons.play,
     this.requireHold = true,
     this.height = 56,
+    this.onCharge,
   });
 
   final VoidCallback onLaunch;
@@ -38,17 +44,30 @@ class EvPlayButton extends StatefulWidget {
 
   final double height;
 
+  /// Заряд 0…1 на каждом кадре удержания и сброса — для тех, кто греется
+  /// вместе с кнопкой: герой дрожит тепловым маревом.
+  final ValueChanged<double>? onCharge;
+
   @override
   State<EvPlayButton> createState() => _EvPlayButtonState();
 }
 
 class _EvPlayButtonState extends State<EvPlayButton>
     with TickerProviderStateMixin {
-  late final AnimationController _hold = AnimationController(
-    vsync: this,
-    duration: EvMotion.hold,
-    reverseDuration: const Duration(milliseconds: 160),
-  )..addStatusListener(_onHold);
+  late final AnimationController _hold =
+      AnimationController(
+          vsync: this,
+          duration: EvMotion.hold,
+          reverseDuration: const Duration(milliseconds: 160),
+        )
+        ..addStatusListener(_onHold)
+        ..addListener(() => widget.onCharge?.call(_hold.value));
+
+  late final FocusNode _focus = FocusNode(
+    debugLabel: 'EvPlayButton',
+    onKeyEvent: _onKey,
+  );
+  bool _ring = false;
 
   late final AnimationController _breathe = AnimationController(
     vsync: this,
@@ -91,7 +110,21 @@ class _EvPlayButtonState extends State<EvPlayButton>
     _hold.dispose();
     _breathe.dispose();
     _sweep.dispose();
+    _focus.dispose();
     super.dispose();
+  }
+
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    final key = event.logicalKey;
+    if (key != LogicalKeyboardKey.space &&
+        key != LogicalKeyboardKey.enter &&
+        key != LogicalKeyboardKey.numpadEnter) {
+      return KeyEventResult.ignored;
+    }
+    // Повтор клавиши не перезапускает заряд, а отпускание сбрасывает его.
+    if (event is KeyDownEvent && !_down) _press();
+    if (event is KeyUpEvent) _release();
+    return KeyEventResult.handled;
   }
 
   void _press() {
@@ -115,15 +148,17 @@ class _EvPlayButtonState extends State<EvPlayButton>
     final c = ev.colors;
     final r = ev.radii.pill.clamp(0.0, widget.height / 2);
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) {
-        setState(() => _hover = true);
-        _sweep.forward(from: 0);
-      },
-      onExit: (_) {
-        setState(() => _hover = false);
-        _release();
+    return FocusableActionDetector(
+      focusNode: _focus,
+      mouseCursor: SystemMouseCursors.click,
+      onShowFocusHighlight: (value) => setState(() => _ring = value),
+      onShowHoverHighlight: (value) {
+        setState(() => _hover = value);
+        if (value) {
+          _sweep.forward(from: 0);
+        } else {
+          _release();
+        }
       },
       child: Listener(
         onPointerDown: (_) => _press(),
@@ -146,6 +181,7 @@ class _EvPlayButtonState extends State<EvPlayButton>
                     color: c.hot2,
                     radius: r,
                     inset: -11,
+                    focusRing: _ring,
                   ),
                   child: Container(
                     height: widget.height,
@@ -276,22 +312,37 @@ class _EvPlayButtonState extends State<EvPlayButton>
 }
 
 /// Кольцо заряда обходит кнопку за 620 мс. Рисуется поверх, с отступом
-/// наружу, чтобы не спорить с кромкой.
+/// наружу, чтобы не спорить с кромкой. Здесь же рамка фокуса: 2 px `hot2`
+/// с отступом 3 px, как `:focus-visible` в прототипе.
 class _ChargeRingPainter extends CustomPainter {
   _ChargeRingPainter({
     required this.progress,
     required this.color,
     required this.radius,
     required this.inset,
+    required this.focusRing,
   });
 
   final double progress;
   final Color color;
   final double radius;
   final double inset;
+  final bool focusRing;
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (focusRing) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          (Offset.zero & size).inflate(4),
+          Radius.circular(radius + 4),
+        ),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = color,
+      );
+    }
     if (progress <= 0) return;
     final rect = Rect.fromLTWH(0, 0, size.width, size.height).deflate(inset);
     final rrect = RRect.fromRectAndRadius(
@@ -316,5 +367,8 @@ class _ChargeRingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ChargeRingPainter old) =>
-      old.progress != progress || old.color != color || old.radius != radius;
+      old.progress != progress ||
+      old.color != color ||
+      old.radius != radius ||
+      old.focusRing != focusRing;
 }

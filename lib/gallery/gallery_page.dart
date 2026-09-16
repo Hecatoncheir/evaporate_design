@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../art/key_art.dart';
 import '../design/appearance.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
@@ -48,7 +49,7 @@ class _GalleryBodyState extends State<_GalleryBody> {
     ('Неон Хальцион', 'Киберпанк · в очереди', EvCoverPalette.neon, 4422, EvGameState.queued, null, 'в очереди'),
     ('Лунная Колея', 'Симулятор · 12 ч', EvCoverPalette.lunar, 7781, EvGameState.ready, null, null),
     ('Красный Меридиан', 'Тактика · 31 ч', EvCoverPalette.crimson, 2960, EvGameState.ready, null, null),
-    ('Орбита 7', 'Космосим · качается', EvCoverPalette.glass, 8802, EvGameState.downloading, 0.41, '41 %'),
+    ('Орбита 7', 'Космосим · качается', EvCoverPalette.orbit, 8802, EvGameState.downloading, 0.41, '41 %'),
   ];
 
   @override

@@ -45,15 +45,20 @@ class EvType {
     color: ink,
   );
 
+  // Разрядка задана явно: под Material текст без неё наследует 0.25
+  // из bodyMedium и выходит шире прототипа — описание героя переносилось
+  // на лишнюю строку.
   TextStyle get body => GoogleFonts.onest(
     fontSize: 14,
     height: 1.5,
+    letterSpacing: 0,
     color: ink2,
   );
 
   TextStyle get bodySmall => GoogleFonts.onest(
     fontSize: 12.5,
     height: 1.45,
+    letterSpacing: 0,
     color: ink3,
   );
 
@@ -68,6 +73,7 @@ class EvType {
   /// Числа. Везде, где цифры выстраиваются в колонку, — моноширинные.
   TextStyle get data => GoogleFonts.jetBrainsMono(
     fontSize: 11.5,
+    letterSpacing: 0,
     color: ink3,
     fontFeatures: const [FontFeature.tabularFigures()],
   );
