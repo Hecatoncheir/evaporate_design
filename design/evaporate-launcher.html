@@ -3745,7 +3745,10 @@ readThemeColors();
 const glc=$("#gl");
 let gl=null,prog=null,U={},t0=performance.now(),mx=.5,my=.4,tmx=.5,tmy=.4;
 function initGL(){
-  gl=glc.getContext("webgl",{alpha:true,antialias:false,premultipliedAlpha:false})||glc.getContext("experimental-webgl");
+  /* Предумноженная альфа — по умолчанию. С premultipliedAlpha:false браузер
+     умножал цвет на альфу в третий раз (шейдер и смешение уже умножили),
+     и плюм давал не больше 1 % яркости: readPixels, альфа ≤ 18/255. */
+  gl=glc.getContext("webgl",{alpha:true,antialias:false})||glc.getContext("experimental-webgl");
   if(!gl){glc.style.display="none";document.body.style.background=
     "radial-gradient(70% 90% at 72% 12%, rgba(255,122,24,.13), transparent 60%), var(--void)";return false}
   const vs=`attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}`;
@@ -3817,10 +3820,15 @@ function resizeFX(){
   const want=Math.round(clamp(innerWidth/17,34,104)*FLAGS.q);
   parts=Array.from({length:want},()=>spawn(true));
 }
+/* Жизнь искры — в кадрах при 60 Гц, как и скорости. Раньше она копилась
+   в миллисекундах: искры гасли за секунду, новые рождались под кромкой и
+   через пару секунд все угли жили в нижних 30 px окна. Первая партия
+   стартует в разных фазах, чтобы не разгораться разом. */
 function spawn(any){
+  const max=340+Math.random()*560;
   return{x:Math.random()*innerWidth,y:any?innerHeight*(.30+Math.random()*.72):innerHeight+12,
     vy:-(.16+Math.random()*.55),vx:(Math.random()-.5)*.14,
-    r:.5+Math.random()*1.7,life:0,max:340+Math.random()*560,
+    r:.5+Math.random()*1.7,life:any?Math.random()*max*.5:0,max,
     ph:Math.random()*7,sw:.28+Math.random()*.7,cool:Math.random()<.24};
 }
 function drawFX(dt){
@@ -3828,7 +3836,7 @@ function drawFX(dt){
   if(!FLAGS.sparks)return;
   const H=THEME.hot2,C=THEME.cool;
   for(let i=0;i<parts.length;i++){
-    const p=parts[i];p.life+=dt;
+    const p=parts[i];p.life+=dt/16.667;
     if(p.life>p.max||p.y<-20){parts[i]=spawn(false);continue}
     p.ph+=dt*.0024;
     p.x+=p.vx+Math.sin(p.ph)*p.sw*.5;p.y+=p.vy*(1+p.life/p.max*.8);
@@ -4601,7 +4609,7 @@ function burst(rect, n){
     p.vx = Math.cos(a) * (.5 + r * 2.4) * .6;
     p.vy = -(.8 + Math.random() * 2.6);
     p.r = .7 + Math.random() * 2.2;
-    p.life = 0; p.max = 700 + Math.random() * 700;
+    p.life = 0; p.max = 42 + Math.random() * 42;   // кадры: вспышка на 0,7–1,4 с
     p.cool = Math.random() < .3;
   }
 }
