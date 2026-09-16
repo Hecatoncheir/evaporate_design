@@ -23,6 +23,15 @@
         "import functools, http.server as h; h.SimpleHTTPRequestHandler.extensions_map['.html'] = 'text/html; charset=utf-8'; h.test(HandlerClass=functools.partial(h.SimpleHTTPRequestHandler, directory='design'), port=8778, bind='127.0.0.1')"
       ],
       "port": 8778
+    },
+    {
+      "name": "app-web-build",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-c",
+        "import functools, http.server as h; h.SimpleHTTPRequestHandler.extensions_map['.wasm'] = 'application/wasm'; h.test(HandlerClass=functools.partial(h.SimpleHTTPRequestHandler, directory='build/web'), port=8779, bind='127.0.0.1')"
+      ],
+      "port": 8779
     }
   ]
 }
