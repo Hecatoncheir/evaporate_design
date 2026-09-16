@@ -3198,7 +3198,9 @@ function paintHero(g){
   sx2.save();sx2.globalCompositeOperation="screen";
   const gg=sx2.createRadialGradient(W*.70,H*.70,0,W*.70,H*.70,W*.22);
   gg.addColorStop(0,g.pal.hot2);gg.addColorStop(.4,g.pal.hot);gg.addColorStop(1,"rgba(0,0,0,0)");
-  sx2.globalAlpha=.45;sx2.fillStyle=gg;sx2.fillRect(W*.4,H*.4,W*.6,H*.6);sx2.restore();
+  /* свечение — круг радиуса градиента. Прямоугольник от 0.4 высоты резал
+     его верх, и в небе героя стояла горизонтальная ступенька */
+  sx2.globalAlpha=.45;sx2.fillStyle=gg;sx2.beginPath();sx2.arc(W*.70,H*.70,W*.22,0,7);sx2.fill();sx2.restore();
   sx2.fillStyle="#010104";
   sx2.beginPath();sx2.moveTo(W*.50,H+4);
   sx2.lineTo(W*.545,H*.815);sx2.lineTo(W*.74,H*.795);sx2.lineTo(W*.86,H*.86);sx2.lineTo(W+4,H*.845);sx2.lineTo(W+4,H+4);
