@@ -1633,6 +1633,191 @@ h1.title b{font-weight:800;display:block}
 .tophrs .hb i{display:block;height:100%;background:linear-gradient(90deg,var(--hot-deep),var(--hot-2));box-shadow:0 0 10px rgb(var(--glow-hot)/.4)}
 .tophrs .h{font-family:var(--font-mono);font-size:12.5px;color:var(--ink-2);flex:0 0 auto;font-variant-numeric:tabular-nums}
 
+
+/* ═══ РЕЖИМЫ ПРОСМОТРА ═════════════════════════════════════════
+   Каркас у всех направлений общий, поэтому B и D встают видами
+   библиотеки, а C — отдельным полноэкранным режимом. Переключатель
+   живёт в топбаре и виден только на библиотеке.
+   ══════════════════════════════════════════════════════════════ */
+.views{display:none;gap:2px;padding:2px;border-radius:99px;border:1px solid var(--line);background:rgba(0,0,0,.25)}
+.topbar .views.show{display:flex}
+.views button{
+  width:34px;height:26px;border-radius:99px;display:grid;place-items:center;
+  color:var(--ink-4);transition:.2s var(--ease);
+}
+.views button svg{width:15px;height:15px}
+.views button:hover{color:var(--ink-2)}
+.views button[aria-pressed="true"]{background:rgba(255,255,255,.1);color:var(--hot-2)}
+
+/* переключение видов внутри одного экрана */
+#sc-library.v-wall > .hero,
+#sc-library.v-wall > .sec,
+#sc-library.v-term > .hero,
+#sc-library.v-term > .sec,
+#sc-library.v-term .side-rail,
+#sc-library.v-wall .side-rail{display:none}
+#sc-library.v-wall .wall,
+#sc-library.v-term .term{display:block}
+.wall,.term{display:none}
+#sc-library.v-wall,#sc-library.v-term{display:block;padding-right:0}
+
+/* ── B · Стена ──────────────────────────────────────────────── */
+.wall{padding:var(--pad)}
+.wall-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.wall-bar .fchip{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;color:var(--ink-3);
+  padding:6px 12px;border-radius:99px;border:1px solid var(--line);transition:.22s var(--ease);
+}
+.wall-bar .fchip:hover{color:var(--ink);border-color:var(--ink-4)}
+.wall-bar .fchip[aria-pressed="true"]{color:var(--hot-2);border-color:rgb(var(--glow-hot)/.45);background:rgb(var(--glow-hot)/.1)}
+.wall-bar .sp{flex:1}
+.wall-bar .cnt{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4)}
+.wall-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(146px,1fr));
+  grid-auto-rows:1fr;gap:11px;
+}
+.wt{
+  position:relative;aspect-ratio:3/4;border-radius:var(--r-3);overflow:hidden;
+  border:1px solid var(--line);background:var(--raised) center/cover;
+  transition:transform .35s var(--ease-out),box-shadow .35s var(--ease-out),border-color .3s;
+  text-align:left;
+}
+.wt::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -50px 70px -34px rgba(0,0,0,.92);
+}
+.wt .nm{
+  position:absolute;left:10px;right:10px;bottom:9px;z-index:2;font-size:11px;
+  text-shadow:0 2px 8px #000;opacity:0;transform:translateY(4px);
+  transition:opacity .25s,transform .25s var(--ease-out);
+}
+.wt:hover{transform:translateY(-4px);border-color:rgb(var(--glow-hot)/.4);box-shadow:0 18px 38px rgba(0,0,0,.6)}
+.wt:hover .nm{opacity:1;transform:none}
+.wt .badge{top:8px;left:8px}
+.wt-big{
+  grid-column:span 3;grid-row:span 2;aspect-ratio:auto;
+  box-shadow:0 0 0 1px rgb(var(--glow-hot)/.5),0 0 46px rgb(var(--glow-hot)/.24),0 26px 54px rgba(0,0,0,.6);
+}
+.wt-big:hover{transform:none}
+.wt-big .nm{display:none}
+@media(max-width:900px){.wt-big{grid-column:span 2}}
+.wt .over{
+  position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:flex-end;
+  gap:11px;padding:clamp(16px,2vw,22px);
+  background:linear-gradient(0deg,rgba(6,6,10,.95) 8%,rgba(6,6,10,.4) 46%,transparent);
+}
+.wt .over .tt{font-family:var(--font-dsp);font-weight:800;font-size:clamp(20px,2.2vw,30px);line-height:.98;letter-spacing:-.02em}
+.wt .over .cs{display:flex;gap:6px;flex-wrap:wrap}
+.wt .over .acts{display:flex;gap:9px;flex-wrap:wrap;margin-top:2px}
+
+/* ── D · Терминал ───────────────────────────────────────────── */
+.term{padding:var(--pad)}
+.term-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.term-head .big{margin-top:0;font-size:clamp(24px,3vw,34px)}
+.term-head .sp{flex:1}
+.term-head .hint{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4)}
+.tbl{border:1px solid var(--line-soft);border-radius:var(--r-3);overflow:hidden}
+.trow{
+  display:grid;grid-template-columns:22px 26px minmax(0,2.2fr) minmax(0,1fr) 68px 82px 62px 104px 34px;
+  gap:12px;align-items:center;padding:8px 13px;
+  border-bottom:1px solid var(--line-soft);
+  font-family:var(--font-mono);font-size:11px;color:var(--ink-3);
+  transition:background .16s;text-align:left;width:100%;
+}
+.trow:last-child{border-bottom:0}
+.trow.hd{
+  color:var(--ink-4);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;
+  background:rgba(255,255,255,.022);position:sticky;top:0;z-index:2;
+}
+.trow.hd button{
+  font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;
+  display:flex;align-items:center;gap:5px;transition:color .2s;
+}
+.trow.hd button:hover{color:var(--ink-2)}
+.trow.hd button.sorted{color:var(--hot-2)}
+.trow.hd button.sorted::after{content:"▾";font-size:9px}
+.trow.hd button.sorted.asc::after{content:"▴"}
+.trow:not(.hd):hover{background:rgba(255,255,255,.035)}
+.trow.sel{background:rgb(var(--glow-hot)/.09);color:var(--ink);box-shadow:inset 2px 0 0 var(--hot-1)}
+.trow .st{width:6px;height:6px;border-radius:50%;display:block;margin:0 auto}
+.trow .cv{width:22px;height:29px;border-radius:4px;background:var(--raised) center/cover;border:1px solid var(--line)}
+.trow .nm{font-family:var(--font-ui);font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow.sel .nm{color:var(--ink)}
+.trow .num{text-align:right;font-variant-numeric:tabular-nums}
+.trow .c-last{white-space:nowrap}
+.trow .go{opacity:0;transition:opacity .18s}
+.trow:hover .go,.trow.sel .go{opacity:1}
+.trow .go svg{width:13px;height:13px;color:var(--hot-2)}
+@media(max-width:1000px){
+  .trow{grid-template-columns:22px 26px minmax(0,2fr) 74px 62px 34px}
+  .trow .c-genre,.trow .c-size,.trow .c-last{display:none}
+}
+
+/* ── C · Пульт ──────────────────────────────────────────────── */
+.bp{
+  position:fixed;inset:0;z-index:85;display:grid;grid-template-rows:auto 1fr auto;
+  opacity:0;visibility:hidden;transition:opacity .38s var(--ease),visibility .38s;
+  background:var(--void);
+}
+.bp.on{opacity:1;visibility:visible}
+.bp-bg{position:absolute;inset:0;background-size:cover;background-position:center;
+  filter:blur(34px) saturate(1.35);transform:scale(1.18);opacity:.5;transition:background-image .5s,opacity .5s}
+.bp-veil{position:absolute;inset:0;background:radial-gradient(64% 72% at 50% 44%,transparent,rgba(4,4,8,.94))}
+.bp-top{position:relative;z-index:2;display:flex;align-items:center;gap:14px;padding:22px clamp(22px,4vw,48px)}
+.bp-top .brand{font-family:var(--font-dsp);font-weight:600;font-size:12px;letter-spacing:.2em}
+.bp-top .sp{flex:1}
+.bp-stage{position:relative;z-index:2;display:grid;place-items:center;min-height:0}
+.bp-flow{display:flex;align-items:center;gap:clamp(14px,2.4vw,30px)}
+.bp-cv{
+  width:clamp(84px,9vw,132px);aspect-ratio:3/4;border-radius:14px;flex:0 0 auto;
+  background:var(--raised) center/cover;border:1px solid var(--line);
+  opacity:.34;transform:scale(.84);box-shadow:0 20px 40px rgba(0,0,0,.6);
+  transition:width .42s var(--ease-out),opacity .42s,transform .42s var(--ease-out),box-shadow .42s;
+}
+.bp-cv.mid{
+  width:clamp(170px,17vw,248px);opacity:1;transform:scale(1);
+  box-shadow:0 34px 76px rgba(0,0,0,.78),0 0 0 1px rgb(var(--glow-hot)/.5),0 0 70px rgb(var(--glow-hot)/.3);
+}
+.bp-info{
+  position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:15px;
+  padding:0 clamp(22px,4vw,48px) clamp(14px,2vw,26px);text-align:center;
+}
+.bp-ttl{font-family:var(--font-dsp);font-weight:300;font-size:clamp(28px,4.4vw,58px);line-height:.96;letter-spacing:-.03em}
+.bp-ttl b{font-weight:800}
+.bp-sub{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-3)}
+.bp-acts{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.bp-big{
+  display:flex;align-items:center;gap:12px;height:52px;padding:0 28px 0 23px;border-radius:99px;
+  color:#170800;font-weight:600;font-size:16px;position:relative;overflow:hidden;isolation:isolate;
+  background:linear-gradient(115deg,var(--hot-2),var(--hot-1) 58%,var(--hot-deep));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 12px 34px rgb(var(--glow-hot)/.45),0 0 0 1px rgb(var(--glow-hot)/.35);
+  transition:transform .2s var(--ease);
+}
+.bp-big::before{content:"";position:absolute;inset:-40% -10%;z-index:-1;filter:blur(7px);opacity:.75;
+  background:radial-gradient(45% 120% at 22% 50%,rgba(255,255,255,.88),rgba(255,210,120,.34) 40%,transparent 72%);
+  animation:breathe 3.6s ease-in-out infinite}
+.bp-big:hover{transform:translateY(-2px)}
+.bp-big svg{width:19px;height:19px}
+.bp-ghost{
+  display:flex;align-items:center;gap:10px;height:52px;padding:0 22px;border-radius:99px;
+  border:1px solid var(--line);color:var(--ink-2);font-size:14px;background:rgba(14,15,22,.6);
+  backdrop-filter:blur(10px);transition:.24s var(--ease);
+}
+.bp-ghost:hover{color:var(--ink);border-color:var(--ink-4)}
+.bp-ghost svg{width:16px;height:16px}
+.bp-pads{
+  position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:clamp(16px,3vw,34px);
+  padding:14px;border-top:1px solid rgba(255,255,255,.07);flex-wrap:wrap;
+  font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);
+}
+.bp-pads span{display:flex;align-items:center;gap:8px}
+.bp-pads b{
+  display:inline-grid;place-items:center;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--line);color:var(--ink-3);font-size:9px;font-weight:400;
+}
+.bp-pads b.a{border-color:rgb(59 227 155/.5);color:var(--ok)}
+.bp-pads b.x{border-color:rgb(var(--glow-cool)/.5);color:var(--cool)}
+
 </style>
 
 <!-- ── SVG defs: filters + the icon system ─────────────────────── -->
@@ -1695,6 +1880,9 @@ h1.title b{font-weight:800;display:block}
     <symbol id="i-magnet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5.4 4.2v7.6a6.6 6.6 0 0 0 13.2 0V4.2h-4.4v7.6a2.2 2.2 0 0 1-4.4 0V4.2H5.4Z" stroke-linejoin="round"/><path d="M5.4 8.6h4.4M14.2 8.6h4.4"/></symbol>
     <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9.5 6 6 6-6"/></symbol>
     <symbol id="i-retry" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.4 3.6v4.8h-4.8"/></symbol>
+    <symbol id="i-wall" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.4" y="3.4" width="7.4" height="7.4" rx="1.4"/><rect x="13.2" y="3.4" width="7.4" height="7.4" rx="1.4"/><rect x="3.4" y="13.2" width="7.4" height="7.4" rx="1.4"/><rect x="13.2" y="13.2" width="7.4" height="7.4" rx="1.4"/></symbol>
+    <symbol id="i-rows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.6 6h16.8M3.6 12h16.8M3.6 18h16.8"/><path d="M3.6 6h3M3.6 12h3M3.6 18h3" stroke-width="2.6"/></symbol>
+    <symbol id="i-pad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7.4 7.4h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4a3 3 0 0 1-5.4 2.3l-1.2-1.6H8.8l-1.2 1.6a3 3 0 0 1-5.4-2.3l.7-4a4.6 4.6 0 0 1 4.5-3.7Z"/><path d="M6.6 11.4v2.4M5.4 12.6h2.4M16.4 12h.1M18.2 13.8h.1"/></symbol>
     <symbol id="i-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 9.4h3.1L12 5.6v12.8l-4.4-3.8H4.5V9.4Z"/><path d="M15.4 9.6a3.4 3.4 0 0 1 0 4.8M18 7a7 7 0 0 1 0 10"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.6 4.6L19 6.8"/></symbol>
 
@@ -1731,6 +1919,12 @@ h1.title b{font-weight:800;display:block}
   <main class="stage">
     <header class="topbar">
       <div class="crumbs"><b>EVAPORATE</b><span class="sl">/</span><span class="cur" id="crumb">Библиотека</span></div>
+      <div class="views show" id="views" role="group" aria-label="Вид библиотеки">
+        <button data-view="showcase" aria-pressed="true" title="Витрина" aria-label="Витрина"><svg><use href="#i-lib"/></svg></button>
+        <button data-view="wall" aria-pressed="false" title="Стена" aria-label="Стена"><svg><use href="#i-wall"/></svg></button>
+        <button data-view="term" aria-pressed="false" title="Терминал" aria-label="Терминал"><svg><use href="#i-rows"/></svg></button>
+      </div>
+      <button class="kbtn" id="openBp" title="Режим «Пульт»"><svg><use href="#i-pad"/></svg><span>Пульт</span><span class="kbd">P</span></button>
       <div class="tb-sp"></div>
       <button class="kbtn" id="openCmd"><svg><use href="#i-search"/></svg><span>Поиск</span><span class="kbd">/</span></button>
       <div class="pill"><span class="dot busy"></span><span id="netRate">1.6 МБ/с</span></div>
@@ -1775,6 +1969,32 @@ h1.title b{font-weight:800;display:block}
             <div class="sk-card"><div class="sk a"></div><div class="sk b"></div><div class="sk c"></div></div>
           </div>
         </div>
+        <!-- B · Стена -->
+        <div class="wall">
+          <div class="wall-bar" id="wallBar">
+            <button class="fchip" data-filter="all" aria-pressed="true">Все</button>
+            <button class="fchip" data-filter="ready" aria-pressed="false">Установлены</button>
+            <button class="fchip" data-filter="dl" aria-pressed="false">Качаются</button>
+            <button class="fchip" data-filter="recent" aria-pressed="false">Недавние</button>
+            <span class="sp"></span>
+            <span class="cnt" id="wallCnt"></span>
+          </div>
+          <div class="wall-grid" id="wallGrid"></div>
+        </div>
+
+        <!-- D · Терминал -->
+        <div class="term">
+          <div class="term-head">
+            <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;color:var(--hot-1)">[ 02 / БИБЛИОТЕКА ]</span>
+          </div>
+          <div class="term-head">
+            <span class="big" id="termBig">12<u>игр</u></span>
+            <span class="sp"></span>
+            <span class="hint">↑↓ строка · Enter запустить · заголовок сортирует</span>
+          </div>
+          <div class="tbl" id="termTbl"></div>
+        </div>
+
         <div class="hero" id="hero">
           <div class="hl sky" data-d="5"></div>
           <div class="hl mid" data-d="14"></div>
@@ -2593,6 +2813,38 @@ h1.title b{font-weight:800;display:block}
       <button class="keep" id="flowNext">Дальше<svg><use href="#i-arrow"/></svg></button>
       <button class="ico" id="flowX" aria-label="Выйти из сценария"><svg><use href="#i-x"/></svg></button>
     </span>
+  </div>
+</div>
+
+<!-- ── C · Пульт ────────────────────────────────────────────── -->
+<div class="bp" id="bp" role="dialog" aria-modal="true" aria-label="Режим Пульт">
+  <div class="bp-bg" id="bpBg"></div><div class="bp-veil"></div>
+  <div class="bp-top">
+    <span class="brand">EVAPORATE</span>
+    <span class="pill"><span class="dot"></span><span id="bpPos">1 / 12</span></span>
+    <span class="sp"></span>
+    <span class="pill" id="bpNet"><span class="dot busy"></span>1.6 МБ/с</span>
+    <span class="pill" style="border-color:rgb(var(--glow-hot)/.4);color:var(--hot-2)">ВВ</span>
+  </div>
+
+  <div class="bp-stage"><div class="bp-flow" id="bpFlow"></div></div>
+
+  <div class="bp-info">
+    <div class="meta" id="bpChips" style="justify-content:center"></div>
+    <div class="bp-ttl" id="bpTtl"></div>
+    <div class="bp-sub" id="bpSub"></div>
+    <div class="bp-acts">
+      <button class="bp-big" id="bpPlay"><svg><use href="#i-play"/></svg><span id="bpPlayLb">Продолжить</span></button>
+      <button class="bp-ghost" id="bpMore"><svg><use href="#i-info"/></svg>Подробнее</button>
+    </div>
+  </div>
+
+  <div class="bp-pads">
+    <span><b class="a">A</b>Запустить</span>
+    <span><b class="x">X</b>Подробнее</span>
+    <span><b>◄ ►</b>Выбор игры</span>
+    <span><b>Y</b>Поиск</span>
+    <span><b>B</b>Выйти из режима</span>
   </div>
 </div>
 
@@ -3796,6 +4048,9 @@ function resetAll(){
   digestRail.style.display = "none";
   renderDL(DL.default);
   renderFriends("default"); renderInvite(false);
+  scLib.classList.remove("v-wall", "v-term"); libView = "showcase";
+  $$("#views button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === "showcase")));
+  bpShow(false);
   if(setQ.value){ setQ.value = ""; setFilter(""); }
   setNote(null);
   closeOvl();
@@ -3858,6 +4113,9 @@ function applyState(id){
       pills[1].innerHTML = `<span class="dot"></span>Движок простаивает`;
       break;
 
+    case "mode-wall":    setHero(HERO.ready); setView("wall"); break;
+    case "mode-term":    setHero(HERO.ready); setView("term"); break;
+    case "mode-bp":      setHero(HERO.ready); bpShow(true); break;
     case "pr-default":   setHero(HERO.ready); break;
     case "set-default":  setHero(HERO.ready); break;
     case "set-find":
@@ -4879,6 +5137,213 @@ STATES.push(
     });
   });
 })();
+
+
+/* ═══════════════════════════════════════════════════════════════
+   РЕЖИМЫ ПРОСМОТРА — B · Стена, D · Терминал, C · Пульт
+   Каркас один, поэтому B и D живут видами библиотеки, а C забирает
+   весь экран: рейл и топбар в нём не нужны.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── B · Стена ─────────────────────────────────────────────── */
+let wallSel = "ashen", wallFilter = "all";
+const RECENT = ["ashen", "depth", "crimson", "wolf", "storm"];
+function wallList(){
+  if(wallFilter === "ready")  return GAMES.filter(g => g.state === "ready");
+  if(wallFilter === "dl")     return GAMES.filter(g => g.state !== "ready");
+  if(wallFilter === "recent") return RECENT.map(byId);
+  return GAMES;
+}
+function renderWall(){
+  const list = wallList();
+  if(!list.some(g => g.id === wallSel)) wallSel = list[0]?.id;
+  const sel = byId(wallSel);
+  $("#wallCnt").textContent = `${list.length} из ${GAMES.length}`;
+  const big = sel ? `<button class="wt wt-big" data-wall="${sel.id}"
+      style="background-image:url(${sel.wallArt || (sel.wallArt = makeArt(760, 520, sel.pal, sel.seed + 7, {ridges:2, sx:.66, sy:.36}))})">
+      <span class="over">
+        <span class="cs">${sel.tags.slice(0, 2).map((t, i) => `<span class="chip${i ? "" : " hot"}">${t}</span>`).join("")}</span>
+        <span class="tt">${sel.t}</span>
+        <span class="acts">
+          <span class="play" style="height:44px;font-size:14px" data-wall-play="${sel.id}"><svg><use href="#i-play"/></svg><span>${sel.state === "ready" ? "Играть" : "Скачать"}</span></span>
+          <span class="ghost" style="height:44px" data-id="${sel.id}"><svg><use href="#i-info"/></svg>Подробнее</span>
+        </span>
+      </span></button>` : "";
+  const rest = list.filter(g => g.id !== wallSel).map(g => {
+    const badge = g.state === "dl" ? `<span class="badge dl">${g.pct} %</span>`
+                : g.state === "queue" ? `<span class="badge">в очереди</span>` : "";
+    return `<button class="wt" data-wall="${g.id}" style="background-image:url(${g.cover})">${badge}<span class="nm">${g.t}</span></button>`;
+  }).join("");
+  $("#wallGrid").innerHTML = big + rest;
+}
+$("#wallBar").addEventListener("click", e => {
+  const b = e.target.closest(".fchip"); if(!b) return;
+  wallFilter = b.dataset.filter;
+  $$(".fchip", $("#wallBar")).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  renderWall();
+});
+$("#wallGrid").addEventListener("click", e => {
+  const p = e.target.closest("[data-wall-play]");
+  if(p){ const g = byId(p.dataset.wallPlay); g.state === "ready" ? launch(g) : go("downloads"); return; }
+  if(e.target.closest("[data-id]")) return;                 /* «Подробнее» откроет карточку */
+  const t = e.target.closest("[data-wall]");
+  if(t && t.dataset.wall !== wallSel){ wallSel = t.dataset.wall; renderWall(); }
+});
+
+/* ── D · Терминал ──────────────────────────────────────────── */
+const LAST = ["41 мин назад", "вчера 23:40", "3 дня назад", "неделю назад", "месяц назад", "—"];
+let termSort = {k: "last", asc: false}, termSel = 0;
+function termRows(){
+  const rows = GAMES.map((g, i) => {
+    const d = cardData(g);
+    const ver = (g.tags.find(t => /^v\d/.test(t)) || "—").replace(/^v/, "");
+    return {
+      g, id: g.id, nm: g.t,
+      genre: g.sub.split("·")[0].trim(),
+      ver, size: parseFloat(String(g.size).replace(",", ".")) || 0,
+      hours: d.hours,
+      lastI: d.hours ? i % 4 : 5,
+      st: g.state === "ready" ? (d.hours ? "var(--ok)" : "var(--ink-4)")
+        : g.state === "dl" ? "var(--hot-2)" : "var(--ink-4)"
+    };
+  });
+  const k = termSort.k, s = termSort.asc ? 1 : -1;
+  rows.sort((a, b) => {
+    const v = k === "nm" ? a.nm.localeCompare(b.nm, "ru")
+            : k === "genre" ? a.genre.localeCompare(b.genre, "ru")
+            : k === "last" ? a.lastI - b.lastI
+            : a[k] - b[k];
+    return (k === "nm" || k === "genre" || k === "last" ? v : v) * s;
+  });
+  return rows;
+}
+function renderTerm(){
+  const rows = termRows();
+  termSel = clamp(termSel, 0, rows.length - 1);
+  const h = (k, lb, cls) => `<button class="${termSort.k === k ? "sorted" + (termSort.asc ? " asc" : "") : ""}" data-sort="${k}">${lb}</button>`;
+  $("#termBig").innerHTML = `${GAMES.length}<u>игр · ${GAMES.filter(g => g.state === "ready").length} установлено</u>`;
+  $("#termTbl").innerHTML =
+    `<div class="trow hd"><span></span><span></span>${h("nm", "Название")}
+       <span class="c-genre">${h("genre", "Жанр")}</span><span>Версия</span>
+       <span class="c-size num">${h("size", "Размер")}</span><span class="num">${h("hours", "Часы")}</span>
+       <span class="c-last">${h("last", "Последний запуск")}</span><span></span></div>` +
+    rows.map((r, i) => `<button class="trow${i === termSel ? " sel" : ""}" data-term="${i}" data-id="${r.id}">
+      <span><i class="st" style="background:${r.st};box-shadow:0 0 7px ${r.st}"></i></span>
+      <span class="cv" style="background-image:url(${r.g.cover})"></span>
+      <span class="nm">${r.nm}</span>
+      <span class="c-genre">${r.genre}</span>
+      <span>${r.ver}</span>
+      <span class="c-size num">${r.size ? r.size.toFixed(1).replace(".", ",") + " ГБ" : "—"}</span>
+      <span class="num">${r.hours ? r.hours + " ч" : "—"}</span>
+      <span class="c-last">${LAST[r.lastI]}</span>
+      <span class="go"><svg><use href="#i-play"/></svg></span>
+    </button>`).join("");
+}
+$("#termTbl").addEventListener("click", e => {
+  const s = e.target.closest("[data-sort]");
+  if(s){ const k = s.dataset.sort;
+    termSort = {k, asc: termSort.k === k ? !termSort.asc : false}; renderTerm(); return; }
+  const r = e.target.closest("[data-term]");
+  if(r){ termSel = +r.dataset.term; renderTerm(); }
+});
+
+/* ── переключатель видов ───────────────────────────────────── */
+let libView = "showcase";
+function setView(v){
+  libView = v;
+  scLib.classList.toggle("v-wall", v === "wall");
+  scLib.classList.toggle("v-term", v === "term");
+  $$("#views button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === v)));
+  if(v === "wall") renderWall();
+  if(v === "term") renderTerm();
+  if(cur !== "library") go("library");
+  scLib.scrollTop = 0;
+}
+$("#views").addEventListener("click", e => {
+  const b = e.target.closest("[data-view]"); if(b) setView(b.dataset.view);
+});
+/* переключатель принадлежит библиотеке и прячется в других разделах */
+const _go = go;
+go = function(id){ _go(id); $("#views").classList.toggle("show", id === "library"); };
+
+/* ── C · Пульт ─────────────────────────────────────────────── */
+const bp = $("#bp");
+let bpI = 0, bpOpen = false;
+const BP_LIST = () => GAMES;
+function renderBp(){
+  const list = BP_LIST(), n = list.length;
+  bpI = (bpI % n + n) % n;
+  const g = list[bpI];
+  const at = k => list[(bpI + k % n + n) % n];
+  $("#bpFlow").innerHTML = [-2, -1, 0, 1, 2].map(k => {
+    const x = at(k);
+    return `<div class="bp-cv${k === 0 ? " mid" : ""}" style="background-image:url(${x.cover})"></div>`;
+  }).join("");
+  $("#bpBg").style.backgroundImage = `url(${g.bpArt || (g.bpArt = makeArt(600, 380, g.pal, g.seed + 23, {ridges:1, sx:.5, sy:.4}))})`;
+  $("#bpTtl").innerHTML = g.t.split(" ").length > 1
+    ? g.t.split(" ").slice(0, -1).join(" ") + " <b>" + g.t.split(" ").slice(-1) + "</b>"
+    : "<b>" + g.t + "</b>";
+  $("#bpChips").innerHTML = g.tags.slice(0, 3).map((t, i) => `<span class="chip${i ? "" : " hot"}">${t}</span>`).join("");
+  const d = cardData(g);
+  $("#bpSub").textContent = d.hours ? `сыграно ${d.hours} ч · ${g.size}` : `${g.sub} · ${g.size}`;
+  $("#bpPlayLb").textContent = g.state === "ready" ? (d.hours ? "Продолжить" : "Играть") : "Скачать";
+  $("#bpPos").textContent = `${bpI + 1} / ${n}`;
+}
+function bpShow(v){
+  bpOpen = v; bp.classList.toggle("on", v);
+  bp.setAttribute("aria-hidden", String(!v));
+  if(v){ renderBp(); Snd.play("swish"); }
+}
+$("#openBp").onclick = () => bpShow(true);
+$("#bpPlay").onclick = () => { const g = BP_LIST()[bpI];
+  if(g.state === "ready"){ bpShow(false); launch(g); } else { bpShow(false); go("downloads"); } };
+$("#bpMore").onclick = () => { bpShow(false); openSheet(BP_LIST()[bpI]); };
+$("#bpFlow").addEventListener("click", e => {
+  const cvs = $$(".bp-cv", $("#bpFlow"));
+  const i = cvs.indexOf(e.target.closest(".bp-cv"));
+  if(i < 0 || i === 2) return;
+  bpI += i - 2; renderBp(); Snd.play("tick");
+});
+
+addEventListener("keydown", e => {
+  if(e.target.tagName === "INPUT") return;
+  if(bpOpen){
+    if(e.key === "Escape"){ e.preventDefault(); bpShow(false); return; }
+    if(e.key === "ArrowRight"){ e.preventDefault(); bpI++; renderBp(); Snd.play("tick"); return; }
+    if(e.key === "ArrowLeft"){ e.preventDefault(); bpI--; renderBp(); Snd.play("tick"); return; }
+    if(e.key === "Enter"){ e.preventDefault(); $("#bpPlay").click(); return; }
+    return;
+  }
+  if(e.key === "p" || e.key === "P" || e.key === "з" || e.key === "З"){ bpShow(true); return; }
+  if(cur === "library" && libView === "term" && !sheet.classList.contains("on")){
+    const rows = $$("[data-term]");
+    if(e.key === "ArrowDown"){ e.preventDefault(); termSel = clamp(termSel + 1, 0, rows.length - 1); renderTerm(); Snd.play("tick"); }
+    if(e.key === "ArrowUp"){ e.preventDefault(); termSel = clamp(termSel - 1, 0, rows.length - 1); renderTerm(); Snd.play("tick"); }
+    if(e.key === "Enter"){ e.preventDefault(); const r = termRows()[termSel];
+      if(r) r.g.state === "ready" ? launch(r.g) : go("downloads"); }
+  }
+});
+
+/* ── состояния ─────────────────────────────────────────────── */
+STATES.push(
+  {g:"Режимы", id:"mode-wall", n:"B · Стена",    d:"плотная сетка, фильтры в шапке"},
+  {g:"Режимы", id:"mode-term", n:"D · Терминал", d:"таблица, сортировка, клавиатура"},
+  {g:"Режимы", id:"mode-bp",   n:"C · Пульт",    d:"полный экран, геймпад · клавиша P"}
+);
+(() => {
+  const list = $("#demoList");
+  const h = document.createElement("div"); h.className = "gl"; h.textContent = "Режимы";
+  list.append(h);
+  ["mode-wall", "mode-term", "mode-bp"].forEach(id => {
+    const s = STATES.find(x => x.id === id);
+    const b = document.createElement("button");
+    b.className = "demo-i"; b.dataset.st = id;
+    b.innerHTML = `<span class="k"></span><span class="tx"><span class="n">${s.n}</span><span class="d">${s.d}</span></span>`;
+    list.append(b);
+  });
+})();
+
+renderWall(); renderTerm();
 
 /* keep republished views alive where the platform supports it */
 try{window.claude?.hot?.snapshot?.(()=>({skin:document.documentElement.dataset.skin||"magma",cur}))}catch(_){}
