@@ -1179,6 +1179,180 @@ h1.title b{font-weight:800;display:block}
 .screen.is-empty .side-rail,
 .screen.is-skel .side-rail{display:none}
 
+
+/* ═══ КАРТОЧКА ИГРЫ ════════════════════════════════════════════
+   Раньше карточка ничего не умела: в ней не было даже кнопки
+   запуска. Теперь у неё липкая полоса действий, которая знает
+   состояние игры, и четыре блока данных, которые есть только
+   у лаунчера — история, достижения, состав на диске и раздача.
+   ══════════════════════════════════════════════════════════════ */
+.sheet-in{display:flex;flex-direction:column;width:min(1080px,100%)}
+.sheet-art{
+  height:clamp(190px,26vh,280px);flex:0 0 auto;
+  perspective:900px;isolation:isolate;
+}
+.sheet-art .sl{position:absolute;inset:-5%;background-size:cover;background-position:center;will-change:transform}
+.sheet-art::after{
+  content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:
+    linear-gradient(90deg,var(--surface) 1%,rgba(14,15,22,.8) 34%,rgba(14,15,22,.1) 68%,transparent),
+    linear-gradient(0deg,var(--surface) 2%,transparent 62%);
+}
+.sheet-head{
+  position:absolute;z-index:3;left:clamp(18px,3vw,30px);right:clamp(18px,3vw,30px);
+  bottom:clamp(14px,2vw,20px);display:flex;flex-direction:column;gap:9px;max-width:min(640px,76%);
+}
+.sheet-head h1{
+  margin:0;font-family:var(--font-dsp);font-weight:300;
+  font-size:clamp(26px,3.4vw,42px);line-height:1;letter-spacing:-.025em;text-wrap:balance;
+  text-shadow:0 0 30px rgba(0,0,0,.8);
+}
+.sheet-head h1 b{font-weight:800}
+
+/* липкая полоса действий */
+.sheet-bar{
+  position:sticky;top:0;z-index:6;flex:0 0 auto;
+  display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+  padding:12px clamp(18px,3vw,30px);
+  border-bottom:1px solid var(--line-soft);
+  background:rgba(14,15,22,.94);backdrop-filter:blur(20px) saturate(1.1);
+}
+.sheet-bar .sp{flex:1;min-width:0}
+.sheet-bar .where{
+  font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);text-align:right;
+  white-space:nowrap;
+}
+.sheet-bar .where b{color:var(--ink-2);font-weight:500}
+.sheet-bar .bar{position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:0}
+.sheet-bar .bar i{border-radius:0}
+.pbtn{
+  position:relative;display:flex;align-items:center;gap:11px;height:46px;padding:0 22px 0 18px;
+  border-radius:99px;color:#170800;font-weight:600;font-size:14px;overflow:hidden;isolation:isolate;
+  background:linear-gradient(115deg,var(--hot-2),var(--hot-1) 58%,var(--hot-deep));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 8px 26px rgb(var(--glow-hot)/.4),0 0 0 1px rgb(var(--glow-hot)/.35);
+  transition:transform .2s var(--ease),box-shadow .3s var(--ease);
+}
+.pbtn::before{
+  content:"";position:absolute;inset:-40% -10%;z-index:-1;filter:blur(6px);opacity:.72;
+  background:radial-gradient(45% 120% at 22% 50%,rgba(255,255,255,.85),rgba(255,210,120,.34) 40%,transparent 72%);
+  animation:breathe 3.6s ease-in-out infinite;
+}
+.pbtn:hover{transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 12px 34px rgb(var(--glow-hot)/.52),0 0 0 1px rgb(var(--glow-hot)/.5)}
+.pbtn svg{width:17px;height:17px}
+.pbtn .hold{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;opacity:.62}
+.pbtn.cool{
+  color:#031318;background:linear-gradient(115deg,#a9f2ff,var(--cool) 58%,#1b6f8a);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 8px 26px rgb(var(--glow-cool)/.38),0 0 0 1px rgb(var(--glow-cool)/.35);
+}
+.pbtn.cool::before{background:radial-gradient(45% 120% at 22% 50%,rgba(255,255,255,.85),rgba(160,240,255,.34) 40%,transparent 72%)}
+.pwrap{position:relative;display:inline-flex}
+.pwrap .charge{inset:-11px}
+.sbtn{
+  display:flex;align-items:center;gap:8px;height:46px;padding:0 15px;border-radius:99px;
+  border:1px solid var(--line);color:var(--ink-2);font-size:13px;transition:.24s var(--ease);
+}
+.sbtn:hover{color:var(--ink);border-color:var(--ink-4);background:rgba(255,255,255,.05)}
+.sbtn svg{width:15px;height:15px}
+.sbtn.icon{width:46px;padding:0;justify-content:center}
+.sbtn.bad:hover{color:var(--bad);border-color:rgb(255 77 94/.5)}
+.runpill{
+  display:flex;align-items:center;gap:11px;height:46px;padding:0 20px 0 17px;border-radius:99px;
+  border:1px solid rgb(59 227 155/.45);color:var(--ok);font-weight:500;font-size:14px;
+  background:linear-gradient(115deg,rgb(59 227 155/.14),rgb(59 227 155/.05));
+  box-shadow:0 0 26px rgb(59 227 155/.16),inset 0 1px 0 rgba(255,255,255,.12);
+}
+.runpill .pip{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);animation:pulse 1.5s infinite}
+.runpill .tm{font-family:var(--font-mono);font-size:12.5px;opacity:.75;font-variant-numeric:tabular-nums}
+
+.sheet-b{padding:clamp(18px,2.6vw,26px) clamp(18px,3vw,30px) clamp(22px,3vw,30px);margin-top:0}
+.sheet-cols{grid-template-columns:minmax(0,1fr) 300px;gap:clamp(20px,2.4vw,30px);margin-top:0}
+@media(max-width:900px){.sheet-cols{grid-template-columns:1fr}}
+
+.cblock + .cblock{margin-top:26px}
+.cblock-h{display:flex;align-items:baseline;gap:12px;margin-bottom:13px}
+.cblock-h .lb{font-family:var(--font-dsp);font-weight:600;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase}
+.cblock-h .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.cblock-h .v{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.cblock-h .v b{color:var(--hot-2);font-weight:500}
+
+/* история — то, что знает только лаунчер */
+.hist{display:flex;gap:clamp(18px,3vw,34px);align-items:flex-end;flex-wrap:wrap}
+.hist .tot{display:flex;flex-direction:column;flex:0 0 auto}
+.hist .tot .n{font-family:var(--font-dsp);font-weight:300;font-size:clamp(28px,3.4vw,40px);line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.hist .tot .k{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-top:7px}
+.hist .last{display:flex;flex-direction:column;flex:0 0 auto}
+.hist .last .n{font-size:15px;font-variant-numeric:tabular-nums}
+.hist .last .k{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-top:7px}
+.hist .chart{flex:1;min-width:190px;display:flex;align-items:flex-end;gap:5px;height:62px}
+.hist .chart span{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;
+}
+.hist .chart i{
+  display:block;width:100%;border-radius:3px 3px 1px 1px;background:rgba(255,255,255,.1);
+  transition:background .3s;
+}
+.hist .chart span.top i{background:linear-gradient(180deg,var(--hot-2),var(--hot-1));box-shadow:0 0 14px rgb(var(--glow-hot)/.5)}
+.hist .chart em{font-style:normal;font-family:var(--font-mono);font-size:9px;color:var(--ink-4)}
+
+/* достижения */
+.achbar{height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin-bottom:14px}
+.achbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--hot-deep),var(--hot-2));box-shadow:0 0 12px rgb(var(--glow-hot)/.5)}
+.nearest{
+  display:flex;align-items:center;gap:12px;padding:11px 13px;margin-bottom:12px;
+  border:1px solid rgb(var(--glow-hot)/.3);border-radius:var(--r-3);background:rgb(var(--glow-hot)/.06);
+}
+.nearest .ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto;
+  color:var(--hot-2);border:1px solid rgb(var(--glow-hot)/.4);background:rgb(var(--glow-hot)/.1)}
+.nearest .ic svg{width:15px;height:15px}
+.nearest .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.nearest .tx .n{font-size:13px;font-weight:500}
+.nearest .tx .d{font-family:var(--font-mono);font-size:10px;color:var(--ink-3);margin-top:4px}
+.nearest .pc{font-family:var(--font-mono);font-size:15px;color:var(--hot-2);font-variant-numeric:tabular-nums}
+#shBlurb + .cblock{margin-top:24px}
+.achgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px}
+.achgrid .ach{padding:10px 12px;border-radius:var(--r-2);background:rgba(255,255,255,.022);align-items:flex-start}
+.achgrid .ach + .ach{border-top:0}
+.achgrid .ach .ic{width:32px;height:32px;border-radius:9px}
+.achgrid .ach .ic svg{width:15px;height:15px}
+
+/* состав на диске */
+.stack{display:flex;height:8px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.07);margin-bottom:13px}
+.stack i{display:block;height:100%}
+.stack i + i{box-shadow:inset 1px 0 0 rgba(6,6,10,.6)}
+
+/* раздача — то, чего нет ни у одного магазина */
+.seedbox{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.seedbox .f .k{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4)}
+.seedbox .f .v{font-family:var(--font-mono);font-size:15px;margin-top:4px;font-variant-numeric:tabular-nums}
+.seedbox .f .v.ok{color:var(--ok)}
+.seedbox .f .v.c{color:var(--cool)}
+.ratio{grid-column:1 / -1;height:4px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.ratio i{display:block;height:100%;background:linear-gradient(90deg,#1b6f8a,var(--cool));box-shadow:0 0 10px rgb(var(--glow-cool)/.5)}
+
+/* список глаголов */
+.verbs{display:flex;flex-direction:column;margin:-7px -8px}
+.verb{
+  display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r-2);
+  color:var(--ink-2);font-size:13px;text-align:left;transition:.2s var(--ease);
+}
+.verb:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.verb svg{width:15px;height:15px;color:var(--ink-4);flex:0 0 auto;transition:color .2s}
+.verb:hover svg{color:var(--hot-2)}
+.verb em{font-style:normal;margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--ink-4)}
+.verb.bad:hover{background:rgb(255 77 94/.09);color:var(--bad)}
+.verb.bad:hover svg{color:var(--bad)}
+
+@media(max-height:800px){
+  .sheet{padding:10px}
+  .sheet-art{height:clamp(150px,20vh,190px)}
+  .sheet-head h1{font-size:clamp(22px,2.6vw,32px)}
+  .sheet-bar{padding-top:10px;padding-bottom:10px}
+  .pbtn,.sbtn,.runpill{height:42px}
+  .cblock + .cblock{margin-top:20px}
+}
+
+.pwrap.charging .charge{opacity:1}
+
 </style>
 
 <!-- ── SVG defs: filters + the icon system ─────────────────────── -->
@@ -1583,39 +1757,62 @@ h1.title b{font-weight:800;display:block}
   </main>
 </div>
 
-<!-- ── detail sheet ─────────────────────────────────────────── -->
+<!-- ── карточка игры ────────────────────────────────────────── -->
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Карточка игры">
   <div class="sheet-in">
-    <div class="sheet-art" id="shArt"><button class="sheet-x" id="shX" aria-label="Закрыть"><svg><use href="#i-x"/></svg></button></div>
+    <div class="sheet-art" id="shArt">
+      <div class="sl" data-d="6" id="shSky"></div>
+      <div class="sl" data-d="22" id="shFg"></div>
+      <button class="sheet-x" id="shX" aria-label="Закрыть"><svg><use href="#i-x"/></svg></button>
+      <div class="sheet-head">
+        <div class="eyebrow" id="shEye"></div>
+        <h1 id="shTitle"></h1>
+        <div class="meta" id="shMeta"></div>
+      </div>
+    </div>
+
+    <div class="sheet-bar" id="shBar"></div>
+
     <div class="sheet-b">
-      <div class="eyebrow" id="shEye">В библиотеке</div>
-      <h1 class="title" style="font-size:clamp(28px,4vw,46px);margin-top:10px" id="shTitle"></h1>
-      <div class="meta" style="margin-top:14px" id="shMeta"></div>
       <div class="sheet-cols">
         <div>
-          <p class="blurb" style="max-width:62ch" id="shBlurb"></p>
-          <div class="sec-h" style="margin-top:24px"><h2>Достижения</h2><span class="count" id="shAchCount"></span><span class="rule"></span></div>
-          <div id="shAch"></div>
+          <p class="blurb" style="max-width:64ch;margin:0" id="shBlurb"></p>
+
+          <div class="cblock">
+            <div class="cblock-h"><span class="lb">Ваша история</span><span class="rule"></span><span class="v" id="shHistV"></span></div>
+            <div class="hist" id="shHist"></div>
+          </div>
+
+          <div class="cblock">
+            <div class="cblock-h"><span class="lb">Достижения</span><span class="rule"></span><span class="v" id="shAchV"></span></div>
+            <div class="achbar"><i id="shAchBar"></i></div>
+            <div id="shNear"></div>
+            <div class="achgrid" id="shAch"></div>
+          </div>
+
+          <div class="cblock">
+            <div class="cblock-h"><span class="lb">Состав на диске</span><span class="rule"></span><span class="v" id="shPartsV"></span></div>
+            <div class="stack" id="shStack"></div>
+            <div id="shParts"></div>
+          </div>
         </div>
+
         <div>
           <div class="side-card">
-            <div class="p-lab">Играют сейчас</div>
-            <div style="margin-top:8px" id="shFriends"></div>
-          </div>
-          <div class="side-card">
-            <div class="p-lab">На диске</div>
-            <div class="stats" style="margin-top:10px">
-              <span class="st"><svg><use href="#i-disk"/></svg>Размер<b id="shSize"></b></span>
-              <span class="st"><svg><use href="#i-folder"/></svg><b>D:\Игры</b></span>
-            </div>
-            <div class="bar" style="margin-top:12px"><i style="width:100%"></i></div>
+            <div class="p-lab">Раздача</div>
+            <div class="seedbox" style="margin-top:11px" id="shSeed"></div>
           </div>
           <div class="side-card">
             <div class="p-lab">Сохранения</div>
-            <div class="ev-d" style="margin-top:10px">
-              <span class="dev sync"><svg><use href="#i-cloud"/></svg>синхронизировано</span>
-              <span class="dev"><svg><use href="#i-pc"/></svg>КУЗНЯ</span>
-            </div>
+            <div id="shSave" style="margin-top:11px"></div>
+          </div>
+          <div class="side-card">
+            <div class="p-lab">Друзья</div>
+            <div style="margin-top:6px" id="shFriends"></div>
+          </div>
+          <div class="side-card">
+            <div class="p-lab" style="margin-bottom:12px">Действия</div>
+            <div class="verbs" id="shVerbs"></div>
           </div>
         </div>
       </div>
@@ -1957,7 +2154,7 @@ const GAMES=[
   {id:"wolf",   t:"Волчья Тропа",     sub:"Открытый мир · 58 ч",    pal:P.wolf,   size:"92.7 ГБ", state:"ready", seed:3345,
    blurb:"Тайга размером с область, без маркеров на карте. Ориентируйтесь по звёздам, дыму и следам на снегу.",
    tags:["Установлена","v4.1","92.7 ГБ","Выживание"]},
-  {id:"orbita", t:"Орбита 7",         sub:"Космосим · качается",    pal:P.orbit,  size:"36.0 ГБ", state:"dl", pct:66, seed:8802,
+  {id:"orbita", t:"Орбита 7",         sub:"Космосим · качается",    pal:P.orbit,  size:"36.0 ГБ", state:"dl", pct:41, dlSeeds:27, dlPeers:31, seed:8802,
    blurb:"Семь станций на разных высотах. Топливо конечно, окно стыковки — 90 секунд, а напарник дышит вам в наушник.",
    tags:["Качается","v5.2","36.0 ГБ","Симулятор"]},
   {id:"thresh", t:"Тихий Порог",      sub:"История · 9 ч",          pal:P.thresh, size:"11.8 ГБ", state:"ready", seed:6127,
@@ -1966,7 +2163,7 @@ const GAMES=[
   {id:"storm",  t:"Грозовой Фронт",   sub:"Гонки · 17 ч",           pal:P.storm,  size:"53.4 ГБ", state:"ready", seed:1993,
    blurb:"Трассы переписывает погода. Сухая линия исчезает на втором круге, и держаться приходится за то, чего уже нет.",
    tags:["Установлена","v2.0","53.4 ГБ","Гонки"]},
-  {id:"halc2",  t:"Хальцион: Эхо",    sub:"Дополнение · качается",  pal:P.neon,   size:"9.4 ГБ",  state:"dl", pct:40, seed:2211,
+  {id:"halc2",  t:"Хальцион: Эхо",    sub:"Дополнение · качается",  pal:P.neon,   size:"9.4 ГБ",  state:"dl", pct:66, dlSeeds:81, dlPeers:82, seed:2211,
    blurb:"Сюжетное дополнение на 12 часов: подземные уровни сети и новая ветка финала.",
    tags:["Качается","DLC","9.4 ГБ"]},
   {id:"perigee",t:"Перигей",          sub:"Дополнение · очередь",   pal:P.orbit,  size:"6.8 ГБ",  state:"queue", seed:4747,
@@ -2159,38 +2356,308 @@ function go(id){
 }
 $$(".rbtn[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
 
-/* ── detail sheet ──────────────────────────────────────────── */
-const ACH=[
-  [1,"Первый выдох","Пережить вступительную главу"],
-  [1,"Тихий шаг","Пройти уровень, не подняв тревогу"],
-  [1,"Собиратель","Найти 40 из 60 реликвий"],
-  [0,"Без единой царапины","Победить Кузнеца, не получив урона"],
-  [0,"Полный круг","Завершить все побочные линии"],
+/* ── карточка игры ─────────────────────────────────────────── */
+const sheet = $("#sheet");
+const ACH_NAMES = [
+  ["Первый выдох",        "Пережить вступительную главу"],
+  ["Тихий шаг",           "Пройти уровень, не подняв тревогу"],
+  ["Собиратель",          "Найти 40 из 60 реликвий"],
+  ["Без единой царапины", "Победить Кузнеца, не получив урона"],
+  ["Полный круг",         "Завершить все побочные линии"]
 ];
-const FR=[["АК","Антон К.","в игре · 2 ч"],["МС","Мира С.","в сети"],["ДР","Дан Р.","играл вчера"]];
-const sheet=$("#sheet");
-function openSheet(g){
-  $("#shArt").style.backgroundImage=`url(${makeArt(1100,420,g.pal,g.seed+3,{ridges:2,sx:.6,sy:.4})})`;
-  $("#shTitle").textContent=g.t;
-  $("#shEye").textContent = g.state==="dl"?`Качается · ${g.pct}%` : g.state==="queue"?"В очереди на загрузку":"В библиотеке";
-  $("#shMeta").innerHTML=g.tags.map((t,i)=>`<span class="chip${i===0?" hot":""}">${t}</span>`).join("");
-  $("#shBlurb").textContent=g.blurb;
-  $("#shSize").textContent=g.size;
-  $("#shAchCount").textContent="3 из 5";
-  $("#shAch").innerHTML=ACH.map(([got,n,d])=>`
-    <div class="ach${got?" got":""}"><span class="ic"><svg><use href="#i-trophy"/></svg></span>
-    <span class="tx"><span class="n">${n}</span><span class="d">${d}</span></span></div>`).join("");
-  $("#shFriends").innerHTML=FR.map(([ini,n,s],i)=>`
-    <div class="frow"><span class="av" style="background:${["linear-gradient(140deg,var(--hot-2),var(--hot-1))","linear-gradient(140deg,var(--cool),#1b6f8a)","linear-gradient(140deg,var(--arc),#5a2fa8)"][i]}">${ini}</span>
-    <span class="fn">${n}</span><span class="fs">${s}</span></div>`).join("");
-  sheet.classList.add("on");
+const FRIENDS = [
+  ["АК","Антон К.","linear-gradient(140deg,var(--hot-2),var(--hot-1))"],
+  ["МС","Мира С.","linear-gradient(140deg,var(--cool),#1b6f8a)"],
+  ["ДР","Дан Р.","linear-gradient(140deg,var(--arc),#5a2fa8)"],
+  ["ЛП","Лена П.","linear-gradient(140deg,#3be39b,#146c48)"]
+];
+const DAYS = ["пн","вт","ср","чт","пт","сб","вс"];
+const gb = n => n.toFixed(1).replace(".", ",") + " ГБ";
+
+/* всё, что знает лаунчер и не знает магазин */
+function cardData(g){
+  if(g._cd) return g._cd;
+  const r = rng32(g.seed + 77);
+  const hm = /(\d+)\s*ч/.exec(g.sub);
+  const hours = hm ? +hm[1] : 0;
+  const total = parseFloat(String(g.size).replace(",", ".")) || 10;
+  const installed = g.state === "ready";
+  const sessions = hours
+    ? Array.from({length: 7}, (_, i) => Math.round(14 + r() * 118 * (i === 4 ? 1.35 : 1)))
+    : [0, 0, 0, 0, 0, 0, 0];
+  const got = hours ? 3 : 0;
+  g._cd = {
+    hours, total, installed, sessions, got, ach: 5,
+    lastMin: hours ? 60 + Math.round(r() * 60) : 0,
+    lastAgo: hours ? ["41 минуту назад", "вчера в 23:40", "3 дня назад"][Math.floor(r() * 3)] : "—",
+    parts: [
+      {n: "Игра",                sz: total * .79,  on: installed, req: true},
+      {n: "Русская озвучка",     sz: total * .12,  on: installed},
+      {n: "Текстуры 4K",         sz: total * .09,  on: installed},
+      {n: "Английская озвучка",  sz: total * .115, on: false},
+      {n: "Саундтрек FLAC",      sz: total * .035, on: false}
+    ],
+    ratio: +(0.4 + r() * 2.6).toFixed(2),
+    peers: 2 + Math.floor(r() * 22),
+    friends: FRIENDS.slice(0, 2 + Math.floor(r() * 3))
+  };
+  g._cd.uploaded = g._cd.total * g._cd.ratio;
+  return g._cd;
 }
-document.addEventListener("click",e=>{
-  const c=e.target.closest("[data-id]"); if(c){openSheet(byId(c.dataset.id));return}
-  if(e.target.closest("[data-open]")) openSheet(GAMES[+e.target.closest("[data-open]").dataset.open]);
+
+/* карточка читает состояние приложения, а не только поле игры */
+function cardState(g){
+  if(g.id === "ashen"){
+    if(curState === "lib-running" || curState === "ovl") return "running";
+    if(curState === "lib-install")  return "installing";
+    if(curState === "lib-update")   return "update";
+    if(curState === "lib-notinst")  return "notinst";
+  }
+  if(g.state === "dl")    return "downloading";
+  if(g.state === "queue") return "queued";
+  return "ready";
+}
+const RING = `<div class="charge"><svg viewBox="0 0 100 100" preserveAspectRatio="none">
+  <rect class="chr" x="1" y="1" width="98" height="98" rx="45" fill="none" stroke="var(--hot-2)"
+        stroke-width="1.4" vector-effect="non-scaling-stroke" pathLength="100"
+        stroke-dasharray="100" stroke-dashoffset="100" style="filter:drop-shadow(0 0 8px var(--hot-2))"/>
+</svg></div>`;
+const ICONBTNS = `
+  <button class="sbtn icon" title="Проверить файлы" aria-label="Проверить файлы"><svg><use href="#i-verified"/></svg></button>
+  <button class="sbtn icon" title="Открыть папку" aria-label="Открыть папку"><svg><use href="#i-folder"/></svg></button>
+  <button class="sbtn icon" title="Настройки запуска" aria-label="Настройки запуска"><svg><use href="#i-set"/></svg></button>`;
+
+function barHTML(g, st, d){
+  switch(st){
+    case "running": return `
+      <span class="runpill"><span class="pip"></span>Идёт игра<span class="tm">01:04:12</span></span>
+      <button class="sbtn" data-card="ovl"><svg><use href="#i-lib"/></svg>Оверлей</button>
+      <button class="sbtn bad" data-card="quit"><svg><use href="#i-power"/></svg>Завершить</button>
+      <span class="sp"></span><span class="where">Глава 5 · <b>Кузня Сумерек</b></span>`;
+    case "installing": return `
+      <span class="runpill" style="border-color:rgb(var(--glow-hot)/.45);color:var(--hot-2);background:linear-gradient(115deg,rgb(var(--glow-hot)/.14),rgb(var(--glow-hot)/.05));box-shadow:0 0 26px rgb(var(--glow-hot)/.16)">
+        <span class="pip" style="background:var(--hot-2);box-shadow:0 0 10px var(--hot-2)"></span>Установка<span class="tm">41 %</span></span>
+      <button class="sbtn"><svg><use href="#i-pause"/></svg>Пауза</button>
+      <button class="sbtn bad"><svg><use href="#i-x"/></svg>Отменить</button>
+      <span class="sp"></span><span class="where">28.0 из 68.4 ГБ · <b>осталось 12 мин</b></span>
+      <span class="bar"><i style="width:41%"></i></span>`;
+    case "downloading": return `
+      <button class="pbtn cool" data-card="dl"><svg><use href="#i-dl"/></svg><span>Идёт загрузка</span><span class="hold">${g.pct} %</span></button>
+      <button class="sbtn"><svg><use href="#i-pause"/></svg>Пауза</button>
+      ${ICONBTNS}
+      <span class="sp"></span><span class="where">сиды <b>${g.dlSeeds ?? 27}</b> · пиры <b>${g.dlPeers ?? 31}</b></span>
+      <span class="bar c"><i style="width:${g.pct}%"></i></span>`;
+    case "queued": return `
+      <button class="pbtn" data-card="dl"><svg><use href="#i-dl"/></svg><span>Скачать сейчас</span><span class="hold">${g.size.toUpperCase()}</span></button>
+      <button class="sbtn bad"><svg><use href="#i-x"/></svg>Убрать из очереди</button>
+      <span class="sp"></span><span class="where">в очереди · <b>вторая</b></span>`;
+    case "notinst": return `
+      <button class="pbtn" data-card="install"><svg><use href="#i-dl"/></svg><span>Установить</span><span class="hold">${g.size.toUpperCase()}</span></button>
+      <button class="sbtn"><svg><use href="#i-folder"/></svg>Указать папку</button>
+      <span class="sp"></span><span class="where">свободно <b>214 ГБ</b></span>`;
+    case "update": return `
+      <button class="pbtn" data-card="install"><svg><use href="#i-dl"/></svg><span>Обновить и играть</span><span class="hold">1,8 ГБ</span></button>
+      <button class="sbtn" data-card="play"><svg><use href="#i-play"/></svg>Без обновления</button>
+      ${ICONBTNS}
+      <span class="sp"></span><span class="where">установлена <b>2.4.1</b></span>`;
+    default: return `
+      <span class="pwrap">${RING}
+        <button class="pbtn" id="shPlay"><svg><use href="#i-play"/></svg><span>Играть</span><span class="hold">УДЕРЖАТЬ</span></button>
+      </span>
+      ${ICONBTNS}
+      <span class="sp"></span>
+      <span class="where">${d.hours ? "Глава 5 · <b>62 %</b>" : "ещё не запускали"}</span>`;
+  }
+}
+
+/* слои обложки для параллакса */
+function sheetLayers(g){
+  if(g._sl) return g._sl;
+  const W = 1100, H = 420;
+  const sky = makeArt(W, H, g.pal, g.seed + 3, {ridges: 0, monolith: false, sx: .64, sy: .34});
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const x = c.getContext("2d"), r = rng32(g.seed + 91);
+  x.save(); x.globalCompositeOperation = "screen";
+  const gg = x.createRadialGradient(W * .64, H * .52, 0, W * .64, H * .52, W * .2);
+  gg.addColorStop(0, g.pal.hot2); gg.addColorStop(.42, g.pal.hot); gg.addColorStop(1, "rgba(0,0,0,0)");
+  x.globalAlpha = .4; x.fillStyle = gg; x.fillRect(0, 0, W, H); x.restore();
+  for(let k = 0; k < 2; k++){
+    const base = H * (.66 + k * .14), amp = H * .16, ph = r() * 9;
+    x.beginPath(); x.moveTo(-2, H + 2);
+    for(let i = -2; i <= W + 2; i += W / 30)
+      x.lineTo(i, base + Math.sin(i / W * 5.2 + ph) * amp * .7 + Math.sin(i / W * 13 + ph * 2) * amp * .3);
+    x.lineTo(W + 2, H + 2); x.closePath();
+    x.fillStyle = k ? "#010104" : "rgba(4,4,8,.8)"; x.fill();
+    x.save(); x.globalCompositeOperation = "screen"; x.strokeStyle = g.pal.hot;
+    x.globalAlpha = .46 - k * .2; x.lineWidth = 1.5; x.shadowColor = g.pal.hot; x.shadowBlur = 14;
+    x.stroke(); x.restore();
+  }
+  x.save(); x.globalCompositeOperation = "screen";
+  for(let i = 0; i < 60; i++){
+    x.fillStyle = `rgba(255,236,206,${r() * .5})`;
+    x.beginPath(); x.arc(r() * W, H * .3 + r() * H * .66, r() * 2 + .5, 0, 7); x.fill();
+  }
+  x.restore();
+  g._sl = {sky, fg: c.toDataURL("image/png")};
+  return g._sl;
+}
+
+function openSheet(g){
+  const d = cardData(g), st = cardState(g), L = sheetLayers(g);
+  $("#shSky").style.backgroundImage = `url(${L.sky})`;
+  $("#shFg").style.backgroundImage  = `url(${L.fg})`;
+  $("#shTitle").innerHTML = g.t.split(" ").length > 1
+    ? g.t.split(" ").slice(0, -1).join(" ") + " <b>" + g.t.split(" ").slice(-1) + "</b>"
+    : "<b>" + g.t + "</b>";
+  $("#shEye").textContent = {
+    running:"Идёт игра · запущена 1 ч 04 мин назад", installing:"Установка · осталось 12 мин",
+    downloading:`Качается · ${g.pct} %`, queued:"В очереди на загрузку",
+    notinst:"В библиотеке · на диске нет", update:"Установлена · доступно обновление",
+    ready: d.hours ? `В библиотеке · сыграно ${d.hours} ч` : "В библиотеке"
+  }[st];
+  $("#shMeta").innerHTML = g.tags.map((t, i) => `<span class="chip${i === 0 ? " hot" : ""}">${t}</span>`).join("");
+  $("#shBlurb").textContent = g.blurb;
+  $("#shBar").innerHTML = barHTML(g, st, d);
+
+  /* история */
+  $("#shHistV").textContent = d.hours ? "последние 7 сессий" : "";
+  const mx = Math.max(1, ...d.sessions), top = d.sessions.indexOf(mx);
+  $("#shHist").innerHTML = d.hours ? `
+    <div class="tot"><span class="n">${d.hours} ч</span><span class="k">всего в игре</span></div>
+    <div class="last"><span class="n">${Math.floor(d.lastMin / 60)} ч ${d.lastMin % 60} мин</span>
+      <span class="k">последняя · ${d.lastAgo}</span></div>
+    <div class="chart">${d.sessions.map((v, i) =>
+      `<span class="${i === top ? "top" : ""}" title="${v} мин"><i style="height:${Math.max(6, v / mx * 100)}%"></i><em>${DAYS[i]}</em></span>`).join("")}</div>`
+    : `<div class="tot"><span class="n">—</span><span class="k">ещё не запускали</span></div>
+       <div class="last"><span class="n" style="color:var(--ink-3);font-size:13.5px">История появится после первого запуска</span>
+       <span class="k">сессии · достижения · часы</span></div>`;
+
+  /* достижения */
+  const pc = Math.round(d.got / d.ach * 100);
+  $("#shAchV").innerHTML = `<b>${d.got}</b> из ${d.ach} · ${pc} %`;
+  $("#shAchBar").style.width = pc + "%";
+  $("#shNear").innerHTML = d.got ? `
+    <div class="nearest"><span class="ic"><svg><use href="#i-trophy"/></svg></span>
+      <span class="tx"><span class="n">Ближе всего: Собиратель</span><span class="d">37 из 60 реликвий · осталось 23</span></span>
+      <span class="pc">62 %</span></div>` : "";
+  $("#shAch").innerHTML = ACH_NAMES.map(([n, s], i) => `
+    <div class="ach${i < d.got ? " got" : ""}"><span class="ic"><svg><use href="#i-trophy"/></svg></span>
+      <span class="tx"><span class="n">${n}</span><span class="d">${s}</span></span></div>`).join("");
+
+  /* состав */
+  const onSum = d.parts.filter(p => p.on).reduce((a, p) => a + p.sz, 0);
+  const offSum = d.parts.filter(p => !p.on).reduce((a, p) => a + p.sz, 0);
+  $("#shPartsV").innerHTML = onSum ? `<b>${gb(onSum)}</b> на диске` : `<b>${gb(offSum)}</b> к загрузке`;
+  const cols = ["var(--hot-1)", "var(--cool)", "var(--arc)"];
+  $("#shStack").innerHTML = d.parts.filter(p => p.on)
+    .map((p, i) => `<i style="width:${p.sz / (onSum || 1) * 100}%;background:${cols[i % 3]}" title="${p.n}"></i>`).join("")
+    || `<i style="width:100%;background:rgba(255,255,255,.08)"></i>`;
+  $("#shParts").innerHTML = d.parts.map(p => `
+    <button class="filerow${p.req ? " locked" : ""}" aria-pressed="${p.on}">
+      <span class="bx"><svg><use href="#i-check"/></svg></span>
+      <span class="n">${p.n}${p.req ? "<em>обязательно</em>" : ""}</span>
+      <span class="sz">${gb(p.sz)}</span>
+    </button>`).join("");
+
+  /* раздача */
+  $("#shSeed").innerHTML = `
+    <div class="f"><div class="k">Рейтинг</div><div class="v ${d.ratio >= 1 ? "ok" : ""}">${String(d.ratio).replace(".", ",")}</div></div>
+    <div class="f"><div class="k">Отдано</div><div class="v c">${gb(d.uploaded)}</div></div>
+    <div class="ratio"><i style="width:${clamp(d.ratio / 3 * 100, 4, 100)}%"></i></div>
+    <div class="f"><div class="k">Пиров сейчас</div><div class="v">${d.peers}</div></div>
+    <div class="f"><div class="k">Раздаём</div><div class="v ok">${d.installed ? "да" : "нет"}</div></div>`;
+
+  /* сохранения */
+  $("#shSave").innerHTML = d.hours ? `
+    <div class="savept" style="max-width:100%">
+      <span class="th" style="background-image:url(${g.cover})"></span>
+      <span class="tx"><span class="h">02:14 · Глава 5</span><span class="d">${d.lastAgo} · 148 МБ</span></span>
+    </div>
+    <div class="ev-d" style="margin-top:10px">
+      <span class="dev sync"><svg><use href="#i-cloud"/></svg>выгружено</span>
+      <span class="dev"><svg><use href="#i-pc"/></svg>КУЗНЯ</span>
+    </div>` : `<div class="cta-note"><svg><use href="#i-cloud"/></svg>Сохранений пока нет</div>`;
+
+  $("#shFriends").innerHTML = d.friends.map(([ini, n, bg], i) => `
+    <div class="frow"><span class="av" style="background:${bg}">${ini}</span>
+      <span class="fn">${n}</span><span class="fs">${i ? "в сети" : "в игре · 2 ч"}</span></div>`).join("");
+
+  $("#shVerbs").innerHTML = `
+    <button class="verb"><svg><use href="#i-verified"/></svg>Проверить целостность<em>~4 мин</em></button>
+    <button class="verb"><svg><use href="#i-folder"/></svg>Открыть папку<em>D:\\Игры</em></button>
+    <button class="verb"><svg><use href="#i-boost"/></svg>Создать ярлык</button>
+    <button class="verb"><svg><use href="#i-seed"/></svg>${d.installed ? "Перестать раздавать" : "Начать раздачу"}</button>
+    <button class="verb bad"><svg><use href="#i-x"/></svg>Удалить с диска<em>${gb(onSum)}</em></button>`;
+
+  sheet.classList.add("on");
+  sheet.dataset.game = g.id;
+  const pb = $("#shPlay");
+  if(pb) makeHold(pb, $(".chr", $("#shBar")), () => { closeSheet(); launch(g); });
+}
+
+/* удержание — тот же ритуал, что и в герое */
+function makeHold(btn, ring, done){
+  let raf = null, t0 = 0;
+  const stop = ok => { cancelAnimationFrame(raf); raf = null;
+    btn.parentElement.classList.remove("charging"); if(!ok) ring.style.strokeDashoffset = "100"; };
+  const step = () => {
+    const p = clamp((performance.now() - t0) / 620, 0, 1);
+    ring.style.strokeDashoffset = String(100 - 100 * p);
+    if(p >= 1){ stop(true); done(); return; }
+    raf = requestAnimationFrame(step);
+  };
+  const start = e => {
+    if(e && e.button !== undefined && e.button !== 0) return;
+    if(!FLAGS.hold){ done(); return; }
+    btn.parentElement.classList.add("charging"); t0 = performance.now(); raf = requestAnimationFrame(step);
+  };
+  btn.addEventListener("pointerdown", start);
+  ["pointerup", "pointerleave", "pointercancel"].forEach(ev => btn.addEventListener(ev, () => stop(false)));
+  btn.addEventListener("keydown", e => { if((e.key === " " || e.key === "Enter") && !raf){ e.preventDefault(); start(); } });
+  btn.addEventListener("keyup", () => stop(false));
+}
+
+function closeSheet(){ sheet.classList.remove("on"); }
+
+/* параллакс обложки */
+$("#shArt").addEventListener("pointermove", e => {
+  if(!FLAGS.para) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  const ox = (e.clientX - r.left) / r.width - .5, oy = (e.clientY - r.top) / r.height - .5;
+  $$(".sl", e.currentTarget).forEach(el => {
+    const dd = +el.dataset.d;
+    el.style.transform = `translate3d(${-ox * dd}px,${-oy * dd * .5}px,0)`;
+  });
 });
-$("#shX").onclick=()=>sheet.classList.remove("on");
-sheet.onclick=e=>{if(e.target===sheet)sheet.classList.remove("on")};
+$("#shArt").addEventListener("pointerleave", e =>
+  $$(".sl", e.currentTarget).forEach(el => el.style.transform = ""));
+
+/* переключатели состава ведут себя как в диалоге добавления */
+$("#shParts").addEventListener("click", e => {
+  const row = e.target.closest(".filerow");
+  if(!row || row.classList.contains("locked")) return;
+  row.setAttribute("aria-pressed", String(row.getAttribute("aria-pressed") !== "true"));
+});
+
+/* действия из полосы */
+$("#shBar").addEventListener("click", e => {
+  const b = e.target.closest("[data-card]");
+  if(!b) return;
+  const g = byId(sheet.dataset.game);
+  const a = b.dataset.card;
+  if(a === "ovl"){ closeSheet(); applyState("ovl"); }
+  if(a === "quit"){ closeSheet(); applyState("lib-default"); }
+  if(a === "play"){ closeSheet(); launch(g); }
+  if(a === "install"){ closeSheet(); applyState("lib-install"); }
+  if(a === "dl"){ closeSheet(); applyState("dl-default"); }
+});
+
+document.addEventListener("click", e => {
+  const c = e.target.closest("[data-id]"); if(c){ openSheet(byId(c.dataset.id)); return; }
+  const o = e.target.closest("[data-open]"); if(o) openSheet(GAMES[+o.dataset.open]);
+});
+$("#shX").onclick = closeSheet;
+sheet.onclick = e => { if(e.target === sheet) closeSheet(); };
 
 /* ── command palette ───────────────────────────────────────── */
 const cmd=$("#cmd"),cmdI=$("#cmdI"),cmdL=$("#cmdL");
@@ -2749,7 +3216,7 @@ function applyState(id){
     case "lib-default":  setHero(HERO.ready); break;
     case "lib-return":
       setHero(HERO.ret); setNote(HERO.ret.note);
-      $("#savePtTh").style.backgroundImage = `url(${byId("ashen").cover})`;
+      { const th = $("#savePtTh"); if(th) th.style.backgroundImage = `url(${byId("ashen").cover})`; }
       openDigest();
       break;
     case "lib-empty":
@@ -3222,8 +3689,8 @@ const RETURN_FLOW = [
 const SCEN = {first: FLOW, ret: RETURN_FLOW};
 let scenKey = "first";
 
-/* the rail's thumbnails share the generated covers */
-$("#savePtTh").style.backgroundImage = `url(${byId("ashen").cover})`;
+/* the rail's thumbnails share the generated covers.
+   The save strip is injected by setNote, so its thumb is set there, not here. */
 $("#railT1 .th").style.backgroundImage = `url(${byId("orbita").cover})`;
 $("#railT2 .th").style.backgroundImage = `url(${byId("halc2").cover})`;
 
