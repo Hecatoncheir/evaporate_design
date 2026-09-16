@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../design/appearance.dart';
+import '../design/effects.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
 import '../gallery/gallery_page.dart';
@@ -17,6 +18,7 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final ev = context.ev;
     final appearance = EvAppearanceScope.of(context);
+    final effects = EvEffectsScope.maybeOf(context);
     final gutter = EvSpace.gutterFor(MediaQuery.sizeOf(context));
     return ListView(
       primary: true,
@@ -51,6 +53,73 @@ class SettingsPage extends StatelessWidget {
             ],
           ),
         ),
+        if (effects != null) ...[
+          const SizedBox(height: EvSpace.xxl),
+          const EvSectionHeader('Эффекты', count: 'атмосфера и качество'),
+          const SizedBox(height: EvSpace.l),
+          EvPanel(
+            child: Column(
+              children: [
+                EvOption(
+                  title: 'Живой фон (шейдер)',
+                  description: 'Объёмный плюм пара за интерфейсом',
+                  control: EvSwitch(
+                    value: effects.livingBackground,
+                    semanticLabel: 'Живой фон',
+                    onChanged: (v) => effects.livingBackground = v,
+                  ),
+                ),
+                EvOption(
+                  title: 'Искры и частицы',
+                  description: 'Восходящие угли, аддитивное смешивание',
+                  control: EvSwitch(
+                    value: effects.sparks,
+                    semanticLabel: 'Искры',
+                    onChanged: (v) => effects.sparks = v,
+                  ),
+                ),
+                EvOption(
+                  title: 'Плёночное зерно',
+                  description: '5 % перекрытия, убирает бандинг на градиентах',
+                  control: EvSwitch(
+                    value: effects.grain,
+                    semanticLabel: 'Зерно',
+                    onChanged: (v) => effects.grain = v,
+                  ),
+                ),
+                EvOption(
+                  title: 'Уровень эффектов',
+                  description: 'Плотность частиц и разрешение шейдера',
+                  control: EvSegmented<EvEffectsQuality>(
+                    items: {
+                      for (final q in EvEffectsQuality.values) q: q.label,
+                    },
+                    value: effects.quality,
+                    onChanged: (q) => effects.quality = q,
+                  ),
+                ),
+                EvOption(
+                  last: true,
+                  title: 'Ограничить до 30 к/с в фоне',
+                  description: 'Экономит батарею, когда окно неактивно',
+                  control: EvSwitch(
+                    value: effects.throttleInBackground,
+                    semanticLabel: 'Ограничение кадров',
+                    onChanged: (v) => effects.throttleInBackground = v,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (MediaQuery.disableAnimationsOf(context)) ...[
+            const SizedBox(height: EvSpace.m),
+            Text(
+              'В системе включено «уменьшить движение» — атмосфера стоит '
+              'неподвижным кадром, что бы здесь ни было выбрано.',
+              style: ev.text.bodySmall.copyWith(color: ev.colors.ink4),
+            ),
+          ],
+        ],
         const SizedBox(height: EvSpace.xxl),
         const EvSectionHeader('Разработка'),
         const SizedBox(height: EvSpace.l),
@@ -71,9 +140,10 @@ class SettingsPage extends StatelessWidget {
         ),
         const SizedBox(height: EvSpace.l),
         Text(
-          'Остальные разделы — эффекты, звук, библиотека, загрузки, раздача, '
+          'Остальные разделы — звук, библиотека, загрузки, раздача, '
           'сохранения, запуск, клавиши, «О программе» — и поиск по настройкам '
-          'пока живут в макете design/evaporate-launcher.html.',
+          'пока живут в макете design/evaporate-launcher.html. Из эффектов '
+          'там же пока параллакс, ритуал запуска и удержание «Играть».',
           style: ev.text.bodySmall.copyWith(color: ev.colors.ink4),
         ),
       ],

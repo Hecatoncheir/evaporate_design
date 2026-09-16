@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../atmosphere/ev_atmosphere.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
-import 'ev_backdrop.dart';
 import 'ev_hints_bar.dart';
 import 'ev_palette.dart';
 import 'ev_rail.dart';
@@ -189,78 +189,73 @@ class _EvShellState extends State<EvShell> {
       onKeyEvent: _onKey,
       child: Scaffold(
         backgroundColor: c.ground,
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            const EvBackdrop(),
-            ListenableBuilder(
-              listenable: _controller,
-              builder: (context, _) {
-                final section = _controller.section;
-                final page = AnimatedSwitcher(
-                  duration: reduced ? Duration.zero : EvMotion.screenSettle,
-                  reverseDuration: reduced ? Duration.zero : EvMotion.fast,
-                  layoutBuilder: _stackPages,
-                  transitionBuilder: _pageTransition,
-                  child: _SectionHost(
-                    key: ValueKey(section),
-                    reselected: _controller.reselected,
-                    child: Builder(
-                      builder: (context) =>
-                          widget.pageBuilder(context, section),
-                    ),
+        body: EvAtmosphere(
+          child: ListenableBuilder(
+            listenable: _controller,
+            builder: (context, _) {
+              final section = _controller.section;
+              final page = AnimatedSwitcher(
+                duration: reduced ? Duration.zero : EvMotion.screenSettle,
+                reverseDuration: reduced ? Duration.zero : EvMotion.fast,
+                layoutBuilder: _stackPages,
+                transitionBuilder: _pageTransition,
+                child: _SectionHost(
+                  key: ValueKey(section),
+                  reselected: _controller.reselected,
+                  child: Builder(
+                    builder: (context) => widget.pageBuilder(context, section),
                   ),
-                );
-                final topBar = EvTopBar(
-                  section: section.label,
-                  onSearch: _openPalette,
-                  trailing: widget.status,
-                );
-                return LayoutBuilder(
-                  builder: (context, box) {
-                    if (box.maxWidth < EvSpace.narrowBreakpoint) {
-                      return Column(
-                        children: [
-                          EvTopBar(
-                            section: section.label,
-                            onSearch: _openPalette,
-                          ),
-                          Expanded(child: page),
-                          EvBottomNav(
-                            current: section,
-                            onSelect: _controller.go,
-                            initials: widget.initials,
-                          ),
-                        ],
-                      );
-                    }
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                ),
+              );
+              final topBar = EvTopBar(
+                section: section.label,
+                onSearch: _openPalette,
+                trailing: widget.status,
+              );
+              return LayoutBuilder(
+                builder: (context, box) {
+                  if (box.maxWidth < EvSpace.narrowBreakpoint) {
+                    return Column(
                       children: [
-                        EvRail(
+                        EvTopBar(
+                          section: section.label,
+                          onSearch: _openPalette,
+                        ),
+                        Expanded(child: page),
+                        EvBottomNav(
                           current: section,
                           onSelect: _controller.go,
                           initials: widget.initials,
-                          userName: widget.userName,
-                          friendsOnline: widget.friendsOnline,
-                          downloadsActive: widget.downloadsActive,
-                        ),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              topBar,
-                              Expanded(child: page),
-                              const EvHintsBar(),
-                            ],
-                          ),
                         ),
                       ],
                     );
-                  },
-                );
-              },
-            ),
-          ],
+                  }
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      EvRail(
+                        current: section,
+                        onSelect: _controller.go,
+                        initials: widget.initials,
+                        userName: widget.userName,
+                        friendsOnline: widget.friendsOnline,
+                        downloadsActive: widget.downloadsActive,
+                      ),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            topBar,
+                            Expanded(child: page),
+                            const EvHintsBar(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );

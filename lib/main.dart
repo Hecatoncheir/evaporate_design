@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'data/sample_data.dart';
 import 'design/appearance.dart';
+import 'design/effects.dart';
 import 'design/theme.dart';
 import 'design/tokens.dart';
 import 'screens/library_page.dart';
@@ -16,7 +17,11 @@ import 'widgets/ev_surfaces.dart';
 void main() => runApp(const EvaporateApp());
 
 class EvaporateApp extends StatefulWidget {
-  const EvaporateApp({super.key});
+  const EvaporateApp({super.key, this.effects});
+
+  /// Эффекты атмосферы. Не задано — приложение заводит свои, всё включено.
+  /// Тесты передают [EvEffects.still], чтобы кадры не шли бесконечно.
+  final EvEffects? effects;
 
   @override
   State<EvaporateApp> createState() => _EvaporateAppState();
@@ -24,11 +29,15 @@ class EvaporateApp extends StatefulWidget {
 
 class _EvaporateAppState extends State<EvaporateApp> {
   final _appearance = EvAppearance();
+  late final _ownEffects = widget.effects == null ? EvEffects() : null;
   final _shell = EvShellController();
+
+  EvEffects get _effects => widget.effects ?? _ownEffects!;
 
   @override
   void dispose() {
     _appearance.dispose();
+    _ownEffects?.dispose();
     _shell.dispose();
     super.dispose();
   }
@@ -37,16 +46,19 @@ class _EvaporateAppState extends State<EvaporateApp> {
   Widget build(BuildContext context) {
     return EvAppearanceScope(
       appearance: _appearance,
-      child: ListenableBuilder(
-        listenable: _appearance,
-        builder: (context, _) => MaterialApp(
-          title: 'Evaporate',
-          debugShowCheckedModeBanner: false,
-          // Тема одна — тёмная, по требованию продукта.
-          theme: _appearance.theme,
-          themeAnimationDuration: EvMotion.screen,
-          themeAnimationCurve: EvMotion.easeOut,
-          home: _Home(shell: _shell),
+      child: EvEffectsScope(
+        effects: _effects,
+        child: ListenableBuilder(
+          listenable: _appearance,
+          builder: (context, _) => MaterialApp(
+            title: 'Evaporate',
+            debugShowCheckedModeBanner: false,
+            // Тема одна — тёмная, по требованию продукта.
+            theme: _appearance.theme,
+            themeAnimationDuration: EvMotion.screen,
+            themeAnimationCurve: EvMotion.easeOut,
+            home: _Home(shell: _shell),
+          ),
         ),
       ),
     );

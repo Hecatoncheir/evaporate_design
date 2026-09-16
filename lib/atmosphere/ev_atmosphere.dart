@@ -1,0 +1,485 @@
+import 'dart:async';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
+
+import '../design/effects.dart';
+import '../design/theme.dart';
+import '../design/tokens.dart';
+import 'ember_field.dart';
+import 'static_backdrop.dart';
+
+/// Живая атмосфера за интерфейсом: плюм пара, восходящие угли и плёночное
+/// зерно — три слоя прототипа, в том же порядке снизу вверх.
+///
+/// Курсор слегка сдвигает плюм (параллакс), поэтому атмосфера оборачивает
+/// содержимое окна, а не лежит отдельным слоем: движение мыши над
+/// интерфейсом доходит и до неё.
+///
+/// Кадры идут, только пока их видно:
+/// * свёрнутое окно или перекрытый маршрут — ни одного кадра;
+/// * неактивное окно — 30 к/с, если это разрешено в настройках;
+/// * «уменьшить движение» — один неподвижный кадр, как в прототипе.
+///
+/// Без [EvEffectsScope] выше по дереву атмосфера неподвижна и пуста.
+class EvAtmosphere extends StatefulWidget {
+  const EvAtmosphere({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<EvAtmosphere> createState() => EvAtmosphereState();
+}
+
+class EvAtmosphereState extends State<EvAtmosphere>
+    with SingleTickerProviderStateMixin {
+  late final Ticker _ticker = createTicker(_onTick);
+  late final AppLifecycleListener _lifecycle;
+  final _repaint = _Repaint();
+  final _scene = _Scene();
+  final _clock = Stopwatch();
+  Timer? _throttle;
+  Duration _lastTick = Duration.zero;
+
+  AppLifecycleState? _appState = SchedulerBinding.instance.lifecycleState;
+  EvEffects? _effects;
+  bool _reducedMotion = false;
+  bool _tickerModeEnabled = true;
+
+  ui.FragmentShader? _plume;
+  bool _plumeUnavailable = false;
+  late final ui.Image _glowSprite = _makeGlowSprite();
+  ui.Image? _grain;
+
+  /// Секунды времени плюма — для тестов.
+  @visibleForTesting
+  double get time => _scene.time;
+
+  /// Кадры идут: тикером или, в фоне, таймером на 30 к/с.
+  @visibleForTesting
+  bool get isAnimating => _ticker.isActive || _throttle != null;
+
+  @visibleForTesting
+  bool get isThrottled => _throttle != null;
+
+  /// Шейдер загружен; `false` и при ошибке, и пока он грузится.
+  @visibleForTesting
+  bool get hasPlume => _plume != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(
+      onStateChange: (state) {
+        _appState = state;
+        _syncRunning();
+      },
+    );
+    EvPlumeProgram.load().then((program) {
+      if (!mounted) return;
+      setState(() {
+        _plume = program?.fragmentShader();
+        _plumeUnavailable = program == null;
+      });
+    });
+    _makeGrain().then((image) {
+      if (!mounted) {
+        image.dispose();
+        return;
+      }
+      setState(() => _grain = image);
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _effects = EvEffectsScope.maybeOf(context);
+    _reducedMotion = MediaQuery.disableAnimationsOf(context);
+    _tickerModeEnabled = TickerMode.valuesOf(context).enabled;
+    if (_reducedMotion) {
+      // неподвижный кадр прототипа: t = 8, курсор в центре
+      _scene
+        ..time = 8
+        ..pointer = const Offset(0.5, 0.5)
+        ..target = const Offset(0.5, 0.5);
+    }
+    _syncRunning();
+  }
+
+  @override
+  void dispose() {
+    _throttle?.cancel();
+    _ticker.dispose();
+    _lifecycle.dispose();
+    _repaint.dispose();
+    _plume?.dispose();
+    _glowSprite.dispose();
+    _grain?.dispose();
+    super.dispose();
+  }
+
+  /// Решает, идут ли кадры и как часто.
+  void _syncRunning() {
+    final effects = _effects;
+    final visible = switch (_appState) {
+      AppLifecycleState.hidden ||
+      AppLifecycleState.paused ||
+      AppLifecycleState.detached => false,
+      _ => true,
+    };
+    final wanted =
+        effects != null &&
+        !_reducedMotion &&
+        _tickerModeEnabled &&
+        visible &&
+        (effects.livingBackground || effects.sparks);
+    final throttled =
+        wanted &&
+        effects.throttleInBackground &&
+        _appState == AppLifecycleState.inactive;
+
+    if (wanted && !throttled) {
+      if (!_ticker.isActive) {
+        _lastTick = Duration.zero;
+        _ticker.start();
+      }
+    } else if (_ticker.isActive) {
+      _ticker.stop();
+    }
+
+    if (throttled) {
+      if (_throttle == null) {
+        _clock
+          ..reset()
+          ..start();
+        _throttle = Timer.periodic(const Duration(milliseconds: 33), (_) {
+          final dt = _clock.elapsedMicroseconds / 1e6;
+          _clock
+            ..reset()
+            ..start();
+          _advance(dt);
+        });
+      }
+    } else {
+      _throttle?.cancel();
+      _throttle = null;
+    }
+  }
+
+  void _onTick(Duration elapsed) {
+    final dt = (elapsed - _lastTick).inMicroseconds / 1e6;
+    _lastTick = elapsed;
+    _advance(dt);
+  }
+
+  void _advance(double dt) {
+    final seconds = math.min(dt, 0.1);
+    _scene.time += seconds;
+    // Сглаживание курсора из прототипа — 5,5 % пути за кадр при 60 Гц,
+    // пересчитанное во время, чтобы не зависеть от частоты экрана.
+    final k = 1 - math.pow(1 - 0.055, seconds * 60).toDouble();
+    _scene.pointer = Offset.lerp(_scene.pointer, _scene.target, k)!;
+    if (_effects?.sparks ?? false) _scene.embers.step(seconds);
+    _repaint.notify();
+  }
+
+  void _onPointer(PointerEvent event) {
+    if (_reducedMotion) return;
+    final size = context.size;
+    if (size == null || size.isEmpty) return;
+    _scene.target = Offset(
+      (event.localPosition.dx / size.width).clamp(0.0, 1.0),
+      (event.localPosition.dy / size.height).clamp(0.0, 1.0),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.evc;
+    final effects = _effects;
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerHover: _onPointer,
+      onPointerMove: _onPointer,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          RepaintBoundary(
+            child: CustomPaint(
+              painter: _AtmospherePainter(
+                repaint: _repaint,
+                scene: _scene,
+                colors: c,
+                devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+                quality: effects?.quality ?? EvEffectsQuality.full,
+                plume: (effects?.livingBackground ?? false) ? _plume : null,
+                staticFallback:
+                    (effects?.livingBackground ?? false) && _plumeUnavailable,
+                sparks: effects?.sparks ?? false,
+                glowSprite: _glowSprite,
+                grain: (effects?.grain ?? false) ? _grain : null,
+              ),
+            ),
+          ),
+          widget.child,
+        ],
+      ),
+    );
+  }
+}
+
+/// Загрузка шейдера плюма — один раз на приложение.
+abstract final class EvPlumeProgram {
+  static Future<ui.FragmentProgram?>? _loading;
+
+  /// `null`, если шейдер недоступен: тогда рисуется неподвижный фон.
+  static Future<ui.FragmentProgram?> load() =>
+      _loading ??= ui.FragmentProgram.fromAsset('shaders/plume.frag')
+          .then<ui.FragmentProgram?>((program) => program)
+          .catchError((Object error) {
+            debugPrint('EvAtmosphere: шейдер плюма недоступен: $error');
+            return null;
+          });
+}
+
+/// Униформы плюма — контракт с `shaders/plume.frag`: индексы идут подряд
+/// в порядке объявления. [pointer] — доли окна сверху вниз; шейдеру,
+/// написанному под WebGL, нужна ось y снизу вверх.
+void setPlumeUniforms(
+  ui.FragmentShader shader, {
+  required Size frame,
+  required double time,
+  required Offset pointer,
+  required EvColors colors,
+}) {
+  shader
+    ..setFloat(0, frame.width)
+    ..setFloat(1, frame.height)
+    ..setFloat(2, time)
+    ..setFloat(3, pointer.dx)
+    ..setFloat(4, 1 - pointer.dy)
+    ..setFloat(5, colors.hot1.r)
+    ..setFloat(6, colors.hot1.g)
+    ..setFloat(7, colors.hot1.b)
+    ..setFloat(8, colors.hot2.r)
+    ..setFloat(9, colors.hot2.g)
+    ..setFloat(10, colors.hot2.b)
+    ..setFloat(11, colors.cool.r)
+    ..setFloat(12, colors.cool.g)
+    ..setFloat(13, colors.cool.b);
+}
+
+class _Repaint extends ChangeNotifier {
+  void notify() => notifyListeners();
+}
+
+/// Изменяемое состояние кадра. Художник читает его в момент рисования,
+/// поэтому кадры не пересобирают виджеты.
+class _Scene {
+  double time = 0;
+  Offset pointer = const Offset(0.5, 0.4);
+  Offset target = const Offset(0.5, 0.4);
+  final embers = EvEmberField();
+}
+
+class _AtmospherePainter extends CustomPainter {
+  _AtmospherePainter({
+    required Listenable repaint,
+    required this.scene,
+    required this.colors,
+    required this.devicePixelRatio,
+    required this.quality,
+    required this.plume,
+    required this.staticFallback,
+    required this.sparks,
+    required this.glowSprite,
+    required this.grain,
+  }) : super(repaint: repaint);
+
+  final _Scene scene;
+  final EvColors colors;
+  final double devicePixelRatio;
+  final EvEffectsQuality quality;
+  final ui.FragmentShader? plume;
+  final bool staticFallback;
+  final bool sparks;
+  final ui.Image glowSprite;
+  final ui.Image? grain;
+
+  static const _spriteSize = 32.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    final rect = Offset.zero & size;
+    canvas.drawRect(rect, Paint()..color = colors.ground);
+
+    final shader = plume;
+    if (shader != null) {
+      _paintPlume(canvas, size, shader);
+    } else if (staticFallback) {
+      paintStaticBackdrop(canvas, size, hot: colors.hot1, vent: colors.hot2);
+    }
+
+    if (sparks) {
+      // размер окна известен только здесь
+      scene.embers.resize(size, quality.factor);
+      _paintEmbers(canvas);
+    }
+
+    final noise = grain;
+    if (noise != null) {
+      canvas.drawRect(
+        rect,
+        Paint()
+          ..shader = ImageShader(
+            noise,
+            TileMode.repeated,
+            TileMode.repeated,
+            Matrix4.identity().storage,
+          )
+          ..blendMode = BlendMode.overlay
+          ..color = const Color(0x0D000000),
+      );
+    }
+  }
+
+  /// Плюм рисуется в отдельную картинку уменьшенного разрешения и
+  /// растягивается на окно — как холст WebGL в прототипе. Заодно в такой
+  /// картинке нет преобразований, и координата пикселя в шейдере одинакова
+  /// у Skia и Impeller.
+  void _paintPlume(Canvas canvas, Size size, ui.FragmentShader shader) {
+    final scale = quality.plumeScale(devicePixelRatio);
+    final w = math.max(2, (size.width * scale).round());
+    final h = math.max(2, (size.height * scale).round());
+    final frame = Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble());
+    setPlumeUniforms(
+      shader,
+      frame: frame.size,
+      time: scene.time,
+      pointer: scene.pointer,
+      colors: colors,
+    );
+
+    final recorder = ui.PictureRecorder();
+    Canvas(recorder).drawRect(frame, Paint()..shader = shader);
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(w, h);
+    picture.dispose();
+    canvas.drawImageRect(
+      image,
+      frame,
+      Offset.zero & size,
+      Paint()..filterQuality = FilterQuality.low,
+    );
+    // Холст держит свою ссылку на картинку до конца кадра.
+    image.dispose();
+  }
+
+  /// Угли: свечение одним вызовом drawAtlas из белого спрайта, окрашенного
+  /// под каждую искру, и светлое ядро поверх. Смешение «экран», как у
+  /// холста частиц в прототипе.
+  void _paintEmbers(Canvas canvas) {
+    final transforms = <RSTransform>[];
+    final rects = <Rect>[];
+    final tints = <Color>[];
+    final cores = <(Offset, double, double)>[];
+    const sprite = Rect.fromLTWH(0, 0, _spriteSize, _spriteSize);
+    for (final e in scene.embers.embers) {
+      final a = e.opacity;
+      if (a <= 0.004) continue;
+      final rr = e.coreRadius;
+      transforms.add(
+        RSTransform.fromComponents(
+          rotation: 0,
+          scale: rr * 5.5 / (_spriteSize / 2),
+          anchorX: _spriteSize / 2,
+          anchorY: _spriteSize / 2,
+          translateX: e.x,
+          translateY: e.y,
+        ),
+      );
+      rects.add(sprite);
+      tints.add((e.cool ? colors.cool : colors.hot2).withValues(alpha: a));
+      cores.add((Offset(e.x, e.y), rr * 0.55, a * 0.9));
+    }
+    if (transforms.isEmpty) return;
+    canvas.drawAtlas(
+      glowSprite,
+      transforms,
+      rects,
+      tints,
+      BlendMode.modulate,
+      null,
+      Paint()
+        ..blendMode = BlendMode.screen
+        ..filterQuality = FilterQuality.low,
+    );
+    final core = Paint()..blendMode = BlendMode.screen;
+    for (final (center, radius, alpha) in cores) {
+      core.color = Color.fromRGBO(255, 246, 230, alpha);
+      canvas.drawCircle(center, radius, core);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_AtmospherePainter old) =>
+      old.colors != colors ||
+      old.devicePixelRatio != devicePixelRatio ||
+      old.quality != quality ||
+      old.plume != plume ||
+      old.staticFallback != staticFallback ||
+      old.sparks != sparks ||
+      old.grain != grain;
+}
+
+/// Белый спрайт свечения: те же ступени, что у градиента искры в
+/// прототипе, — ядро, 28 % на трети радиуса, ноль на краю.
+ui.Image _makeGlowSprite() {
+  const size = _AtmospherePainter._spriteSize;
+  const center = Offset(size / 2, size / 2);
+  final recorder = ui.PictureRecorder();
+  Canvas(recorder).drawCircle(
+    center,
+    size / 2,
+    Paint()
+      ..shader = ui.Gradient.radial(
+        center,
+        size / 2,
+        const [Color(0xFFFFFFFF), Color(0x47FFFFFF), Color(0x00FFFFFF)],
+        const [0, 0.35, 1],
+      ),
+  );
+  final picture = recorder.endRecording();
+  final image = picture.toImageSync(size.toInt(), size.toInt());
+  picture.dispose();
+  return image;
+}
+
+/// Плитка зерна 128 × 128: серый 110…200 — как в прототипе.
+Future<ui.Image> _makeGrain() {
+  const side = 128;
+  final random = math.Random(128);
+  final pixels = Uint8List(side * side * 4);
+  for (var i = 0; i < side * side; i++) {
+    final v = 110 + random.nextInt(90);
+    pixels
+      ..[i * 4] = v
+      ..[i * 4 + 1] = v
+      ..[i * 4 + 2] = v
+      ..[i * 4 + 3] = 255;
+  }
+  final completer = Completer<ui.Image>();
+  ui.decodeImageFromPixels(
+    pixels,
+    side,
+    side,
+    ui.PixelFormat.rgba8888,
+    completer.complete,
+  );
+  return completer.future;
+}

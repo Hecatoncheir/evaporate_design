@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:evaporate_design/design/appearance.dart';
+import 'package:evaporate_design/design/effects.dart';
 import 'package:evaporate_design/design/theme.dart';
 import 'package:evaporate_design/design/tokens.dart';
 import 'package:evaporate_design/main.dart';
@@ -20,6 +21,15 @@ void _window(WidgetTester tester, double width, double height) {
   tester.view.physicalSize = Size(width, height);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
+}
+
+/// Приложение с неподвижной атмосферой: живой фон шёл бы бесконечно,
+/// и pumpAndSettle не дождался бы покоя. Сама атмосфера проверяется
+/// в atmosphere_test.dart.
+Widget _app() {
+  final effects = EvEffects.still();
+  addTearDown(effects.dispose);
+  return EvaporateApp(effects: effects);
 }
 
 Finder _crumb(String label) =>
@@ -105,7 +115,7 @@ void main() {
     tester,
   ) async {
     _window(tester, 1280, 720);
-    await tester.pumpWidget(const EvaporateApp());
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
 
     expect(tester.getSize(find.byType(EvRail)).width, EvSpace.railWidth);
@@ -127,11 +137,29 @@ void main() {
     }
   });
 
+  testWidgets('настройки эффектов меняют общие EvEffects', (tester) async {
+    _window(tester, 1440, 900);
+    final effects = EvEffects.still();
+    addTearDown(effects.dispose);
+    await tester.pumpWidget(EvaporateApp(effects: effects));
+    await tester.pumpAndSettle();
+    await _key(tester, LogicalKeyboardKey.digit4);
+
+    // зерно не заводит кадров, поэтому pumpAndSettle здесь честен
+    await tester.tap(find.bySemanticsLabel('Зерно'));
+    await tester.pumpAndSettle();
+    expect(effects.grain, isTrue);
+
+    await tester.tap(find.text('Эко'));
+    await tester.pumpAndSettle();
+    expect(effects.quality, EvEffectsQuality.eco);
+  });
+
   testWidgets('рейл переключает раздел, повторный клик ничего не ломает', (
     tester,
   ) async {
     _window(tester, 1440, 900);
-    await tester.pumpWidget(const EvaporateApp());
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
 
     await tester.tap(_railItem(EvSection.downloads));
@@ -150,7 +178,7 @@ void main() {
 
   testWidgets('цифры выбирают раздел, Ctrl+Tab идёт по кругу', (tester) async {
     _window(tester, 1440, 900);
-    await tester.pumpWidget(const EvaporateApp());
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
 
     await _key(tester, LogicalKeyboardKey.digit3);
@@ -172,7 +200,7 @@ void main() {
   testWidgets('смена облика не глушит клавиши каркаса', (tester) async {
     // смена темы пересобирает всё дерево, включая узел фокуса каркаса
     _window(tester, 1440, 900);
-    await tester.pumpWidget(const EvaporateApp());
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
 
     EvAppearanceScope.of(tester.element(find.byType(EvShell))).skin =
@@ -266,7 +294,7 @@ void main() {
 
   testWidgets('подсказка рейла появляется при наведении', (tester) async {
     _window(tester, 1440, 900);
-    await tester.pumpWidget(const EvaporateApp());
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
 
     double opacity() => tester
@@ -295,7 +323,7 @@ void main() {
     tester,
   ) async {
     _window(tester, 1440, 900);
-    await tester.pumpWidget(const EvaporateApp());
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
 
     EvSection? focusedRail() => FocusManager.instance.primaryFocus?.context
@@ -314,7 +342,7 @@ void main() {
 
   testWidgets('узкое окно: навигация внизу, подсказок нет', (tester) async {
     _window(tester, 600, 900);
-    await tester.pumpWidget(const EvaporateApp());
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
 
     expect(find.byType(EvRail), findsNothing);
@@ -336,7 +364,7 @@ void main() {
     tester,
   ) async {
     _window(tester, 1440, 900);
-    await tester.pumpWidget(const EvaporateApp());
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
 
     await _key(tester, LogicalKeyboardKey.slash);
