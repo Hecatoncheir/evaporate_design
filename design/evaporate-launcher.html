@@ -1818,6 +1818,79 @@ h1.title b{font-weight:800;display:block}
 .bp-pads b.a{border-color:rgb(59 227 155/.5);color:var(--ok)}
 .bp-pads b.x{border-color:rgb(var(--glow-cool)/.5);color:var(--cool)}
 
+
+/* ═══ ПРОФИЛЬ ДРУГА ════════════════════════════════════════════
+   Чужая страница полезна не как копия своей, а как сравнение:
+   общие игры, кто сколько наиграл, сколько он раздал именно вам.
+   И скрытое показывается скрытым, а не отсутствующим — иначе
+   тумблеры приватности на своей странице ничего не значат.
+   ══════════════════════════════════════════════════════════════ */
+.fp-back{
+  display:flex;align-items:center;gap:9px;margin:var(--pad) var(--pad) 0;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-4);transition:color .2s;
+}
+.fp-back:hover{color:var(--hot-2)}
+.fp-back svg{width:13px;height:13px;transform:rotate(180deg)}
+
+.me-av.st-play::after,.me-av.st-on::after,.me-av.st-off::after{
+  content:"";position:absolute;right:3px;bottom:3px;width:17px;height:17px;border-radius:50%;
+  border:3px solid var(--sub);
+}
+.me-av{position:relative}
+.me-av.st-play::after{background:var(--hot-2);box-shadow:0 0 12px var(--hot-2)}
+.me-av.st-on::after{background:var(--ok);box-shadow:0 0 12px var(--ok)}
+.me-av.st-off::after{background:var(--ink-4)}
+
+/* строка «сейчас играет» */
+.fp-now{
+  position:relative;border-radius:var(--r-4);overflow:hidden;border:1px solid var(--line);
+  display:flex;align-items:flex-end;min-height:150px;padding:clamp(15px,2vw,20px);
+}
+.fp-now .art{position:absolute;inset:0;background-size:cover;background-position:center}
+.fp-now::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(6,6,10,.94) 10%,rgba(6,6,10,.4) 52%,transparent)}
+.fp-now .in{position:relative;z-index:2;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;width:100%}
+.fp-now .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.fp-now .g{font-family:var(--font-dsp);font-weight:600;font-size:clamp(16px,2vw,22px);letter-spacing:-.01em}
+.fp-now .s{font-family:var(--font-mono);font-size:11px;color:var(--ink-3)}
+.fp-now .acts{display:flex;gap:9px;flex-wrap:wrap}
+
+/* общие игры — расходящееся сравнение */
+.cg{display:flex;align-items:center;gap:13px;padding:11px 0}
+.cg + .cg{border-top:1px solid var(--line-soft)}
+.cg .cv{width:30px;height:39px;border-radius:6px;background:var(--raised) center/cover;border:1px solid var(--line);flex:0 0 auto}
+.cg .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.cg .n{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cgbar{display:grid;grid-template-columns:1fr 1px 1fr;align-items:center;gap:8px;height:16px}
+.cgbar .l{display:flex;justify-content:flex-end;align-items:center;gap:8px}
+.cgbar .r{display:flex;align-items:center;gap:8px}
+.cgbar i{display:block;height:6px;border-radius:99px}
+.cgbar .l i{background:linear-gradient(270deg,var(--hot-2),var(--hot-deep));box-shadow:0 0 10px rgb(var(--glow-hot)/.4)}
+.cgbar .r i{background:linear-gradient(90deg,#1b6f8a,var(--cool));box-shadow:0 0 10px rgb(var(--glow-cool)/.4)}
+.cgbar .mid{width:1px;height:14px;background:var(--line);justify-self:center}
+.cgbar b{font-family:var(--font-mono);font-size:10.5px;font-weight:500;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cgbar .l b{color:var(--hot-2)}
+.cgbar .r b{color:var(--cool)}
+.cg-lg{display:flex;align-items:center;gap:16px;font-family:var(--font-mono);font-size:10px;color:var(--ink-4);margin-bottom:6px}
+.cg-lg span{display:flex;align-items:center;gap:7px}
+.cg-lg i{width:9px;height:9px;border-radius:2px}
+
+/* скрытое */
+.hidden-box{
+  display:flex;align-items:flex-start;gap:12px;padding:13px 15px;border-radius:var(--r-3);
+  border:1px dashed var(--line);color:var(--ink-3);
+}
+.hidden-box svg{width:17px;height:17px;color:var(--ink-4);flex:0 0 auto;margin-top:1px}
+.hidden-box .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.hidden-box .h{font-size:13px;color:var(--ink-2)}
+.hidden-box .d{font-size:12px;color:var(--ink-4);margin-top:4px;line-height:1.5}
+.hid-row{display:flex;align-items:center;gap:10px;padding:9px 0;font-size:12.5px;color:var(--ink-3)}
+.hid-row + .hid-row{border-top:1px solid var(--line-soft)}
+.hid-row svg{width:14px;height:14px;color:var(--ink-4);flex:0 0 auto}
+.hid-row em{font-style:normal;margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--ink-4)}
+.mstat.hid .v{color:var(--ink-4);font-size:clamp(18px,2vw,22px)}
+.mstat.hid .v svg{width:16px;height:16px;vertical-align:-2px;margin-right:7px}
+
 </style>
 
 <!-- ── SVG defs: filters + the icon system ─────────────────────── -->
@@ -1880,6 +1953,7 @@ h1.title b{font-weight:800;display:block}
     <symbol id="i-magnet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5.4 4.2v7.6a6.6 6.6 0 0 0 13.2 0V4.2h-4.4v7.6a2.2 2.2 0 0 1-4.4 0V4.2H5.4Z" stroke-linejoin="round"/><path d="M5.4 8.6h4.4M14.2 8.6h4.4"/></symbol>
     <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9.5 6 6 6-6"/></symbol>
     <symbol id="i-retry" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.4 3.6v4.8h-4.8"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4.6" y="10.4" width="14.8" height="9.6" rx="2.2"/><path d="M8.2 10.4V7.8a3.8 3.8 0 0 1 7.6 0v2.6" stroke-linecap="round"/><path d="M12 14.2v2" stroke-linecap="round"/></symbol>
     <symbol id="i-wall" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.4" y="3.4" width="7.4" height="7.4" rx="1.4"/><rect x="13.2" y="3.4" width="7.4" height="7.4" rx="1.4"/><rect x="3.4" y="13.2" width="7.4" height="7.4" rx="1.4"/><rect x="13.2" y="13.2" width="7.4" height="7.4" rx="1.4"/></symbol>
     <symbol id="i-rows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.6 6h16.8M3.6 12h16.8M3.6 18h16.8"/><path d="M3.6 6h3M3.6 12h3M3.6 18h3" stroke-width="2.6"/></symbol>
     <symbol id="i-pad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7.4 7.4h9.2a4.6 4.6 0 0 1 4.5 3.7l.7 4a3 3 0 0 1-5.4 2.3l-1.2-1.6H8.8l-1.2 1.6a3 3 0 0 1-5.4-2.3l.7-4a4.6 4.6 0 0 1 4.5-3.7Z"/><path d="M6.6 11.4v2.4M5.4 12.6h2.4M16.4 12h.1M18.2 13.8h.1"/></symbol>
@@ -2545,6 +2619,70 @@ h1.title b{font-weight:800;display:block}
           </div>
         </div>
       </section>
+
+      <!-- ══ FRIEND PROFILE ═══════════════════════════════════ -->
+      <section class="screen" id="sc-fprofile">
+        <button class="fp-back" data-goto="friends"><svg><use href="#i-arrow"/></svg>Все друзья</button>
+
+        <div class="me-head" style="margin-top:12px">
+          <div class="me-art" id="fpArt"></div>
+          <div class="me-body">
+            <div class="me-av" id="fpAv"></div>
+            <div class="me-tx">
+              <div class="eyebrow" id="fpEye"></div>
+              <h1 class="title" style="font-size:clamp(28px,4vw,50px)" id="fpName"></h1>
+              <div class="meta" style="margin-top:12px" id="fpChips"></div>
+            </div>
+            <div class="me-acts">
+              <button class="mini"><svg><use href="#i-note"/></svg>Написать</button>
+              <button class="mini"><svg><use href="#i-play"/></svg>Пригласить</button>
+              <button class="mini bad"><svg><use href="#i-x"/></svg>Убрать</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec"><div class="me-stats" id="fpStats"></div></div>
+
+        <div class="sec" id="fpNowSec">
+          <div class="sec-h"><h2>Сейчас играет</h2><span class="count" id="fpNowCnt"></span><span class="rule"></span></div>
+          <div id="fpNow"></div>
+        </div>
+
+        <div class="dl-head">
+          <div class="panel">
+            <div class="p-lab">Общие игры</div>
+            <div class="cg-lg" style="margin-top:12px">
+              <span><i style="background:var(--hot-2)"></i>вы</span>
+              <span><i style="background:var(--cool)"></i><b id="fpWho2"></b></span>
+            </div>
+            <div id="fpCommon"></div>
+          </div>
+          <div class="panel">
+            <div class="glowcorner"></div>
+            <div class="p-lab">Раздача между вами</div>
+            <div class="big" id="fpSeedBig"></div>
+            <div class="ratio" style="margin-top:16px"><i id="fpSeedBar"></i></div>
+            <div class="stats" style="margin-top:12px" id="fpSeedStats"></div>
+            <div class="cta-note cool" style="margin-top:14px" id="fpSeedNote"></div>
+
+            <div class="p-lab" style="margin-top:20px">Что скрыто</div>
+            <div style="margin-top:10px" id="fpHidden"></div>
+          </div>
+        </div>
+
+        <div class="sec" id="fpYearSec">
+          <div class="sec-h"><h2>Год игры</h2><span class="count" id="fpYearV"></span><span class="rule"></span></div>
+          <div class="panel"><div class="year" id="fpYear"></div>
+            <div class="year-lg"><span>меньше</span><i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i><span>больше</span></div>
+          </div>
+        </div>
+
+        <div class="sec" id="fpAchSec">
+          <div class="sec-h"><h2>Достижения, которых нет у вас</h2><span class="count" id="fpAchCnt"></span><span class="rule"></span></div>
+          <div class="panel"><div class="achgrid" id="fpAch"></div></div>
+        </div>
+      </section>
+
     </div>
 
     <footer class="hints">
@@ -3179,7 +3317,7 @@ $("#timeline").innerHTML=SAVES.map(s=>`
   </div>`).join("");
 
 /* ── routing ───────────────────────────────────────────────── */
-const NAMES={library:"Библиотека",downloads:"Загрузки",saves:"Сохранения",settings:"Настройки",friends:"Друзья",profile:"Профиль"};
+const NAMES={library:"Библиотека",downloads:"Загрузки",saves:"Сохранения",settings:"Настройки",friends:"Друзья",profile:"Профиль",fprofile:"Профиль друга"};
 const ORDER=["library","downloads","saves","settings","friends","profile"];
 let cur="library";
 function go(id){
@@ -4116,6 +4254,8 @@ function applyState(id){
     case "mode-wall":    setHero(HERO.ready); setView("wall"); break;
     case "mode-term":    setHero(HERO.ready); setView("term"); break;
     case "mode-bp":      setHero(HERO.ready); bpShow(true); break;
+    case "fp-open":      setHero(HERO.ready); fpRender(0); break;
+    case "fp-closed":    setHero(HERO.ready); fpRender(6); break;
     case "pr-default":   setHero(HERO.ready); break;
     case "set-default":  setHero(HERO.ready); break;
     case "set-find":
@@ -4175,8 +4315,9 @@ function applyState(id){
   }
   const target = scope === "dl" ? "downloads" : scope === "sv" ? "saves"
                : scope === "fr" ? "friends"   : scope === "pr" ? "profile"
-               : scope === "set" ? "settings" : "library";
+               : scope === "set" ? "settings" : scope === "fp" ? "fprofile" : "library";
   if(id !== "ovl") go(target);
+  if(scope === "fp") $("#crumb").textContent = PEOPLE[fpI].n;
   const cue = {"dl-nospace":"err", "dl-noseeds":"warn", "dl-hash":"warn", "dl-offline":"warn",
                "lib-offline":"warn", "fr-offline":"warn", "sv-conflict":"warn", "sv-nocloud":"warn",
                "lib-running":"ok"}[id];
@@ -4621,7 +4762,7 @@ function renderFriends(mode){
 
   $("#frNowCount").textContent = now.length ? now.length + " из 12" : "никого";
   $("#frNow").innerHTML = now.length ? now.map(p => `
-    <button class="fnow">
+    <button class="fnow" data-friend="${PEOPLE.indexOf(p)}">
       <span class="art" style="background-image:url(${byId(p.g).cover})"></span>
       <span class="who">${frAv(p)}<span class="tx"><span class="nm">${p.n}</span><span class="st">в игре</span></span></span>
       <span class="game">${byId(p.g).t}</span>
@@ -4641,7 +4782,7 @@ function renderFriends(mode){
          <span class="d">Загрузки идут только из общего роя, скорость просядет</span></div>`
     : SEEDERS.map(s => {
         const p = PEOPLE[s.p];
-        return `<div class="seedrow">
+        return `<div class="seedrow" data-friend="${s.p}" style="cursor:pointer">
           ${frAv(p)}
           <span class="mid">
             <span class="top"><span class="nm">${p.n}</span>
@@ -4663,7 +4804,7 @@ function renderFriends(mode){
   $("#frList").innerHTML = PEOPLE.map(p => {
     const st = off ? "off" : p.st;
     const line = st === "play" ? `в игре · ${byId(p.g).t}` : st === "on" ? "в сети" : p.was;
-    return `<div class="fr ${st}">
+    return `<div class="fr ${st}" data-friend="${PEOPLE.indexOf(p)}" style="cursor:pointer">
       ${frAv(p)}
       <span class="nm">${p.n}</span>
       <span class="st">${line}</span>
@@ -5344,6 +5485,202 @@ STATES.push(
 })();
 
 renderWall(); renderTerm();
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ПРОФИЛЬ ДРУГА — как его видят друзья
+   Чужая страница полезна сравнением, а не копией своей. И скрытое
+   здесь показано скрытым: иначе тумблеры приватности на своей
+   странице ничего не значат.
+   ═══════════════════════════════════════════════════════════════ */
+const FP = {
+  0: {                                   /* Антон К. — открыт полностью */
+    since: "в друзьях с марта 2025",
+    hours: 2140, ach: [96, 240],
+    gave: "214 ГБ", got: "96 ГБ", ratio: 69,
+    common: [["ashen", 284, 412], ["crimson", 196, 88], ["wolf", 312, 240], ["depth", 64, 121], ["storm", 148, 36]],
+    shows: {playing: true, hours: true, seeding: true},
+    only: [["Полный круг", "Пепельный Предел · все побочные линии"],
+           ["Глубже нельзя", "Глубина 9 · без единого всплытия"],
+           ["Первый снег", "Волчья Тропа · зимовье в одиночку"]]
+  },
+  6: {                                   /* Игорь В. — закрыл часы и достижения */
+    since: "в друзьях с ноября 2024",
+    hours: null, ach: null,
+    gave: "12 ГБ", got: "204 ГБ", ratio: 6,
+    common: [["ashen", 284, null], ["lunar", 92, null], ["glass", 41, null]],
+    shows: {playing: false, hours: false, seeding: true},
+    only: null
+  }
+};
+/* у остальных друзей профиль выводится из их же данных, а не копируется */
+function fpData(i){
+  if(FP[i]) return FP[i];
+  const p = PEOPLE[i], r = rng32(i * 7919 + 13);
+  const pool = GAMES.filter(g => g.state === "ready").slice(0, Math.min(5, p.common));
+  const gave = 20 + Math.round(r() * 180), got = 20 + Math.round(r() * 180);
+  return {
+    since: "в друзьях с 2025 года",
+    hours: 400 + Math.round(r() * 1600),
+    ach: [20 + Math.round(r() * 90), 240],
+    gave: gave + " ГБ", got: got + " ГБ",
+    ratio: Math.round(gave / (gave + got) * 100),
+    common: pool.map(g => { const h = cardData(g).hours;
+      return [g.id, h, Math.max(4, Math.round(h * (.4 + r() * 1.6)))]; }),
+    shows: {playing: true, hours: true, seeding: true},
+    only: null
+  };
+}
+const scFp = $("#sc-fprofile");
+let fpI = 0;
+
+function fpRender(i){
+  const p = PEOPLE[i], d = fpData(i);
+  fpI = i;
+  const playing = p.st === "play" && d.shows.playing;
+  const art = playing ? byId(p.g) : GAMES[0];
+
+  $("#fpArt").style.backgroundImage = `url(${art.fpArt || (art.fpArt = makeArt(1400, 460, art.pal, art.seed + 31, {ridges:2, sx:.7, sy:.33}))})`;
+  const av = $("#fpAv");
+  av.className = "me-av st-" + (d.shows.playing ? p.st : p.st === "play" ? "on" : p.st);
+  av.style.background = p.av; av.textContent = p.i;
+  $("#fpName").textContent = p.n;
+  $("#fpEye").textContent = playing ? `В игре · ${byId(p.g).t} · ${p.t}`
+    : p.st === "off" ? p.was : "В сети";
+  $("#fpChips").innerHTML = [
+    [d.since, 1], [`${p.common} общих игр`], [d.shows.seeding ? `раздал вам ${d.gave}` : "раздача скрыта"]
+  ].map(([t, hot]) => `<span class="chip${hot ? " hot" : ""}">${t}</span>`).join("");
+  $("#fpWho2").textContent = p.n.split(" ")[0].toLowerCase();
+
+  /* плашки: скрытое остаётся плашкой, а не исчезает */
+  const lock = `<svg><use href="#i-lock"/></svg>скрыто`;
+  $("#fpStats").innerHTML = `
+    <div class="mstat${d.hours ? "" : " hid"}"><div class="k">Часов в играх</div>
+      <div class="v">${d.hours ? d.hours.toLocaleString("ru-RU") : lock}</div>
+      <div class="s">${d.hours ? "за всё время" : "он не показывает часы"}</div></div>
+    <div class="mstat"><div class="k">Общих игр</div><div class="v">${p.common}</div>
+      <div class="s">из ${GAMES.length} в вашей библиотеке</div></div>
+    <div class="mstat hot"><div class="k">Раздал вам</div><div class="v">${d.gave}</div>
+      <div class="s">вы ему — ${d.got}</div></div>
+    <div class="mstat${d.ach ? "" : " hid"}"><div class="k">Достижений</div>
+      <div class="v">${d.ach ? d.ach[0] + "<u>/ " + d.ach[1] + "</u>" : lock}</div>
+      <div class="s">${d.ach ? Math.round(d.ach[0] / d.ach[1] * 100) + " % от всех" : "он не показывает достижения"}</div></div>`;
+
+  /* сейчас играет */
+  $("#fpNowCnt").textContent = playing ? "" : "скрыто";
+  $("#fpNow").innerHTML = playing ? `
+    <div class="fp-now">
+      <span class="art" style="background-image:url(${byId(p.g).cover})"></span>
+      <span class="in">
+        <span class="tx"><span class="g">${byId(p.g).t}</span><span class="s">${p.t} · та же глава, что у вас</span></span>
+        <span class="acts">
+          <button class="play" style="height:42px;font-size:13px"><svg><use href="#i-play"/></svg><span>Присоединиться</span></button>
+          <button class="ghost" style="height:42px" data-id="${p.g}"><svg><use href="#i-info"/></svg>Об игре</button>
+        </span>
+      </span>
+    </div>`
+    : `<div class="hidden-box"><svg><use href="#i-lock"/></svg>
+         <span class="tx"><span class="h">${p.n.split(" ")[0]} не показывает, во что играет</span>
+         <span class="d">Это выключается одним тумблером в своём профиле. Вы увидите его в сети, но не увидите игру.</span></span></div>`;
+
+  /* общие игры — расходящееся сравнение */
+  $("#fpCommon").innerHTML = d.common.map(([id, mine, his]) => {
+    const g = byId(id), mx = Math.max(mine, his || 0) || 1;
+    return `<div class="cg">
+      <span class="cv" style="background-image:url(${g.cover})"></span>
+      <span class="tx"><span class="n">${g.t}</span>
+        <span class="cgbar">
+          <span class="l"><b>${mine} ч</b><i style="width:${mine / mx * 100}%"></i></span>
+          <span class="mid"></span>
+          <span class="r">${his === null ? `<b style="color:var(--ink-4)">скрыто</b>`
+            : `<i style="width:${his / mx * 100}%"></i><b>${his} ч</b>`}</span>
+        </span></span>
+    </div>`;
+  }).join("");
+
+  /* раздача между вами */
+  $("#fpSeedBig").innerHTML = `${d.gave.split(" ")[0]}<u>ГБ вам</u>`;
+  $("#fpSeedBar").style.width = d.ratio + "%";
+  $("#fpSeedStats").innerHTML = `
+    <span class="st"><svg><use href="#i-seed"/></svg>он вам<b>${d.gave}</b></span>
+    <span class="st"><svg><use href="#i-dl"/></svg>вы ему<b>${d.got}</b></span>`;
+  $("#fpSeedNote").innerHTML = `<svg><use href="#i-peers"/></svg>${
+    d.ratio >= 50 ? `${d.ratio} % трафика между вами шло от него — он раздаёт вам чаще, чем вы ему`
+                  : `Только ${d.ratio} % шло от него: вы раздаёте ему заметно больше`}`;
+
+  /* что скрыто */
+  const hid = [];
+  if(!d.shows.playing) hid.push(["Во что играет", "i-play"]);
+  if(!d.hours) hid.push(["Часы и общее время", "i-speed"]);
+  if(!d.ach) hid.push(["Достижения", "i-trophy"]);
+  if(!d.shows.seeding) hid.push(["Что раздаёт", "i-seed"]);
+  $("#fpHidden").innerHTML = hid.length
+    ? hid.map(([t, ic]) => `<div class="hid-row"><svg><use href="#${ic}"/></svg>${t}<em>скрыто</em></div>`).join("")
+      + `<div class="hidden-box" style="margin-top:12px"><svg><use href="#i-info"/></svg>
+         <span class="tx"><span class="h">Это его выбор, а не ошибка</span>
+         <span class="d">Те же четыре тумблера есть и у вас — в своём профиле, раздел «Что видят друзья».</span></span></div>`
+    : `<div class="hidden-box"><svg><use href="#i-check"/></svg>
+         <span class="tx"><span class="h">Ничего не скрыто</span>
+         <span class="d">${p.n.split(" ")[0]} показывает друзьям всё: игру, часы, достижения и раздачу.</span></span></div>`;
+
+  /* год игры и чужие достижения — только если часы открыты */
+  $("#fpYearSec").hidden = !d.hours;
+  $("#fpAchSec").hidden = !d.only;
+  if(d.hours){
+    const el = $("#fpYear"); el.innerHTML = "";
+    const r = rng32(p.i.charCodeAt(0) * 977 + i);
+    let days = 0, tot = 0;
+    for(let w = 0; w < 52; w++){
+      const season = .5 + .5 * Math.sin((w / 52) * 6.283 + i);
+      for(let dd = 0; dd < 7; dd++){
+        const v = r() * season * (dd >= 5 ? 1.5 : 1);
+        const lvl = v < .18 ? 0 : v < .36 ? 1 : v < .54 ? 2 : v < .74 ? 3 : 4;
+        const c = document.createElement("i");
+        if(lvl){ c.className = "l" + lvl; days++; tot += lvl; }
+        el.appendChild(c);
+      }
+    }
+    $("#fpYearV").textContent = `${days} дней · около ${tot} часов`;
+  }
+  if(d.only){
+    $("#fpAchCnt").textContent = d.only.length;
+    $("#fpAch").innerHTML = d.only.map(([n, s]) => `
+      <div class="ach got"><span class="ic"><svg><use href="#i-trophy"/></svg></span>
+        <span class="tx"><span class="n">${n}</span><span class="d">${s}</span></span></div>`).join("");
+  }
+}
+
+function openFriend(i){
+  fpRender(i);
+  go("fprofile");
+  $("#crumb").textContent = PEOPLE[i].n;
+  scFp.scrollTop = 0;
+}
+
+/* вход из раздела «Друзья» */
+$("#sc-friends").addEventListener("click", e => {
+  if(e.target.closest("[data-goto]")) return;
+  const el = e.target.closest("[data-friend]");
+  if(el) openFriend(+el.dataset.friend);
+});
+
+/* ── состояния ─────────────────────────────────────────────── */
+STATES.push(
+  {g:"Профиль друга", id:"fp-open",   n:"Открытый профиль", d:"Антон К. · показывает всё"},
+  {g:"Профиль друга", id:"fp-closed", n:"Закрытый профиль", d:"Игорь В. · скрыл часы и игру"}
+);
+(() => {
+  const list = $("#demoList");
+  const h = document.createElement("div"); h.className = "gl"; h.textContent = "Профиль друга";
+  list.append(h);
+  ["fp-open", "fp-closed"].forEach(id => {
+    const s = STATES.find(x => x.id === id);
+    const b = document.createElement("button");
+    b.className = "demo-i"; b.dataset.st = id;
+    b.innerHTML = `<span class="k"></span><span class="tx"><span class="n">${s.n}</span><span class="d">${s.d}</span></span>`;
+    list.append(b);
+  });
+})();
 
 /* keep republished views alive where the platform supports it */
 try{window.claude?.hot?.snapshot?.(()=>({skin:document.documentElement.dataset.skin||"magma",cur}))}catch(_){}
