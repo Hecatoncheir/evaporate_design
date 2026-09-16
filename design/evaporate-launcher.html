@@ -1353,6 +1353,114 @@ h1.title b{font-weight:800;display:block}
 
 .pwrap.charging .charge{opacity:1}
 
+
+/* ═══ ДРУЗЬЯ ═══════════════════════════════════════════════════
+   У торрент-лаунчера социальный граф и рой — один и тот же граф.
+   Друг это не только «кто во что играет», но и «кто прямо сейчас
+   отдаёт вам данные». Второго нет ни у одного магазина, поэтому
+   раздача стоит выше списка.
+   ══════════════════════════════════════════════════════════════ */
+
+/* сейчас в игре */
+.fr-now{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:14px}
+.fnow{
+  position:relative;min-height:170px;border-radius:var(--r-4);overflow:hidden;
+  border:1px solid var(--line);display:flex;flex-direction:column;justify-content:flex-end;
+  padding:15px;isolation:isolate;text-align:left;
+  transition:border-color .3s var(--ease),box-shadow .3s var(--ease),transform .35s var(--ease-out);
+}
+.fnow .art{position:absolute;inset:0;z-index:-2;background-size:cover;background-position:center;transform:scale(1.05);transition:transform .6s var(--ease-out)}
+.fnow::after{
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(0deg,rgba(6,6,10,.96) 8%,rgba(6,6,10,.62) 48%,rgba(6,6,10,.18));
+}
+.fnow:hover{transform:translateY(-4px);border-color:rgb(var(--glow-hot)/.45);box-shadow:0 20px 44px rgba(0,0,0,.6),0 0 34px rgb(var(--glow-hot)/.2)}
+.fnow:hover .art{transform:scale(1.11)}
+.fnow .who{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.fnow .who .av{width:34px;height:34px;font-size:12px;position:relative}
+.fnow .who .av::after{
+  content:"";position:absolute;right:-1px;bottom:-1px;width:10px;height:10px;border-radius:50%;
+  background:var(--ok);box-shadow:0 0 0 2px #0b0b12,0 0 9px var(--ok);
+}
+.fnow .who .nm{font-size:14px;font-weight:500}
+.fnow .who .st{font-family:var(--font-mono);font-size:10px;color:var(--ok);margin-top:3px}
+.fnow .who .tx{display:flex;flex-direction:column;min-width:0}
+.fnow .game{font-family:var(--font-dsp);font-weight:600;font-size:14px;letter-spacing:-.01em;line-height:1.2}
+.fnow .sub{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);margin-top:6px}
+.fnow .acts{display:flex;gap:7px;margin-top:12px}
+
+/* раздают вам — главный блок экрана */
+.seedrow{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:13px;align-items:center;
+  padding:13px 15px;border:1px solid var(--line-soft);border-radius:var(--r-3);
+  background:linear-gradient(180deg,rgba(255,255,255,.028),rgba(255,255,255,.005));
+}
+.seedrow + .seedrow{margin-top:10px}
+.seedrow .av{width:32px;height:32px;font-size:11.5px}
+.seedrow .mid{min-width:0}
+.seedrow .top{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.seedrow .top .nm{font-size:13.5px;font-weight:500}
+.seedrow .top .to{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4)}
+.seedrow .top .to b{color:var(--cool);font-weight:500}
+.seedrow .contrib{display:flex;height:5px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.07);margin-top:9px}
+.seedrow .contrib i{display:block;height:100%;background:linear-gradient(90deg,#1b6f8a,var(--cool));box-shadow:0 0 12px rgb(var(--glow-cool)/.5)}
+.seedrow .contrib u{display:block;height:100%;background:rgba(255,255,255,.12);text-decoration:none}
+.seedrow .rate{text-align:right;flex:0 0 auto}
+.seedrow .rate .v{font-family:var(--font-mono);font-size:15px;color:var(--cool);font-variant-numeric:tabular-nums}
+.seedrow .rate .k{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-4);margin-top:4px}
+
+/* список всех */
+.frlist{border:1px solid var(--line-soft);border-radius:var(--r-3);overflow:hidden}
+.fr{
+  display:grid;grid-template-columns:auto minmax(0,1.4fr) minmax(0,1fr) 86px auto;
+  gap:13px;align-items:center;padding:11px 15px;
+  border-bottom:1px solid var(--line-soft);transition:background .2s;
+}
+.fr:last-child{border-bottom:0}
+.fr:hover{background:rgba(255,255,255,.03)}
+.fr .av{width:32px;height:32px;font-size:11.5px;position:relative}
+.fr .av::after{
+  content:"";position:absolute;right:-1px;bottom:-1px;width:9px;height:9px;border-radius:50%;
+  background:var(--ink-4);box-shadow:0 0 0 2px var(--surface);
+}
+.fr.on .av::after{background:var(--ok);box-shadow:0 0 0 2px var(--surface),0 0 8px var(--ok)}
+.fr.play .av::after{background:var(--hot-2);box-shadow:0 0 0 2px var(--surface),0 0 8px var(--hot-2)}
+.fr .nm{font-size:13.5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr.off .nm{color:var(--ink-3)}
+.fr .st{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr.play .st{color:var(--hot-2)}
+.fr.on .st{color:var(--ok)}
+.fr .common{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);text-align:right;font-variant-numeric:tabular-nums}
+.fr .go{opacity:0;transition:opacity .2s}
+.fr:hover .go{opacity:1}
+@media(max-width:820px){
+  .fr{grid-template-columns:auto minmax(0,1fr) auto}
+  .fr .common,.fr .go{display:none}
+}
+
+/* заявка */
+.invite{
+  display:flex;align-items:center;gap:13px;flex-wrap:wrap;
+  padding:13px 15px;border-radius:var(--r-3);
+  border:1px solid rgb(var(--glow-hot)/.34);background:rgb(var(--glow-hot)/.06);
+}
+.invite .av{width:34px;height:34px;font-size:12px}
+.invite .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.invite .tx .n{font-size:13.5px;font-weight:500}
+.invite .tx .d{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);margin-top:4px}
+.invite .acts{display:flex;gap:8px;flex:0 0 auto}
+
+/* лента */
+.feed .ev{padding:11px 0}
+.feed .ev::before{left:-23px;top:17px}
+.feed .ev .line{font-size:13px;line-height:1.45}
+.feed .ev .line b{font-weight:500}
+.feed .ev .line em{font-style:normal;color:var(--hot-2)}
+.feed .ev .t{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);margin-top:5px;display:block}
+
+/* офлайн */
+.fr-offline .fnow,.fr-offline .seedrow{opacity:.42;filter:saturate(.3)}
+
 </style>
 
 <!-- ── SVG defs: filters + the icon system ─────────────────────── -->
@@ -1442,7 +1550,7 @@ h1.title b{font-weight:800;display:block}
       <button class="rbtn" data-go="settings"><svg><use href="#i-set"/></svg><span class="tip">Настройки</span></button>
     </nav>
     <div class="rail-sp"></div>
-    <button class="rbtn"><svg><use href="#i-friends"/></svg><span class="tip">Друзья · 4 в сети</span></button>
+    <button class="rbtn" data-go="friends"><svg><use href="#i-friends"/></svg><span class="tip">Друзья · 6 в сети</span></button>
     <div class="me">ВВ</div>
   </aside>
 
@@ -1540,7 +1648,7 @@ h1.title b{font-weight:800;display:block}
         <aside class="side-rail">
           <div id="digestRail"></div>
           <div class="rail-card">
-            <div class="p-lab">Друзья · 4 в сети</div>
+            <div class="p-lab">Друзья · 6 в сети</div>
             <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--hot-2),var(--hot-1))">АК</span><span class="fn">Антон К.</span><span class="fs">Пепельный Предел</span></div>
             <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--cool),#1b6f8a)">МС</span><span class="fn">Мира С.</span><span class="fs">Красный Меридиан</span></div>
             <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--arc),#5a2fa8)">ДР</span><span class="fn">Дан Р.</span><span class="fs">в сети</span></div>
@@ -1742,6 +1850,60 @@ h1.title b{font-weight:800;display:block}
           </div>
         </div>
       </section>
+
+      <!-- ══ FRIENDS ══════════════════════════════════════════ -->
+      <section class="screen" id="sc-friends">
+        <div class="dl-head">
+          <div class="panel">
+            <div class="glowcorner"></div>
+            <div class="p-lab">От друзей · прямо сейчас</div>
+            <div class="big" id="frBig">1,34<u>МБ/с</u></div>
+            <div class="cta-note cool" style="margin-top:12px"><svg><use href="#i-peers"/></svg><span id="frShare">83 % вашей скорости приёма дают друзья, а не рой</span></div>
+            <div class="kpis">
+              <div class="kpi"><div class="p-lab">В сети</div><div class="v ok" id="frOn">4</div></div>
+              <div class="kpi"><div class="p-lab">Всего</div><div class="v">12</div></div>
+              <div class="kpi"><div class="p-lab">Раздают вам</div><div class="v c">3</div></div>
+              <div class="kpi"><div class="p-lab">Отдано друзьям</div><div class="v h">214 ГБ</div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="p-lab">Заявка в друзья</div>
+            <div id="frInvite" style="margin-top:12px"></div>
+            <div class="p-lab" style="margin-top:20px">Общая библиотека</div>
+            <div class="cta-note" style="margin-top:10px"><svg><use href="#i-lib"/></svg>У вас 31 игра, которая есть хотя бы у одного друга</div>
+            <div class="stack" style="margin-top:14px">
+              <i style="width:42%;background:var(--hot-1)"></i><i style="width:23%;background:var(--cool)"></i><i style="width:14%;background:var(--arc)"></i>
+            </div>
+            <div class="stats" style="margin-top:12px">
+              <span class="st"><svg><use href="#i-seed"/></svg>у всех<b>13</b></span>
+              <span class="st"><svg><use href="#i-peers"/></svg>у половины<b>7</b></span>
+              <span class="st"><svg><use href="#i-disk"/></svg>только у вас<b>11</b></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h2>Сейчас в игре</h2><span class="count" id="frNowCount"></span><span class="rule"></span></div>
+          <div class="fr-now" id="frNow"></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h2>Раздают вам</h2><span class="count">3 источника</span><span class="rule"></span>
+            <a href="#" onclick="return false" data-goto="downloads">К загрузкам</a></div>
+          <div id="frSeed"></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h2>Все друзья</h2><span class="count" id="frAllCount"></span><span class="rule"></span>
+            <a href="#" onclick="return false">Добавить по коду</a></div>
+          <div class="frlist" id="frList"></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h2>Лента</h2><span class="count">за неделю</span><span class="rule"></span></div>
+          <div class="tl feed" id="frFeed"></div>
+        </div>
+      </section>
     </div>
 
     <footer class="hints">
@@ -1901,7 +2063,7 @@ h1.title b{font-weight:800;display:block}
     </div>
 
     <div class="ovl-card">
-      <div class="p-lab">Друзья · 4 в сети</div>
+      <div class="p-lab">Друзья · 6 в сети</div>
       <div style="margin-top:9px">
         <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--hot-2),var(--hot-1))">АК</span><span class="fn">Антон К.</span><span class="fs">та же глава</span></div>
         <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--cool),#1b6f8a)">МС</span><span class="fn">Мира С.</span><span class="fs">Красный Меридиан</span></div>
@@ -2344,8 +2506,8 @@ $("#timeline").innerHTML=SAVES.map(s=>`
   </div>`).join("");
 
 /* ── routing ───────────────────────────────────────────────── */
-const NAMES={library:"Библиотека",downloads:"Загрузки",saves:"Сохранения",settings:"Настройки"};
-const ORDER=["library","downloads","saves","settings"];
+const NAMES={library:"Библиотека",downloads:"Загрузки",saves:"Сохранения",settings:"Настройки",friends:"Друзья"};
+const ORDER=["library","downloads","saves","settings","friends"];
 let cur="library";
 function go(id){
   if(!NAMES[id])return; cur=id;
@@ -2955,7 +3117,7 @@ addEventListener("keydown",e=>{
   if(e.key==="/"||((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k")){e.preventDefault();cmdOpen();return}
   if(e.ctrlKey&&e.key==="Tab"){e.preventDefault();
     go(ORDER[(ORDER.indexOf(cur)+(e.shiftKey?-1:1)+ORDER.length)%ORDER.length]);return}
-  if(e.key>="1"&&e.key<="4"){go(ORDER[+e.key-1])}
+  if(e.key>="1"&&e.key<="5"){go(ORDER[+e.key-1])}
 });
 
 
@@ -3205,6 +3367,7 @@ function resetAll(){
   digestFloat.classList.remove("on");
   digestRail.style.display = "none";
   renderDL(DL.default);
+  renderFriends("default"); renderInvite(false);
   setNote(null);
   closeOvl();
 }
@@ -3266,6 +3429,16 @@ function applyState(id){
       pills[1].innerHTML = `<span class="dot"></span>Движок простаивает`;
       break;
 
+    case "fr-default":   setHero(HERO.ready); break;
+    case "fr-invite":
+      setHero(HERO.ready); renderInvite(true);
+      pills[1].className = "pill news"; pills[1].innerHTML = `<span class="dot"></span>1 заявка в друзья`;
+      break;
+    case "fr-offline":
+      setHero(HERO.offline); renderFriends("offline");
+      pills[0].className = "pill off"; pills[0].innerHTML = `<span class="dot"></span>Нет сети`;
+      pills[1].className = "pill off"; pills[1].innerHTML = `<span class="dot"></span>Друзья недоступны`;
+      break;
     case "sv-default":   setHero(HERO.ready); break;
     case "sv-conflict":
       setHero(HERO.ready);
@@ -3306,7 +3479,8 @@ function applyState(id){
       setTimeout(() => { if(cur === "library") applyState("lib-running"); }, 4200);
       break;
   }
-  const target = scope === "dl" ? "downloads" : scope === "sv" ? "saves" : "library";
+  const target = scope === "dl" ? "downloads" : scope === "sv" ? "saves"
+               : scope === "fr" ? "friends" : "library";
   if(id !== "ovl") go(target);
   $$(".demo-i").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.st === id)));
   $("#demoC").textContent = STATES.find(s => s.id === id)?.n ?? "";
@@ -3693,6 +3867,158 @@ let scenKey = "first";
    The save strip is injected by setNote, so its thumb is set there, not here. */
 $("#railT1 .th").style.backgroundImage = `url(${byId("orbita").cover})`;
 $("#railT2 .th").style.backgroundImage = `url(${byId("halc2").cover})`;
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ДРУЗЬЯ — люди и источники раздачи в одном списке
+   ═══════════════════════════════════════════════════════════════ */
+const AV = [
+  "linear-gradient(140deg,var(--hot-2),var(--hot-1))",
+  "linear-gradient(140deg,var(--cool),#1b6f8a)",
+  "linear-gradient(140deg,var(--arc),#5a2fa8)",
+  "linear-gradient(140deg,#3be39b,#146c48)",
+  "linear-gradient(140deg,#ff8ae0,#a8226f)",
+  "linear-gradient(140deg,#8fb6ff,#2b4a8f)"
+];
+const PEOPLE = [
+  {i:"АК", n:"Антон К.",  st:"play", g:"ashen",   t:"2 ч 14 мин · Глава 5",        common:14},
+  {i:"МС", n:"Мира С.",   st:"play", g:"crimson", t:"41 мин · Излом, ход 42",      common:9},
+  {i:"ЛП", n:"Лена П.",   st:"play", g:"wolf",    t:"5 ч 02 мин · Чёрная река",    common:11},
+  {i:"ДР", n:"Дан Р.",    st:"on",   was:"в сети",                                  common:6},
+  {i:"НТ", n:"Ника Т.",   st:"on",   was:"в сети",                                  common:8},
+  {i:"ЮС", n:"Юля С.",    st:"on",   was:"в сети",                                  common:5},
+  {i:"ИВ", n:"Игорь В.",  st:"off",  was:"был вчера в 22:10",                       common:12},
+  {i:"СМ", n:"Саша М.",   st:"off",  was:"3 дня назад",                             common:4},
+  {i:"РБ", n:"Рома Б.",   st:"off",  was:"неделю назад",                            common:7},
+  {i:"МЛ", n:"Марк Л.",   st:"off",  was:"месяц назад",                             common:2},
+  {i:"ВГ", n:"Вера Г.",   st:"off",  was:"месяц назад",                             common:3},
+  {i:"ПК", n:"Пётр К.",   st:"off",  was:"два месяца назад",                        common:1}
+];
+PEOPLE.forEach((p, i) => p.av = AV[i % AV.length]);
+
+/* скорости сходятся с экраном загрузок: 592 КБ/с на «Орбиту»,
+   1.03 МБ/с на «Эхо» — друзья дают 83 % из 1.62 МБ/с */
+const SEEDERS = [
+  {p:0, g:"orbita", rate:"402 КБ/с", share:68, of:"592 КБ/с"},
+  {p:5, g:"halc2",  rate:"870 КБ/с", share:84, of:"1.03 МБ/с"},
+  {p:4, g:"orbita", rate:"68 КБ/с",  share:11, of:"592 КБ/с"}
+];
+const FEED = [
+  {who:0, line:'получил <em>«Тихий шаг»</em> в «Пепельном Пределе»', t:"3 часа назад", now:true},
+  {who:2, line:'раздала вам <b>14.2 ГБ</b> за неделю', t:"вчера"},
+  {who:1, line:'начала <b>«Красный Меридиан»</b>', t:"вчера в 21:10"},
+  {who:3, line:'добавил <b>«Стеклянный Сад»</b> в библиотеку', t:"2 дня назад"},
+  {who:4, line:'прошла <em>«Глубину 9»</em> на максимальной сложности', t:"3 дня назад"},
+  {who:6, line:'перестал раздавать <b>«Волчью Тропу»</b>', t:"5 дней назад"}
+];
+
+function frAv(p, cls){ return `<span class="av${cls ? " " + cls : ""}" style="background:${p.av}">${p.i}</span>`; }
+
+function renderFriends(mode){
+  const off = mode === "offline";
+  const now = off ? [] : PEOPLE.filter(p => p.st === "play");
+  $("#sc-friends").classList.toggle("fr-offline", off);
+
+  $("#frNowCount").textContent = now.length ? now.length + " из 12" : "никого";
+  $("#frNow").innerHTML = now.length ? now.map(p => `
+    <button class="fnow">
+      <span class="art" style="background-image:url(${byId(p.g).cover})"></span>
+      <span class="who">${frAv(p)}<span class="tx"><span class="nm">${p.n}</span><span class="st">в игре</span></span></span>
+      <span class="game">${byId(p.g).t}</span>
+      <span class="sub">${p.t}</span>
+      <span class="acts">
+        <span class="mini"><svg><use href="#i-play"/></svg>Присоединиться</span>
+        <span class="mini"><svg><use href="#i-note"/></svg>Написать</span>
+      </span>
+    </button>`).join("")
+    : `<div class="nothing" style="grid-column:1/-1"><svg><use href="#i-friends"/></svg>
+         <span class="h">${off ? "Нет связи с друзьями" : "Сейчас никто не играет"}</span>
+         <span class="d">${off ? "Список и раздача от друзей вернутся, как только появится сеть" : "Мы покажем здесь, когда кто-нибудь запустит игру"}</span></div>`;
+
+  $("#frSeed").innerHTML = off
+    ? `<div class="nothing"><svg><use href="#i-wifi-off"/></svg>
+         <span class="h">Пиры от друзей недоступны</span>
+         <span class="d">Загрузки идут только из общего роя, скорость просядет</span></div>`
+    : SEEDERS.map(s => {
+        const p = PEOPLE[s.p];
+        return `<div class="seedrow">
+          ${frAv(p)}
+          <span class="mid">
+            <span class="top"><span class="nm">${p.n}</span>
+              <span class="to">раздаёт <b>${byId(s.g).t}</b> · ${s.share} % из ${s.of}</span></span>
+            <span class="contrib"><i style="width:${s.share}%"></i><u style="width:${100 - s.share}%"></u></span>
+          </span>
+          <span class="rate"><span class="v">${s.rate}</span><span class="k">от него</span></span>
+        </div>`;
+      }).join("");
+
+  const onCount = off ? 0 : PEOPLE.filter(p => p.st !== "off").length;
+  $("#frOn").textContent = onCount;
+  $("#frAllCount").textContent = `${onCount} в сети из ${PEOPLE.length}`;
+  $("#frBig").innerHTML = off ? `0<u>МБ/с</u>` : `1,34<u>МБ/с</u>`;
+  $("#frShare").textContent = off
+    ? "Нет сети — весь приём идёт из общего роя"
+    : "83 % вашей скорости приёма дают друзья, а не рой";
+
+  $("#frList").innerHTML = PEOPLE.map(p => {
+    const st = off ? "off" : p.st;
+    const line = st === "play" ? `в игре · ${byId(p.g).t}` : st === "on" ? "в сети" : p.was;
+    return `<div class="fr ${st}">
+      ${frAv(p)}
+      <span class="nm">${p.n}</span>
+      <span class="st">${line}</span>
+      <span class="common">${p.common} общих</span>
+      <span class="go"><button class="mini"><svg><use href="#i-note"/></svg>Написать</button></span>
+    </div>`;
+  }).join("");
+
+  $("#frFeed").innerHTML = FEED.map(f => `
+    <div class="ev${f.now ? " now" : ""}">
+      <div class="line"><b>${PEOPLE[f.who].n}</b> ${f.line}</div>
+      <span class="t">${f.t}</span>
+    </div>`).join("");
+}
+
+function renderInvite(show){
+  $("#frInvite").innerHTML = show ? `
+    <div class="invite">
+      <span class="av" style="background:${AV[4]}">КЖ</span>
+      <span class="tx"><span class="n">Кирилл Ж. хочет добавиться</span>
+        <span class="d">3 общие игры · нашёл вас по коду · 12 минут назад</span></span>
+      <span class="acts">
+        <button class="keep"><svg><use href="#i-check"/></svg>Принять</button>
+        <button class="mini bad"><svg><use href="#i-x"/></svg>Отклонить</button>
+      </span>
+    </div>` : `<div class="cta-note"><svg><use href="#i-check"/></svg>Новых заявок нет</div>`;
+}
+
+renderFriends("default");
+renderInvite(false);
+
+$("#sc-friends").addEventListener("click", e => {
+  const a = e.target.closest("[data-goto]");
+  if(a) go(a.dataset.goto);
+});
+
+/* ── состояния раздела ─────────────────────────────────────── */
+STATES.push(
+  {g:"Друзья", id:"fr-default", n:"Обычное состояние", d:"3 в игре · 3 раздают вам"},
+  {g:"Друзья", id:"fr-invite",  n:"Заявка в друзья",   d:"нашли по коду"},
+  {g:"Друзья", id:"fr-offline", n:"Нет сети",          d:"пиры от друзей недоступны"}
+);
+(() => {
+  const list = $("#demoList");
+  const head = document.createElement("div");
+  head.className = "gl"; head.textContent = "Друзья";
+  list.append(head);
+  ["fr-default", "fr-invite", "fr-offline"].forEach(id => {
+    const s = STATES.find(x => x.id === id);
+    const b = document.createElement("button");
+    b.className = "demo-i"; b.dataset.st = id;
+    b.innerHTML = `<span class="k"></span><span class="tx"><span class="n">${s.n}</span><span class="d">${s.d}</span></span>`;
+    list.append(b);
+  });
+})();
 
 /* keep republished views alive where the platform supports it */
 try{window.claude?.hot?.snapshot?.(()=>({skin:document.documentElement.dataset.skin||"magma",cur}))}catch(_){}
