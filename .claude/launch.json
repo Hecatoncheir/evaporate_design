@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "gallery-web",
+      "name": "app-web",
       "runtimeExecutable": "flutter",
       "runtimeArgs": [
         "run",
@@ -14,6 +14,15 @@
         "127.0.0.1"
       ],
       "port": 8777
+    },
+    {
+      "name": "design-web",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-c",
+        "import functools, http.server as h; h.SimpleHTTPRequestHandler.extensions_map['.html'] = 'text/html; charset=utf-8'; h.test(HandlerClass=functools.partial(h.SimpleHTTPRequestHandler, directory='design'), port=8778, bind='127.0.0.1')"
+      ],
+      "port": 8778
     }
   ]
 }
