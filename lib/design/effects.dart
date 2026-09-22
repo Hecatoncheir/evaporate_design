@@ -19,6 +19,23 @@ enum EvEffectsQuality {
   /// плотность экрана, но не больше двух — на 4K плюм мягкий и так.
   double plumeScale(double devicePixelRatio) =>
       (0.55 * factor).clamp(0.3, 1.0) * math.min(devicePixelRatio, 2);
+
+  /// Во сколько раз размывается фон под стеклом. Размытие большого
+  /// радиуса — самая дорогая часть кадра, и «Эко» экономит прежде всего
+  /// на нём.
+  double get blurScale => switch (this) {
+    EvEffectsQuality.eco => 0.55,
+    EvEffectsQuality.full => 1,
+    EvEffectsQuality.max => 1.15,
+  };
+
+  /// Преломление у кромки стекла. На «Эко» его нет: это второй проход
+  /// по фону поверх размытия.
+  bool get lens => this != EvEffectsQuality.eco;
+
+  /// Расхождение каналов в преломлении: на «Макс» стекло дисперсит
+  /// заметнее, как толстое.
+  double get dispersionScale => this == EvEffectsQuality.max ? 1.5 : 1;
 }
 
 /// Эффекты атмосферы. Отдельно от облика: переключение искр не должно
@@ -29,13 +46,15 @@ class EvEffects extends ChangeNotifier {
     this._sparks = true,
     this._parallax = true,
     this._grain = true,
+    this._glass = true,
+    this._refraction = true,
     this._quality = EvEffectsQuality.full,
     this._holdToPlay = true,
     this._throttleInBackground = true,
   });
 
   /// Всё выключено: для превью и тестов, где кадры не должны идти сами.
-  /// Удержание «Играть» остаётся — оно кадров не заводит.
+  /// Удержание «Играть» и стекло остаются — кадров они не заводят.
   EvEffects.still()
     : this(
         livingBackground: false,
@@ -48,6 +67,8 @@ class EvEffects extends ChangeNotifier {
   bool _sparks;
   bool _parallax;
   bool _grain;
+  bool _glass;
+  bool _refraction;
   EvEffectsQuality _quality;
   bool _holdToPlay;
   bool _throttleInBackground;
@@ -81,6 +102,24 @@ class EvEffects extends ChangeNotifier {
   set grain(bool value) {
     if (value == _grain) return;
     _grain = value;
+    notifyListeners();
+  }
+
+  /// Стекло: навигационный слой размывает фон под собой. Выключено —
+  /// остаётся плотная заливка и та же кромка.
+  bool get glass => _glass;
+  set glass(bool value) {
+    if (value == _glass) return;
+    _glass = value;
+    notifyListeners();
+  }
+
+  /// Преломление у кромки стекла. Работает только под Impeller —
+  /// фильтр фона на шейдере есть только там.
+  bool get refraction => _refraction;
+  set refraction(bool value) {
+    if (value == _refraction) return;
+    _refraction = value;
     notifyListeners();
   }
 

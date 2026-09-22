@@ -8,6 +8,8 @@ import '../art/ev_art.dart';
 import '../art/key_art.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../glass/ev_droplet.dart';
+import '../glass/ev_glass.dart';
 import '../widgets/ev_icon.dart';
 import 'ev_top_bar.dart' show EvKey;
 
@@ -42,6 +44,9 @@ class EvCommand {
 /// Как в прототипе: затемнение с размытием, панель 620 px на 15 % высоты
 /// сверху, не больше девяти строк. Закрывается по Esc, клику мимо панели
 /// и после выполнения команды.
+///
+/// Панель — самое толстое стекло в системе: под ней окно не просто
+/// темнеет, а уходит в глубину — размывается и теряет цвет.
 Future<void> showEvPalette(BuildContext context, List<EvCommand> commands) {
   final reduced = MediaQuery.disableAnimationsOf(context);
   return Navigator.of(context).push(
@@ -170,13 +175,17 @@ class _EvPaletteState extends State<EvPalette> {
       child: Stack(
         children: [
           // Мимо панели — закрыть. Размытие под затемнением: окно за
-          // палитрой уходит в глубину, а не просто темнеет.
+          // палитрой уходит в глубину, а не просто темнеет, и заодно
+          // теряет цвет — как за матовым стеклом в iOS.
           Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => Navigator.of(context).pop(),
               child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                filter: ui.ImageFilter.compose(
+                  outer: evGlassColorFilter(0.8, 0.9)!,
+                  inner: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                ),
                 child: const SizedBox.expand(),
               ),
             ),
@@ -212,121 +221,134 @@ class _EvPaletteState extends State<EvPalette> {
     final small = ev.text.data.copyWith(color: c.ink4, fontSize: 10.5);
     return Material(
       type: MaterialType.transparency,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: c.raised,
-          borderRadius: ev.radii.b4,
-          border: Border.all(color: c.line),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0xBF000000),
-              blurRadius: 100,
-              offset: Offset(0, 40),
-            ),
-            BoxShadow(color: Color(0x0AFFFFFF), spreadRadius: 1),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: ev.radii.b4,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 15,
-                ),
-                decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: c.lineSoft)),
-                ),
-                child: Row(
-                  children: [
-                    EvIcon(EvIcons.search, size: 17, color: c.ink4),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: _query,
-                        autofocus: true,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        onChanged: _onQuery,
-                        onSubmitted: (_) => _run(_selected),
-                        // без этого поле теряет фокус после Enter,
-                        // и стрелки перестают работать
-                        onEditingComplete: () {},
-                        cursorColor: c.hot2,
-                        style: ev.text.body.copyWith(
-                          color: c.ink,
+      child: EvGlass(
+        style: EvGlassStyle.raised,
+        borderRadius: ev.radii.b4,
+        shadows: const [
+          BoxShadow(
+            color: Color(0xBF000000),
+            blurRadius: 100,
+            offset: Offset(0, 40),
+          ),
+        ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: c.lineSoft)),
+              ),
+              child: Row(
+                children: [
+                  EvIcon(EvIcons.search, size: 17, color: c.ink4),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _query,
+                      autofocus: true,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      onChanged: _onQuery,
+                      onSubmitted: (_) => _run(_selected),
+                      // без этого поле теряет фокус после Enter,
+                      // и стрелки перестают работать
+                      onEditingComplete: () {},
+                      cursorColor: c.hot2,
+                      style: ev.text.body.copyWith(
+                        color: c.ink,
+                        fontSize: 16,
+                        height: 1.3,
+                      ),
+                      decoration: InputDecoration.collapsed(
+                        hintText: 'Игра, раздел или команда…',
+                        hintStyle: ev.text.body.copyWith(
+                          color: c.ink4,
                           fontSize: 16,
                           height: 1.3,
                         ),
-                        decoration: InputDecoration.collapsed(
-                          hintText: 'Игра, раздел или команда…',
-                          hintStyle: ev.text.body.copyWith(
-                            color: c.ink4,
-                            fontSize: 16,
-                            height: 1.3,
-                          ),
-                        ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    const EvKey('ESC', dense: true),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 12),
+                  const EvKey('ESC', dense: true),
+                ],
               ),
-              Flexible(
-                child: _results.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.all(22),
-                        child: Center(
-                          child: Text(
-                            'ничего не найдено',
-                            style: ev.text.data.copyWith(
-                              color: c.ink4,
-                              fontSize: 12,
-                            ),
+            ),
+            Flexible(
+              child: _results.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(22),
+                      child: Center(
+                        child: Text(
+                          'ничего не найдено',
+                          style: ev.text.data.copyWith(
+                            color: c.ink4,
+                            fontSize: 12,
                           ),
                         ),
-                      )
-                    : ListView.builder(
-                        controller: _scroll,
-                        shrinkWrap: true,
-                        padding: const EdgeInsets.all(_listPad),
-                        itemExtent: _rowHeight,
-                        itemCount: _results.length,
-                        itemBuilder: (context, i) => _PaletteRow(
-                          command: _results[i],
-                          selected: i == _selected,
-                          onHover: () {
-                            if (_selected != i) setState(() => _selected = i);
-                          },
-                          onTap: () => _run(i),
-                        ),
                       ),
+                    )
+                  : _list(ev),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: c.lineSoft)),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 9,
-                ),
-                decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: c.lineSoft)),
-                ),
-                child: Row(
-                  children: [
-                    Text('↑↓ выбрать', style: small),
-                    const SizedBox(width: 16),
-                    Text('↵ открыть', style: small),
-                  ],
-                ),
+              child: Row(
+                children: [
+                  Text('↑↓ выбрать', style: small),
+                  const SizedBox(width: 16),
+                  Text('↵ открыть', style: small),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
+
+  /// Список с каплей под выбранной строкой. Капля лежит в тех же
+  /// координатах, что и список, поэтому при прокрутке едет вместе с ним.
+  Widget _list(EvTheme ev) => LayoutBuilder(
+    builder: (context, box) => Stack(
+      children: [
+        AnimatedBuilder(
+          animation: _scroll,
+          builder: (context, _) {
+            final offset = _scroll.hasClients ? _scroll.offset : 0.0;
+            return EvDroplet(
+              rect: Rect.fromLTWH(
+                _listPad,
+                _listPad + _selected * _rowHeight - offset,
+                box.maxWidth - _listPad * 2,
+                _rowHeight,
+              ),
+              radius: ev.radii.b2,
+              duration: EvMotion.popover,
+            );
+          },
+        ),
+        ListView.builder(
+          controller: _scroll,
+          shrinkWrap: true,
+          padding: const EdgeInsets.all(_listPad),
+          itemExtent: _rowHeight,
+          itemCount: _results.length,
+          itemBuilder: (context, i) => _PaletteRow(
+            command: _results[i],
+            selected: i == _selected,
+            onHover: () {
+              if (_selected != i) setState(() => _selected = i);
+            },
+            onTap: () => _run(i),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _PaletteRow extends StatelessWidget {
@@ -358,12 +380,9 @@ class _PaletteRow extends StatelessWidget {
         child: Semantics(
           button: true,
           selected: selected,
-          child: Container(
+          child: Padding(
+            // Выбранную строку помечает капля стекла под списком.
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
-            decoration: BoxDecoration(
-              borderRadius: ev.radii.b2,
-              color: selected ? c.ink.withValues(alpha: 0.06) : null,
-            ),
             child: Row(
               children: [
                 Container(

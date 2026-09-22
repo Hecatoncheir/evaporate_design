@@ -2,15 +2,17 @@ import 'package:flutter/widgets.dart';
 
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../glass/ev_glass.dart';
 
-/// Панель: поверхность на ступень выше земли, с градиентом белого 3 % → 0.6 %
-/// и, по желанию, тёплым пятном в углу.
+/// Панель: матовое стекло на ступень выше земли. Сквозь него видно, что
+/// делает фон, но ровно настолько, чтобы текст оставался текстом.
 class EvPanel extends StatelessWidget {
   const EvPanel({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(18),
     this.glowCorner = false,
+    this.grouped = false,
   });
 
   final Widget child;
@@ -19,70 +21,72 @@ class EvPanel extends StatelessWidget {
   /// Тёплое пятно в правом верхнем углу. Не больше одного на экран.
   final bool glowCorner;
 
+  /// Панели одного слоя читают фон один раз на всех.
+  final bool grouped;
+
   @override
   Widget build(BuildContext context) {
     final ev = context.ev;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: ev.panelFill,
-        borderRadius: ev.radii.b4,
-        border: Border.all(color: ev.colors.lineSoft),
-      ),
-      child: ClipRRect(
-        borderRadius: ev.radii.b4,
-        child: Stack(
-          children: [
-            if (glowCorner)
-              Positioned(
-                right: -90,
-                top: -120,
-                width: 260,
-                height: 260,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        ev.colors.hot1.withValues(alpha: 0.16),
-                        ev.colors.hot1.withValues(alpha: 0),
-                      ],
-                      stops: const [0, 0.66],
-                    ),
+    return EvGlass(
+      borderRadius: ev.radii.b4,
+      grouped: grouped,
+      child: Stack(
+        children: [
+          if (glowCorner)
+            Positioned(
+              right: -90,
+              top: -120,
+              width: 260,
+              height: 260,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      ev.colors.hot1.withValues(alpha: 0.16),
+                      ev.colors.hot1.withValues(alpha: 0),
+                    ],
+                    stops: const [0, 0.66],
                   ),
                 ),
               ),
-            Padding(padding: padding, child: child),
-          ],
-        ),
+            ),
+          Padding(padding: padding, child: child),
+        ],
       ),
     );
   }
 }
 
-/// Чип: короткая метка на 24 px. Горячий вариант — единственный цветной,
-/// им помечают текущее состояние объекта.
+/// Чип: короткая метка на 24 px. Лежит поверх картинки, поэтому сделан
+/// из линзы — кадр под ним виден и гнётся у кромки. Горячий вариант —
+/// единственный цветной, им помечают текущее состояние объекта.
 class EvChip extends StatelessWidget {
-  const EvChip(this.label, {super.key, this.hot = false});
+  const EvChip(this.label, {super.key, this.hot = false, this.grouped = false});
 
   final String label;
   final bool hot;
+
+  /// Чипы одной строки читают фон один раз на всех.
+  final bool grouped;
 
   @override
   Widget build(BuildContext context) {
     final ev = context.ev;
     final c = ev.colors;
-    return Container(
+    return EvGlass(
+      style: EvGlassStyle.lens,
+      borderRadius: ev.radii.b1,
+      grouped: grouped,
+      tint: hot ? c.hot1.withValues(alpha: 0.16) : null,
+      keyLight: hot ? c.hot2 : null,
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: ev.radii.b1,
-        color: hot ? c.hot1.withValues(alpha: 0.09) : c.sub.withValues(alpha: 0.55),
-        border: Border.all(
-          color: hot ? c.hot1.withValues(alpha: 0.35) : c.line,
-        ),
-      ),
       child: Text(
         label,
-        style: ev.text.data.copyWith(color: hot ? c.hot2 : c.ink2, fontSize: 11),
+        style: ev.text.data.copyWith(
+          color: hot ? c.hot2 : c.ink2,
+          fontSize: 11,
+        ),
       ),
     );
   }
@@ -127,37 +131,39 @@ class EvPill extends StatelessWidget {
     final ev = context.ev;
     final dot = _dot(ev.colors);
     final tinted = status == EvStatus.warn || status == EvStatus.bad;
-    final pill = Container(
-      height: 30,
+    // Таблетки живут в полосе каркаса — под ними уже стекло, второй раз
+    // читать фон незачем.
+    final pill = EvGlass(
+      style: EvGlassStyle.chip,
+      backdrop: false,
+      borderRadius: ev.radii.bPill,
+      tint: tinted ? dot.withValues(alpha: 0.1) : null,
+      keyLight: tinted ? dot : null,
       padding: const EdgeInsets.symmetric(horizontal: 11),
-      decoration: BoxDecoration(
-        borderRadius: ev.radii.bPill,
-        border: Border.all(
-          color: tinted ? dot.withValues(alpha: 0.38) : ev.colors.line,
+      child: SizedBox(
+        height: 30,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: dot,
+                boxShadow: [BoxShadow(color: dot, blurRadius: 9)],
+              ),
+            ),
+            const SizedBox(width: 7),
+            Text(
+              label,
+              style: ev.text.data.copyWith(
+                color: tinted ? dot : ev.colors.ink2,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ),
-        color: tinted ? dot.withValues(alpha: 0.07) : null,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: dot,
-              boxShadow: [BoxShadow(color: dot, blurRadius: 9)],
-            ),
-          ),
-          const SizedBox(width: 7),
-          Text(
-            label,
-            style: ev.text.data.copyWith(
-              color: tinted ? dot : ev.colors.ink2,
-              fontSize: 12,
-            ),
-          ),
-        ],
       ),
     );
     if (onTap == null) return pill;
@@ -167,7 +173,13 @@ class EvPill extends StatelessWidget {
 
 /// Полоса прогресса. Янтарная — приём, циановая — данные и проверка.
 class EvBar extends StatelessWidget {
-  const EvBar(this.value, {super.key, this.cool = false, this.height = 5, this.muted = false});
+  const EvBar(
+    this.value, {
+    super.key,
+    this.cool = false,
+    this.height = 5,
+    this.muted = false,
+  });
 
   /// 0…1
   final double value;
@@ -203,7 +215,12 @@ class EvBar extends StatelessWidget {
                 gradient: LinearGradient(colors: fill),
                 boxShadow: muted
                     ? null
-                    : [BoxShadow(color: glowColor.withValues(alpha: 0.5), blurRadius: 14)],
+                    : [
+                        BoxShadow(
+                          color: glowColor.withValues(alpha: 0.5),
+                          blurRadius: 14,
+                        ),
+                      ],
               ),
             ),
           ),

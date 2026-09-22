@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
@@ -11,6 +10,7 @@ import '../design/theme.dart';
 import '../design/tokens.dart';
 import 'ember_field.dart';
 import 'ev_pointer.dart';
+import 'film_grain.dart';
 import 'static_backdrop.dart';
 
 /// Живая атмосфера за интерфейсом: плюм пара, восходящие угли и плёночное
@@ -63,7 +63,6 @@ class EvAtmosphereState extends State<EvAtmosphere>
   ui.FragmentShader? _plume;
   bool _plumeUnavailable = false;
   late final ui.Image _glowSprite = _makeGlowSprite();
-  ui.Image? _grain;
 
   /// Секунды времени плюма — для тестов.
   @visibleForTesting
@@ -96,12 +95,9 @@ class EvAtmosphereState extends State<EvAtmosphere>
         _plumeUnavailable = program == null;
       });
     });
-    _makeGrain().then((image) {
-      if (!mounted) {
-        image.dispose();
-        return;
-      }
-      setState(() => _grain = image);
+    // Плитка зерна одна на приложение: её же кладёт поверх себя стекло.
+    EvFilmGrain.load().then((_) {
+      if (mounted) setState(() {});
     });
   }
 
@@ -128,7 +124,6 @@ class EvAtmosphereState extends State<EvAtmosphere>
     _pointer.dispose();
     _plume?.dispose();
     _glowSprite.dispose();
-    _grain?.dispose();
     super.dispose();
   }
 
@@ -243,7 +238,7 @@ class EvAtmosphereState extends State<EvAtmosphere>
                       (effects?.livingBackground ?? false) && _plumeUnavailable,
                   sparks: effects?.sparks ?? false,
                   glowSprite: _glowSprite,
-                  grain: (effects?.grain ?? false) ? _grain : null,
+                  grain: (effects?.grain ?? false) ? EvFilmGrain.image : null,
                 ),
               ),
             ),
@@ -492,28 +487,4 @@ ui.Image _makeGlowSprite() {
   final image = picture.toImageSync(size.toInt(), size.toInt());
   picture.dispose();
   return image;
-}
-
-/// Плитка зерна 128 × 128: серый 110…200 — как в прототипе.
-Future<ui.Image> _makeGrain() {
-  const side = 128;
-  final random = math.Random(128);
-  final pixels = Uint8List(side * side * 4);
-  for (var i = 0; i < side * side; i++) {
-    final v = 110 + random.nextInt(90);
-    pixels
-      ..[i * 4] = v
-      ..[i * 4 + 1] = v
-      ..[i * 4 + 2] = v
-      ..[i * 4 + 3] = 255;
-  }
-  final completer = Completer<ui.Image>();
-  ui.decodeImageFromPixels(
-    pixels,
-    side,
-    side,
-    ui.PixelFormat.rgba8888,
-    completer.complete,
-  );
-  return completer.future;
 }

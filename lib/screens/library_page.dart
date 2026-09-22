@@ -116,9 +116,17 @@ class LibraryPage extends StatelessWidget {
       ],
     );
 
+    // Экран лежит под полосами каркаса, поэтому сверху и снизу отступает
+    // на них: содержимое уходит под стекло только при прокрутке.
+    final chrome = MediaQuery.paddingOf(context);
     return ListView(
       primary: true,
-      padding: EdgeInsets.fromLTRB(layout.gutter, 0, layout.gutter, 26),
+      padding: EdgeInsets.fromLTRB(
+        layout.gutter,
+        chrome.top,
+        layout.gutter,
+        26 + chrome.bottom,
+      ),
       children: [
         if (layout.sideWidth == 0)
           main

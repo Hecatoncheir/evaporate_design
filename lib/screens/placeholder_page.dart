@@ -38,14 +38,23 @@ class PlaceholderPage extends StatelessWidget {
     final c = ev.colors;
     final window = MediaQuery.sizeOf(context);
     final gutter = EvSpace.gutterFor(window);
+    final chrome = MediaQuery.paddingOf(context);
     final label = ev.text.data.copyWith(color: c.ink4, fontSize: 10.5);
     return LayoutBuilder(
       builder: (context, box) => SingleChildScrollView(
         primary: true,
-        padding: EdgeInsets.symmetric(horizontal: gutter, vertical: 28),
+        padding: EdgeInsets.fromLTRB(
+          gutter,
+          chrome.top + 28,
+          gutter,
+          chrome.bottom + 28,
+        ),
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            minHeight: math.max(0, box.maxHeight - 56),
+            minHeight: math.max(
+              0,
+              box.maxHeight - 56 - chrome.top - chrome.bottom,
+            ),
           ),
           child: Center(
             child: ConstrainedBox(

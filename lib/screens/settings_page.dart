@@ -5,6 +5,7 @@ import '../design/effects.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
 import '../gallery/gallery_page.dart';
+import '../glass/glass_lens.dart';
 import '../widgets/ev_controls.dart';
 import '../widgets/ev_icon.dart';
 import '../widgets/ev_surfaces.dart';
@@ -20,9 +21,15 @@ class SettingsPage extends StatelessWidget {
     final appearance = EvAppearanceScope.of(context);
     final effects = EvEffectsScope.maybeOf(context);
     final gutter = EvSpace.gutterFor(MediaQuery.sizeOf(context));
+    final chrome = MediaQuery.paddingOf(context);
     return ListView(
       primary: true,
-      padding: EdgeInsets.fromLTRB(gutter, gutter, gutter, 26),
+      padding: EdgeInsets.fromLTRB(
+        gutter,
+        chrome.top + gutter,
+        gutter,
+        26 + chrome.bottom,
+      ),
       children: [
         const EvSectionHeader('Облик', count: 'тема и геометрия'),
         const SizedBox(height: EvSpace.l),
@@ -94,6 +101,29 @@ class SettingsPage extends StatelessWidget {
                     value: effects.grain,
                     semanticLabel: 'Зерно',
                     onChanged: (v) => effects.grain = v,
+                  ),
+                ),
+                EvOption(
+                  title: 'Стекло',
+                  description: 'Рейл, полосы и панели размывают фон под собой',
+                  control: EvSwitch(
+                    value: effects.glass,
+                    semanticLabel: 'Стекло',
+                    onChanged: (v) => effects.glass = v,
+                  ),
+                ),
+                EvOption(
+                  title: 'Преломление стекла',
+                  description: EvGlassLens.supported
+                      ? 'Кадр под кромкой гнётся, как под толстым стеклом'
+                      : 'Кадр гнётся у кромки · нужен Impeller, '
+                            'в этой сборке недоступно',
+                  control: EvSwitch(
+                    value: effects.refraction && EvGlassLens.supported,
+                    semanticLabel: 'Преломление',
+                    onChanged: EvGlassLens.supported
+                        ? (v) => effects.refraction = v
+                        : (_) {},
                   ),
                 ),
                 EvOption(

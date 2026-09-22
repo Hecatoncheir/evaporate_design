@@ -4,15 +4,19 @@ import 'package:flutter/widgets.dart';
 
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../glass/ev_droplet.dart';
+import '../glass/ev_glass.dart';
 import '../widgets/ev_focusable.dart';
 import '../widgets/ev_icon.dart';
 import 'ev_section.dart';
 
 /// Боковой рейл: знак, четыре основных раздела, друзья и аватар.
 ///
-/// Ширина 76. Активный раздел отмечен янтарной чертой у самой кромки окна и
-/// тёплым пятном внутри кнопки — не заливкой: насыщенный объект на экране
-/// один, и это не навигация.
+/// Полоса шириной 76 занята плитой матового стекла: она отступает от кромок
+/// окна на [inset], и за ней видно, как поднимается пар. Выбранный раздел
+/// помечен каплей стекла, которая перетекает к новому разделу, и янтарной
+/// чертой у кромки плиты — заливкой не помечается ничего: насыщенный объект
+/// на экране один, и это не навигация.
 class EvRail extends StatelessWidget {
   const EvRail({
     super.key,
@@ -34,6 +38,48 @@ class EvRail extends StatelessWidget {
   final int? friendsOnline;
   final int? downloadsActive;
 
+  /// Отступ плиты от кромок окна.
+  static const inset = 8.0;
+
+  /// Ширина самой плиты.
+  static const slabWidth = EvSpace.railWidth - inset * 2;
+
+  static const _padTop = 10.0;
+  static const _padBottom = 6.0;
+  static const _markSize = 36.0;
+  static const _markGap = 16.0;
+  static const itemHeight = 44.0;
+  static const itemWidth = 48.0;
+  static const _itemGap = 4.0;
+  static const avatarSize = 38.0;
+  static const _avatarGap = 8.0;
+
+  /// Верх кнопки основного раздела по её номеру.
+  static double itemTop(int index) =>
+      _padTop + _markSize + _markGap + index * (itemHeight + _itemGap);
+
+  /// Верх кнопки «Друзья» на плите высотой [height].
+  static double friendsTop(double height) =>
+      height - _padBottom - avatarSize - _avatarGap - itemHeight;
+
+  static double avatarTop(double height) => height - _padBottom - avatarSize;
+
+  /// Куда встаёт капля: она всегда размером с кнопку и центрируется
+  /// на выбранном, даже если это аватар.
+  static Rect dropletRect(EvSection section, double height) {
+    final center = switch (section) {
+      EvSection.profile => avatarTop(height) + avatarSize / 2,
+      EvSection.friends => friendsTop(height) + itemHeight / 2,
+      _ => itemTop(EvSection.primary.indexOf(section)) + itemHeight / 2,
+    };
+    return Rect.fromLTWH(
+      (slabWidth - itemWidth) / 2,
+      center - itemHeight / 2,
+      itemWidth,
+      itemHeight,
+    );
+  }
+
   String _tip(EvSection s) => switch (s) {
     EvSection.downloads when downloadsActive != null =>
       '${s.label} · $downloadsActive',
@@ -45,66 +91,85 @@ class EvRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ev = context.ev;
-    final c = ev.colors;
-    return Container(
+    return SizedBox(
       width: EvSpace.railWidth,
-      padding: const EdgeInsets.only(top: 18, bottom: 14),
-      decoration: BoxDecoration(
-        border: Border(right: BorderSide(color: c.lineSoft)),
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          stops: const [0, 0.4],
-          colors: [c.ink.withValues(alpha: 0.022), c.ink.withValues(alpha: 0)],
+      child: Padding(
+        padding: const EdgeInsets.all(inset),
+        child: EvGlass(
+          grouped: true,
+          borderRadius: ev.radii.b5,
+          shadows: ev.shadowRest,
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final height = box.maxHeight;
+              return Stack(
+                children: [
+                  EvDroplet(
+                    rect: dropletRect(current, height),
+                    radius: ev.radii.b2,
+                  ),
+                  Positioned(
+                    top: _padTop,
+                    left: (slabWidth - _markSize) / 2,
+                    child: DecoratedBox(
+                      // свечение повторяет плитку знака: rx 14 на сетке 48
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          _markSize * 14 / 48,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: ev.colors.hot1.withValues(alpha: 0.35),
+                            blurRadius: 18,
+                          ),
+                        ],
+                      ),
+                      child: const EvMark(size: _markSize),
+                    ),
+                  ),
+                  for (final (i, s) in EvSection.primary.indexed)
+                    Positioned(
+                      top: itemTop(i),
+                      left: 0,
+                      child: EvRailItem(
+                        section: s,
+                        tooltip: _tip(s),
+                        active: s == current,
+                        onTap: () => onSelect(s),
+                      ),
+                    ),
+                  Positioned(
+                    top: friendsTop(height),
+                    left: 0,
+                    child: EvRailItem(
+                      section: EvSection.friends,
+                      tooltip: _tip(EvSection.friends),
+                      active: current == EvSection.friends,
+                      onTap: () => onSelect(EvSection.friends),
+                    ),
+                  ),
+                  Positioned(
+                    top: avatarTop(height),
+                    left: (slabWidth - avatarSize) / 2,
+                    child: EvAvatar(
+                      initials: initials,
+                      label: 'Профиль · $userName',
+                      active: current == EvSection.profile,
+                      onTap: () => onSelect(EvSection.profile),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          DecoratedBox(
-            // свечение повторяет плитку знака: rx 14 на сетке 48
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(36 * 14 / 48),
-              boxShadow: [
-                BoxShadow(
-                  color: c.hot1.withValues(alpha: 0.35),
-                  blurRadius: 18,
-                ),
-              ],
-            ),
-            child: const EvMark(size: 36),
-          ),
-          const SizedBox(height: EvSpace.l),
-          for (final s in EvSection.primary) ...[
-            EvRailItem(
-              section: s,
-              tooltip: _tip(s),
-              active: s == current,
-              onTap: () => onSelect(s),
-            ),
-            const SizedBox(height: EvSpace.xs),
-          ],
-          const Spacer(),
-          EvRailItem(
-            section: EvSection.friends,
-            tooltip: _tip(EvSection.friends),
-            active: current == EvSection.friends,
-            onTap: () => onSelect(EvSection.friends),
-          ),
-          const SizedBox(height: EvSpace.s),
-          EvAvatar(
-            initials: initials,
-            label: 'Профиль · $userName',
-            active: current == EvSection.profile,
-            onTap: () => onSelect(EvSection.profile),
-          ),
-        ],
       ),
     );
   }
 }
 
-/// Кнопка рейла 48 × 44 внутри полосы шириной 76: черта активного раздела
-/// живёт снаружи кнопки, у кромки окна.
+/// Кнопка рейла 48 × 44 внутри плиты шириной 60: черта активного раздела
+/// живёт снаружи кнопки, у кромки стекла.
 class EvRailItem extends StatefulWidget {
   const EvRailItem({
     super.key,
@@ -112,12 +177,14 @@ class EvRailItem extends StatefulWidget {
     required this.tooltip,
     required this.active,
     required this.onTap,
+    this.width = EvRail.slabWidth,
   });
 
   final EvSection section;
   final String tooltip;
   final bool active;
   final VoidCallback onTap;
+  final double width;
 
   @override
   State<EvRailItem> createState() => _EvRailItemState();
@@ -133,12 +200,12 @@ class _EvRailItemState extends State<EvRailItem> {
     final c = ev.colors;
     final lit = widget.active || _hover || _focus;
     return SizedBox(
-      width: EvSpace.railWidth,
-      height: 44,
+      width: widget.width,
+      height: EvRail.itemHeight,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // черта у кромки
+          // черта у кромки стекла
           Positioned(
             left: 0,
             child: AnimatedContainer(
@@ -181,22 +248,14 @@ class _EvRailItemState extends State<EvRailItem> {
                   child: AnimatedContainer(
                     duration: EvMotion.fast,
                     curve: EvMotion.ease,
-                    width: 48,
-                    height: 44,
+                    width: EvRail.itemWidth,
+                    height: EvRail.itemHeight,
                     decoration: BoxDecoration(
                       borderRadius: ev.radii.b2,
+                      // Выбранное помечает капля стекла под кнопкой,
+                      // наведение — светлая плёнка.
                       color: _hover && !widget.active
                           ? c.ink.withValues(alpha: 0.045)
-                          : null,
-                      gradient: widget.active
-                          ? RadialGradient(
-                              center: const Alignment(-1, 0),
-                              radius: 1.1,
-                              colors: [
-                                c.hot1.withValues(alpha: 0.2),
-                                c.hot1.withValues(alpha: 0),
-                              ],
-                            )
                           : null,
                     ),
                     child: Center(
@@ -226,7 +285,7 @@ class EvAvatar extends StatefulWidget {
     required this.label,
     required this.active,
     required this.onTap,
-    this.size = 38,
+    this.size = EvRail.avatarSize,
     this.showTooltip = true,
   });
 
@@ -354,7 +413,6 @@ class _SideTooltipState extends State<_SideTooltip> {
   @override
   Widget build(BuildContext context) {
     final ev = context.ev;
-    final c = ev.colors;
     return CompositedTransformTarget(
       link: _link,
       child: OverlayPortal(
@@ -373,21 +431,18 @@ class _SideTooltipState extends State<_SideTooltip> {
                 child: AnimatedOpacity(
                   opacity: widget.visible ? 1 : 0,
                   duration: const Duration(milliseconds: 180),
-                  child: Container(
+                  child: EvGlass(
+                    style: EvGlassStyle.raised,
+                    borderRadius: ev.radii.b1,
+                    shadows: ev.shadowRest,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 5,
                     ),
-                    decoration: BoxDecoration(
-                      color: c.raised,
-                      borderRadius: ev.radii.b1,
-                      border: Border.all(color: c.line),
-                      boxShadow: ev.shadowRest,
-                    ),
                     child: Text(
                       widget.message,
                       style: ev.text.bodySmall.copyWith(
-                        color: c.ink2,
+                        color: ev.colors.ink2,
                         fontSize: 12,
                         height: 1.2,
                       ),
@@ -404,8 +459,8 @@ class _SideTooltipState extends State<_SideTooltip> {
   }
 }
 
-/// Нижняя панель навигации для узких окон: рейл превращается в строку,
-/// черта активного раздела уходит под иконку.
+/// Нижняя панель навигации для узких окон: плита стекла, на которой
+/// капля отмечает выбранный раздел.
 class EvBottomNav extends StatelessWidget {
   const EvBottomNav({
     super.key,
@@ -418,70 +473,84 @@ class EvBottomNav extends StatelessWidget {
   final ValueChanged<EvSection> onSelect;
   final String initials;
 
+  static const _slots = [...EvSection.primary, EvSection.friends];
+  static const _itemWidth = 48.0;
+
   @override
   Widget build(BuildContext context) {
     final ev = context.ev;
     final c = ev.colors;
-    return Container(
-      height: EvSpace.bottomNavHeight,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: c.ground,
-        border: Border(top: BorderSide(color: c.line)),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        EvRail.inset,
+        0,
+        EvRail.inset,
+        EvRail.inset,
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          for (final s in [...EvSection.primary, EvSection.friends])
-            Semantics(
-              button: true,
-              selected: s == current,
-              label: s.label,
-              child: EvFocusable(
-                onActivate: () => onSelect(s),
-                radius: ev.radii.r2,
-                child: SizedBox(
-                  width: 48,
-                  height: EvSpace.bottomNavHeight,
-                  child: Stack(
-                    alignment: Alignment.center,
+      child: EvGlass(
+        grouped: true,
+        borderRadius: ev.radii.b5,
+        shadows: ev.shadowRest,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: SizedBox(
+          height: EvSpace.bottomNavHeight - EvRail.inset,
+          child: LayoutBuilder(
+            builder: (context, box) {
+              // spaceAround: у каждой ячейки свой равный кусок ширины,
+              // и капля встаёт по центру его.
+              final slot = box.maxWidth / (_slots.length + 1);
+              final index = _slots.indexOf(current);
+              final center = slot * ((index < 0 ? _slots.length : index) + 0.5);
+              return Stack(
+                children: [
+                  EvDroplet(
+                    rect: Rect.fromCenter(
+                      center: Offset(center, box.maxHeight / 2),
+                      width: _itemWidth,
+                      height: box.maxHeight - 10,
+                    ),
+                    radius: ev.radii.b2,
+                    duration: EvMotion.popover,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      EvIcon(
-                        s.icon,
-                        size: 21,
-                        color: s == current ? c.ink : c.ink3,
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        child: AnimatedContainer(
-                          duration: EvMotion.fast,
-                          width: s == current ? 20 : 0,
-                          height: 2,
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(2),
+                      for (final s in _slots)
+                        Semantics(
+                          button: true,
+                          selected: s == current,
+                          label: s.label,
+                          child: EvFocusable(
+                            onActivate: () => onSelect(s),
+                            radius: ev.radii.r2,
+                            child: SizedBox(
+                              width: _itemWidth,
+                              height: box.maxHeight,
+                              child: Center(
+                                child: EvIcon(
+                                  s.icon,
+                                  size: 21,
+                                  color: s == current ? c.ink : c.ink3,
+                                ),
+                              ),
                             ),
-                            color: c.hot1,
-                            boxShadow: [
-                              BoxShadow(color: c.hot1, blurRadius: 10),
-                            ],
                           ),
                         ),
+                      EvAvatar(
+                        initials: initials,
+                        label: 'Профиль',
+                        active: current == EvSection.profile,
+                        onTap: () => onSelect(EvSection.profile),
+                        size: 32,
+                        showTooltip: false,
                       ),
                     ],
                   ),
-                ),
-              ),
-            ),
-          EvAvatar(
-            initials: initials,
-            label: 'Профиль',
-            active: current == EvSection.profile,
-            onTap: () => onSelect(EvSection.profile),
-            size: 32,
-            showTooltip: false,
+                ],
+              );
+            },
           ),
-        ],
+        ),
       ),
     );
   }
