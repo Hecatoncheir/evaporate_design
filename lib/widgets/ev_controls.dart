@@ -1,12 +1,17 @@
+import 'package:flutter/foundation.dart' show mapEquals;
 import 'package:flutter/widgets.dart';
 
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../glass/ev_droplet.dart';
+import '../glass/ev_glass.dart';
 import 'ev_focusable.dart';
 import 'ev_icon.dart';
 
-/// Второстепенная кнопка. Стеклянная, без заливки — рядом с «Играть»
-/// она не должна претендовать на внимание.
+/// Второстепенная кнопка. Линза без заливки акцентом — рядом с «Играть»
+/// она не должна претендовать на внимание, но и плашкой быть не должна:
+/// кадр под ней виден и гнётся у кромки, а под курсором она разгорается
+/// изнутри и прижимается при нажатии.
 class EvGhostButton extends StatefulWidget {
   const EvGhostButton({
     super.key,
@@ -15,6 +20,7 @@ class EvGhostButton extends StatefulWidget {
     this.icon,
     this.height = 56,
     this.danger = false,
+    this.grouped = false,
   });
 
   final String label;
@@ -25,8 +31,11 @@ class EvGhostButton extends StatefulWidget {
   final String? icon;
   final double height;
 
-  /// Красная кромка при наведении — для необратимого.
+  /// Красный свет на кромке — для необратимого.
   final bool danger;
+
+  /// Кнопки одной строки читают фон один раз на всех.
+  final bool grouped;
 
   @override
   State<EvGhostButton> createState() => _EvGhostButtonState();
@@ -34,52 +43,62 @@ class EvGhostButton extends StatefulWidget {
 
 class _EvGhostButtonState extends State<EvGhostButton> {
   bool _hover = false;
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
     final ev = context.ev;
     final c = ev.colors;
     final accent = widget.danger ? EvColors.bad : c.ink;
+    final lit = _hover && widget.onPressed != null;
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: EvFocusable(
-        onActivate: widget.onPressed,
-        radius: ev.radii.pill,
-        child: AnimatedContainer(
-          duration: EvMotion.fast,
-          curve: EvMotion.ease,
-          height: widget.height,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          decoration: BoxDecoration(
+      onExit: (_) => setState(() {
+        _hover = false;
+        _pressed = false;
+      }),
+      child: Listener(
+        onPointerDown: (_) => setState(() => _pressed = true),
+        onPointerUp: (_) => setState(() => _pressed = false),
+        onPointerCancel: (_) => setState(() => _pressed = false),
+        child: EvFocusable(
+          onActivate: widget.onPressed,
+          radius: ev.radii.pill,
+          child: EvGlass(
+            style: EvGlassStyle.lens,
             borderRadius: ev.radii.bPill,
-            border: Border.all(
-              color: _hover
-                  ? (widget.danger ? EvColors.bad.withValues(alpha: 0.5) : c.ink4)
-                  : c.line,
-            ),
-            color: c.surface.withValues(alpha: _hover ? 0.75 : 0.6),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.icon != null) ...[
-                EvIcon(
-                  widget.icon!,
-                  size: 17,
-                  color: _hover ? accent : c.ink2,
-                ),
-                const SizedBox(width: 9),
-              ],
-              // 15 px, как у «Играть»: кнопки одной строки — одним кеглем
-              Text(
-                widget.label,
-                style: ev.text.body.copyWith(
-                  fontSize: 15,
-                  color: _hover ? accent : c.ink2,
-                ),
+            grouped: widget.grouped,
+            interactive: true,
+            pressed: _pressed,
+            keyLight: widget.danger && lit ? EvColors.bad : null,
+            tint: lit
+                ? c.surface.withValues(alpha: 0.6)
+                : c.sub.withValues(alpha: 0.5),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SizedBox(
+              height: widget.height,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.icon != null) ...[
+                    EvIcon(
+                      widget.icon!,
+                      size: 17,
+                      color: lit ? accent : c.ink2,
+                    ),
+                    const SizedBox(width: 9),
+                  ],
+                  // 15 px, как у «Играть»: кнопки одной строки — одним кеглем
+                  Text(
+                    widget.label,
+                    style: ev.text.body.copyWith(
+                      fontSize: 15,
+                      color: lit ? accent : c.ink2,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -120,33 +139,35 @@ class _EvMiniButtonState extends State<EvMiniButton> {
       onExit: (_) => setState(() => _hover = false),
       child: GestureDetector(
         onTap: widget.onPressed,
-        child: AnimatedContainer(
-          duration: EvMotion.fast,
-          height: 30,
+        child: EvGlass(
+          style: EvGlassStyle.chip,
+          backdrop: false,
+          interactive: true,
+          borderRadius: ev.radii.bPill,
+          keyLight: widget.danger && _hover ? EvColors.bad : null,
+          tint: c.ink.withValues(alpha: _hover ? 0.07 : 0.03),
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            borderRadius: ev.radii.bPill,
-            border: Border.all(
-              color: _hover
-                  ? (widget.danger ? EvColors.bad.withValues(alpha: 0.5) : c.ink4)
-                  : c.line,
-            ),
-            color: _hover ? c.ink.withValues(alpha: 0.05) : null,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.icon != null) ...[
-                EvIcon(widget.icon!, size: 13, color: _hover ? accent : c.ink3),
-                const SizedBox(width: 7),
-              ],
-              Text(
-                widget.label,
-                style: ev.text.bodySmall.copyWith(
-                  color: _hover ? accent : c.ink3,
+          child: SizedBox(
+            height: 30,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (widget.icon != null) ...[
+                  EvIcon(
+                    widget.icon!,
+                    size: 13,
+                    color: _hover ? accent : c.ink3,
+                  ),
+                  const SizedBox(width: 7),
+                ],
+                Text(
+                  widget.label,
+                  style: ev.text.bodySmall.copyWith(
+                    color: _hover ? accent : c.ink3,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -230,7 +251,10 @@ class EvSwitch extends StatelessWidget {
 }
 
 /// Сегментированный выбор из двух-четырёх вариантов.
-class EvSegmented<T> extends StatelessWidget {
+///
+/// Выбранное помечено каплей стекла: она не перескакивает, а перетекает
+/// к новому сегменту, вытягиваясь по дороге.
+class EvSegmented<T> extends StatefulWidget {
   const EvSegmented({
     super.key,
     required this.items,
@@ -243,46 +267,101 @@ class EvSegmented<T> extends StatelessWidget {
   final ValueChanged<T> onChanged;
 
   @override
+  State<EvSegmented<T>> createState() => _EvSegmentedState<T>();
+}
+
+class _EvSegmentedState<T> extends State<EvSegmented<T>> {
+  final _track = GlobalKey();
+  final _keys = <T, GlobalKey>{};
+  Map<T, Rect> _rects = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleMeasure();
+    // Ширина сегмента — это ширина слова, а шрифты догружаются уже после
+    // первого кадра: без пересчёта капля осталась бы мерой запасного.
+    PaintingBinding.instance.systemFonts.addListener(_scheduleMeasure);
+  }
+
+  @override
+  void didUpdateWidget(EvSegmented<T> old) {
+    super.didUpdateWidget(old);
+    _scheduleMeasure();
+  }
+
+  @override
+  void dispose() {
+    PaintingBinding.instance.systemFonts.removeListener(_scheduleMeasure);
+    super.dispose();
+  }
+
+  void _scheduleMeasure() {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+  }
+
+  void _measure() {
+    if (!mounted) return;
+    final track = _track.currentContext?.findRenderObject();
+    if (track is! RenderBox || !track.hasSize) return;
+    final rects = <T, Rect>{};
+    for (final entry in _keys.entries) {
+      final box = entry.value.currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.hasSize) continue;
+      rects[entry.key] =
+          box.localToGlobal(Offset.zero, ancestor: track) & box.size;
+    }
+    if (mapEquals(rects, _rects)) return;
+    setState(() => _rects = rects);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final ev = context.ev;
     final c = ev.colors;
-    return Container(
+    final selected = _rects[widget.value];
+    return EvGlass(
+      style: EvGlassStyle.chip,
+      backdrop: false,
+      borderRadius: ev.radii.bPill,
+      tint: c.ground.withValues(alpha: 0.3),
       padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        borderRadius: ev.radii.bPill,
-        border: Border.all(color: c.line),
-        color: c.ground.withValues(alpha: 0.25),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Stack(
+        key: _track,
         children: [
-          for (final e in items.entries)
-            MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: () => onChanged(e.key),
-                child: AnimatedContainer(
-                  duration: EvMotion.fast,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: ev.radii.bPill,
-                    color: e.key == value
-                        ? c.ink.withValues(alpha: 0.1)
-                        : null,
-                  ),
-                  child: Text(
-                    e.value,
-                    style: ev.text.data.copyWith(
-                      color: e.key == value ? c.ink : c.ink3,
-                      fontSize: 11.5,
+          if (selected != null)
+            EvDroplet(
+              rect: selected,
+              radius: ev.radii.bPill,
+              duration: EvMotion.popover,
+              tint: c.ink.withValues(alpha: 0.1),
+            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final e in widget.items.entries)
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () => widget.onChanged(e.key),
+                    child: Padding(
+                      key: _keys[e.key] ??= GlobalKey(),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 5,
+                      ),
+                      child: Text(
+                        e.value,
+                        style: ev.text.data.copyWith(
+                          color: e.key == widget.value ? c.ink : c.ink3,
+                          fontSize: 11.5,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
+            ],
+          ),
         ],
       ),
     );

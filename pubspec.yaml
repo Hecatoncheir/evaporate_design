@@ -61,9 +61,11 @@ flutter:
     - design/assets/icons/
     - design/assets/logo/
 
-  # Плюм пара за интерфейсом — перенос шейдера из прототипа
+  # Плюм пара за интерфейсом — перенос шейдера из прототипа;
+  # линза — преломление фона под жидким стеклом, только под Impeller
   shaders:
     - shaders/plume.frag
+    - shaders/glass_lens.frag
 
   # To add assets to your application, add an assets section, like this:
   # assets:

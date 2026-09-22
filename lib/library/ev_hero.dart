@@ -210,32 +210,44 @@ class _EvHeroState extends State<EvHero> {
           child: Text(widget.blurb, style: blurbStyle),
         ),
         SizedBox(height: m.bodyGap),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final (label, hot) in widget.chips) EvChip(label, hot: hot),
-          ],
-        ),
-        SizedBox(height: m.bodyGap + m.ctaTop),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            EvPlayButton(
-              height: m.buttonHeight,
-              requireHold: effects?.holdToPlay ?? true,
-              onLaunch: widget.onLaunch ?? () {},
-              onCharge: (value) => _charge.value = value,
-            ),
-            EvGhostButton(
-              label: 'Подробнее',
-              icon: EvIcons.info,
-              height: m.buttonHeight,
-              onPressed: widget.onDetails,
-            ),
-          ],
+        // Чипы и «Подробнее» — линзы поверх одного и того же кадра:
+        // фон они читают один раз на всех.
+        BackdropGroup(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final (label, hot) in widget.chips)
+                    EvChip(label, hot: hot, grouped: true),
+                ],
+              ),
+              SizedBox(height: m.bodyGap + m.ctaTop),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  EvPlayButton(
+                    height: m.buttonHeight,
+                    requireHold: effects?.holdToPlay ?? true,
+                    onLaunch: widget.onLaunch ?? () {},
+                    onCharge: (value) => _charge.value = value,
+                  ),
+                  EvGhostButton(
+                    label: 'Подробнее',
+                    icon: EvIcons.info,
+                    height: m.buttonHeight,
+                    grouped: true,
+                    onPressed: widget.onDetails,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );

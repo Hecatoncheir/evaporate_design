@@ -6,6 +6,7 @@ import '../art/ev_art.dart';
 import '../art/key_art.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../glass/ev_glass.dart';
 import '../widgets/ev_focusable.dart';
 import '../widgets/ev_icon.dart';
 
@@ -59,75 +60,76 @@ class _EvSessionRowState extends State<EvSessionRow> {
           duration: duration,
           curve: EvMotion.ease,
           transform: Matrix4.translationValues(lit ? 3 : 0, 0, 0),
-          padding: const EdgeInsets.all(11),
-          decoration: BoxDecoration(
+          child: EvGlass(
+            // Строки одной сетки читают фон один раз на всех.
+            grouped: true,
+            style: EvGlassStyle.frost.copyWith(blur: 16, tintAlpha: 0.4),
             borderRadius: ev.radii.b3,
-            border: Border.all(color: lit ? c.line : c.lineSoft),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: lit
-                  ? const [Color(0x0EFFFFFF), Color(0x03FFFFFF)]
-                  : const [Color(0x07FFFFFF), Color(0x02FFFFFF)],
-            ),
-          ),
-          child: Row(
-            children: [
-              _Thumb(palette: widget.palette, seed: widget.seed),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      widget.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: ev.text.title.copyWith(fontSize: 13.5),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      widget.subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: ev.text.data.copyWith(
-                        fontSize: 10.5,
-                        color: c.ink4,
+            tint: c.surface.withValues(alpha: lit ? 0.52 : 0.4),
+            padding: const EdgeInsets.all(11),
+            child: Row(
+              children: [
+                _Thumb(palette: widget.palette, seed: widget.seed),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: ev.text.title.copyWith(fontSize: 13.5),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 3),
+                      Text(
+                        widget.subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: ev.text.data.copyWith(
+                          fontSize: 10.5,
+                          color: c.ink4,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 13),
-              AnimatedContainer(
-                duration: duration,
-                width: 32,
-                height: 32,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
+                const SizedBox(width: 13),
+                // Кружок запуска лежит на стекле строки: свой фон
+                // читать незачем, а свет на кромке у него свой.
+                EvGlass(
+                  style: EvGlassStyle.chip,
+                  backdrop: false,
                   borderRadius: BorderRadius.circular(
                     math.min(ev.radii.pill, 16),
                   ),
-                  border: Border.all(
-                    color: lit ? c.hot1.withValues(alpha: .5) : c.line,
-                  ),
-                  boxShadow: lit
+                  keyLight: lit ? c.hot2 : null,
+                  tint: lit
+                      ? c.hot1.withValues(alpha: 0.14)
+                      : c.ink.withValues(alpha: 0.04),
+                  shadows: lit
                       ? [
                           BoxShadow(
                             color: c.hot1.withValues(alpha: .3),
                             blurRadius: 18,
                           ),
                         ]
-                      : null,
+                      : const [],
+                  child: SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: Center(
+                      child: EvIcon(
+                        EvIcons.play,
+                        size: 13,
+                        color: lit ? c.hot2 : c.ink3,
+                      ),
+                    ),
+                  ),
                 ),
-                child: EvIcon(
-                  EvIcons.play,
-                  size: 13,
-                  color: lit ? c.hot2 : c.ink3,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -189,12 +191,16 @@ class EvSessionGrid extends StatelessWidget {
         ((box.maxWidth + gap) / (minWidth + gap)).floor(),
       );
       final width = (box.maxWidth - gap * (columns - 1)) / columns;
-      return Wrap(
-        spacing: gap,
-        runSpacing: gap,
-        children: [
-          for (final child in children) SizedBox(width: width, child: child),
-        ],
+      // Строки не перекрываются и лежат на одном фоне — один снимок
+      // на всю сетку.
+      return BackdropGroup(
+        child: Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final child in children) SizedBox(width: width, child: child),
+          ],
+        ),
       );
     },
   );

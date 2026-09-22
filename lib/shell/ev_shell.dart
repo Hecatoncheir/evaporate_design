@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../atmosphere/ev_atmosphere.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../glass/ev_scroll_edge.dart';
 import 'ev_hints_bar.dart';
 import 'ev_palette.dart';
 import 'ev_rail.dart';
@@ -207,46 +208,90 @@ class _EvShellState extends State<EvShell> {
                   ),
                 ),
               );
-              final topBar = EvTopBar(
-                section: section.label,
-                onSearch: _openPalette,
-                trailing: widget.status,
-              );
               return LayoutBuilder(
                 builder: (context, box) {
-                  if (box.maxWidth < EvSpace.narrowBreakpoint) {
-                    return Column(
-                      children: [
-                        EvTopBar(
-                          section: section.label,
-                          onSearch: _openPalette,
-                        ),
-                        Expanded(child: page),
-                        EvBottomNav(
-                          current: section,
-                          onSelect: _controller.go,
-                          initials: widget.initials,
-                        ),
-                      ],
-                    );
-                  }
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                  final narrow = box.maxWidth < EvSpace.narrowBreakpoint;
+                  final rail = narrow ? 0.0 : EvSpace.railWidth;
+                  final bottom = narrow
+                      ? EvSpace.bottomNavHeight
+                      : EvSpace.hintsHeight;
+                  return Stack(
                     children: [
-                      EvRail(
-                        current: section,
-                        onSelect: _controller.go,
-                        initials: widget.initials,
-                        userName: widget.userName,
-                        friendsOnline: widget.friendsOnline,
-                        downloadsActive: widget.downloadsActive,
+                      // Экран лежит под каркасом во всю высоту: содержимое
+                      // уходит под стекло полос, а не упирается в него.
+                      // Сколько места занято каркасом, экраны узнают из
+                      // отступов MediaQuery.
+                      Positioned.fill(
+                        left: rail,
+                        child: MediaQuery(
+                          data: MediaQuery.of(context).copyWith(
+                            padding: EdgeInsets.only(
+                              top: EvSpace.topBarHeight,
+                              bottom: bottom,
+                            ),
+                          ),
+                          child: page,
+                        ),
                       ),
-                      Expanded(
-                        child: Column(
+                      // Все стёкла каркаса читают фон один раз на всех:
+                      // они не перекрываются, а нарисованы после экрана.
+                      BackdropGroup(
+                        child: Stack(
                           children: [
-                            topBar,
-                            Expanded(child: page),
-                            const EvHintsBar(),
+                            Positioned(
+                              left: rail,
+                              right: 0,
+                              top: EvSpace.topBarHeight,
+                              child: const EvScrollEdge(),
+                            ),
+                            Positioned(
+                              left: rail,
+                              right: 0,
+                              bottom: bottom,
+                              child: const EvScrollEdge(fromTop: false),
+                            ),
+                            Positioned(
+                              left: rail,
+                              right: 0,
+                              top: 0,
+                              child: EvTopBar(
+                                section: section.label,
+                                onSearch: _openPalette,
+                                trailing: narrow ? const [] : widget.status,
+                              ),
+                            ),
+                            if (narrow)
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                child: EvBottomNav(
+                                  current: section,
+                                  onSelect: _controller.go,
+                                  initials: widget.initials,
+                                ),
+                              )
+                            else ...[
+                              Positioned(
+                                left: 0,
+                                top: 0,
+                                bottom: 0,
+                                child: EvRail(
+                                  current: section,
+                                  onSelect: _controller.go,
+                                  initials: widget.initials,
+                                  userName: widget.userName,
+                                  friendsOnline: widget.friendsOnline,
+                                  downloadsActive: widget.downloadsActive,
+                                ),
+                              ),
+                              const Positioned(
+                                left: EvSpace.railWidth,
+                                right: 0,
+                                bottom: 0,
+                                child: EvHintsBar(),
+                              ),
+                            ],
                           ],
                         ),
                       ),

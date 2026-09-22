@@ -4,6 +4,7 @@ import '../art/ev_art.dart';
 import '../art/key_art.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../glass/ev_glass.dart';
 import 'ev_focusable.dart';
 import 'ev_surfaces.dart';
 
@@ -191,19 +192,16 @@ class _Badge extends StatelessWidget {
       EvGameState.queued => c.ink3,
       EvGameState.ready => c.hot2,
     };
-    return Container(
+    // Бейдж лежит прямо на обложке — линза, а не плашка: кадр под ним
+    // виден и гнётся у кромки.
+    return EvGlass(
+      style: EvGlassStyle.lens.copyWith(blur: 10, bevel: 7, depth: 4),
+      borderRadius: ev.radii.b1,
+      keyLight: state == EvGameState.queued ? null : tint,
+      tint: state == EvGameState.queued
+          ? c.ground.withValues(alpha: 0.55)
+          : tint.withValues(alpha: 0.16),
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        borderRadius: ev.radii.b1,
-        color: state == EvGameState.queued
-            ? c.ground.withValues(alpha: 0.7)
-            : tint.withValues(alpha: 0.14),
-        border: Border.all(
-          color: state == EvGameState.queued
-              ? c.ink.withValues(alpha: 0.12)
-              : tint.withValues(alpha: 0.4),
-        ),
-      ),
       child: Text(
         label.toUpperCase(),
         style: ev.text.data.copyWith(
