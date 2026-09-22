@@ -16,6 +16,60 @@ class EvType {
   final Color ink3;
   final Color ink4;
 
+  /// Тот же стиль в другом начертании.
+  ///
+  /// `copyWith(fontWeight: …)` начертания не меняет: google_fonts кладёт
+  /// в стиль `fontFamily: 'Onest_500'` и подгружает только это начертание.
+  /// Движок остаётся с ним: либо подделывает насыщенность, либо молча
+  /// игнорирует просьбу. Настоящее начертание рождается лишь из повторного
+  /// вызова фабрики — через него и идут все отклонения от базового веса.
+  ///
+  /// Остальные параметры прокинуты, чтобы правка веса и правка кегля или
+  /// цвета не расходились по двум вызовам.
+  TextStyle ui(
+    TextStyle base, {
+    FontWeight? weight,
+    double? size,
+    Color? color,
+    double? letterSpacing,
+  }) => GoogleFonts.onest(
+    textStyle: base,
+    fontWeight: weight,
+    fontSize: size,
+    color: color,
+    letterSpacing: letterSpacing,
+  );
+
+  /// То же для дисплейного семейства. См. [ui].
+  TextStyle dsp(
+    TextStyle base, {
+    FontWeight? weight,
+    double? size,
+    Color? color,
+    double? letterSpacing,
+  }) => GoogleFonts.unbounded(
+    textStyle: base,
+    fontWeight: weight,
+    fontSize: size,
+    color: color,
+    letterSpacing: letterSpacing,
+  );
+
+  /// То же для моноширинного семейства. См. [ui].
+  TextStyle mono(
+    TextStyle base, {
+    FontWeight? weight,
+    double? size,
+    Color? color,
+    double? letterSpacing,
+  }) => GoogleFonts.jetBrainsMono(
+    textStyle: base,
+    fontWeight: weight,
+    fontSize: size,
+    color: color,
+    letterSpacing: letterSpacing,
+  );
+
   /// Заголовок героя. Лёгкое начертание в крупном кегле — характер системы.
   TextStyle display(double size) => GoogleFonts.unbounded(
     fontSize: size,
@@ -27,7 +81,7 @@ class EvType {
 
   /// Ударная часть заголовка.
   TextStyle displayBold(double size) =>
-      display(size).copyWith(fontWeight: FontWeight.w800);
+      dsp(display(size), weight: FontWeight.w800);
 
   /// Заголовок раздела: капс с разрядкой.
   TextStyle get section => GoogleFonts.unbounded(
@@ -78,10 +132,7 @@ class EvType {
     fontFeatures: const [FontFeature.tabularFigures()],
   );
 
-  TextStyle get dataStrong => data.copyWith(
-    color: ink,
-    fontWeight: FontWeight.w500,
-  );
+  TextStyle get dataStrong => mono(data, weight: FontWeight.w500, color: ink);
 
   /// Крупное число в панели.
   TextStyle big(double size) => GoogleFonts.unbounded(

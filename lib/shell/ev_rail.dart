@@ -291,13 +291,12 @@ class _EvAvatarState extends State<EvAvatar> {
           child: ExcludeSemantics(
             child: Text(
               widget.initials,
-              style: ev.text
-                  .big(widget.size * 0.34)
-                  .copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF0B0B10),
-                    letterSpacing: 0,
-                  ),
+              style: ev.text.dsp(
+                ev.text.big(widget.size * 0.34),
+                weight: FontWeight.w600,
+                color: const Color(0xFF0B0B10),
+                letterSpacing: 0,
+              ),
             ),
           ),
         ),

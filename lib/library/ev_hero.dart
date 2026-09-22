@@ -197,7 +197,7 @@ class _EvHeroState extends State<EvHero> {
               if (light.isNotEmpty) Text(light, style: titleStyle),
               Text(
                 words.last,
-                style: titleStyle.copyWith(fontWeight: FontWeight.w800),
+                style: ev.text.dsp(titleStyle, weight: FontWeight.w800),
               ),
             ],
           ),

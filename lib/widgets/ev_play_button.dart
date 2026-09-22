@@ -290,9 +290,10 @@ class _EvPlayButtonState extends State<EvPlayButton>
         const SizedBox(width: 13),
         Text(
           widget.label,
-          style: ev.text.title.copyWith(
+          style: ev.text.ui(
+            ev.text.title,
+            weight: FontWeight.w600,
             color: onFill,
-            fontWeight: FontWeight.w600,
           ),
         ),
         if (widget.requireHold) ...[
