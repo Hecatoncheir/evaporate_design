@@ -74,6 +74,49 @@ class _SideCard extends StatelessWidget {
   );
 }
 
+/// Аватар друга: инициалы на градиенте своего цвета. Тот же кружок
+/// стоит и в правой колонке, и в карточке игры.
+class EvFriendAvatar extends StatelessWidget {
+  const EvFriendAvatar({super.key, required this.friend, this.size = 28});
+
+  final EvFriendLine friend;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final ev = context.ev;
+    final c = ev.colors;
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(math.min(ev.radii.pill, size / 2)),
+        gradient: LinearGradient(
+          // 140° в CSS
+          begin: const Alignment(-.64, -.77),
+          end: const Alignment(.64, .77),
+          colors: switch (friend.tint) {
+            EvAvatarTint.hot => [c.hot2, c.hot1],
+            EvAvatarTint.cool => [c.cool, const Color(0xFF1B6F8A)],
+            EvAvatarTint.arc => [c.arc, const Color(0xFF5A2FA8)],
+            EvAvatarTint.ok => const [EvColors.ok, Color(0xFF146C48)],
+          },
+        ),
+      ),
+      child: Text(
+        friend.initials,
+        style: ev.text.ui(
+          ev.text.title,
+          weight: FontWeight.w600,
+          size: size * .39,
+          color: const Color(0xFF0B0B10),
+        ),
+      ),
+    );
+  }
+}
+
 /// «Друзья · 6 в сети».
 class EvFriendsCard extends StatelessWidget {
   const EvFriendsCard({super.key, required this.friends, required this.online});
@@ -93,39 +136,7 @@ class EvFriendsCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 7),
             child: Row(
               children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(
-                      math.min(ev.radii.pill, 14),
-                    ),
-                    gradient: LinearGradient(
-                      // 140° в CSS
-                      begin: const Alignment(-.64, -.77),
-                      end: const Alignment(.64, .77),
-                      colors: switch (f.tint) {
-                        EvAvatarTint.hot => [c.hot2, c.hot1],
-                        EvAvatarTint.cool => [c.cool, const Color(0xFF1B6F8A)],
-                        EvAvatarTint.arc => [c.arc, const Color(0xFF5A2FA8)],
-                        EvAvatarTint.ok => const [
-                          EvColors.ok,
-                          Color(0xFF146C48),
-                        ],
-                      },
-                    ),
-                  ),
-                  child: Text(
-                    f.initials,
-                    style: ev.text.ui(
-                      ev.text.title,
-                      weight: FontWeight.w600,
-                      size: 11,
-                      color: const Color(0xFF0B0B10),
-                    ),
-                  ),
-                ),
+                EvFriendAvatar(friend: f),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(

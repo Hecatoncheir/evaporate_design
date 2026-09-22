@@ -6,6 +6,7 @@ import 'design/effects.dart';
 import 'design/theme.dart';
 import 'design/tokens.dart';
 import 'launch/ev_launch_ritual.dart';
+import 'sheet/ev_game_sheet.dart';
 import 'screens/library_page.dart';
 import 'screens/placeholder_page.dart';
 import 'screens/settings_page.dart';
@@ -81,6 +82,13 @@ class _Home extends StatelessWidget {
         stages: sampleLaunchStages,
       );
 
+  /// Карточка игры. Запуск из неё — тот же ритуал.
+  static void _open(BuildContext context, SampleGame game) => showEvGameSheet(
+    context,
+    game: game,
+    onLaunch: () => _launch(context, game),
+  );
+
   @override
   Widget build(BuildContext context) {
     final appearance = EvAppearanceScope.of(context);
@@ -100,8 +108,8 @@ class _Home extends StatelessWidget {
             title: g.title,
             subtitle: g.subtitle,
             cover: (g.palette, g.seed),
-            hint: '↵ к полке',
-            onRun: () => shell.go(EvSection.library),
+            hint: '↵ открыть',
+            onRun: () => _open(context, g),
             // Запускать можно только то, что уже на диске; остальное ведёт
             // туда, где оно качается, — как «Стена» и «Пульт» в прототипе.
             onLaunch: g.state == EvGameState.ready
@@ -140,6 +148,7 @@ class _Home extends StatelessWidget {
           friendsOnline: sampleFriendsOnline,
           downloadSlots: sampleDownloadSlots,
           onLaunch: (g) => _launch(context, g),
+          onOpen: (g) => _open(context, g),
         ),
         EvSection.settings => const SettingsPage(),
         _ => PlaceholderPage(section: section),

@@ -184,7 +184,7 @@ class _EvHeroState extends State<EvHero> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _Eyebrow(widget.eyebrow),
+        EvEyebrow(widget.eyebrow),
         SizedBox(height: m.bodyGap),
         // две строки на экране, одно название для экранного диктора
         Semantics(
@@ -205,7 +205,7 @@ class _EvHeroState extends State<EvHero> {
         SizedBox(height: m.bodyGap),
         ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: m.blurbChars * _chWidth(blurbStyle),
+            maxWidth: m.blurbChars * evCharWidth(blurbStyle),
           ),
           child: Text(widget.blurb, style: blurbStyle),
         ),
@@ -253,55 +253,6 @@ class _EvHeroState extends State<EvHero> {
     );
   }
 
-  /// Ширина знака «0» — единица `ch` в CSS.
-  static double _chWidth(TextStyle style) {
-    final painter = TextPainter(
-      text: TextSpan(text: '0', style: style),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    final width = painter.width;
-    painter.dispose();
-    return width;
-  }
-}
-
-/// Надглавие: короткая горячая черта и капс моноширинным.
-class _Eyebrow extends StatelessWidget {
-  const _Eyebrow(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final ev = context.ev;
-    return Row(
-      children: [
-        Container(
-          width: 22,
-          height: 1,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [ev.colors.hot1, ev.colors.hot1.withValues(alpha: 0)],
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Flexible(
-          child: Text(
-            text.toUpperCase(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: ev.text.data.copyWith(
-              fontSize: 10.5,
-              height: 1.5,
-              letterSpacing: 2.31,
-              color: ev.colors.hot2,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 /// Сдвиг за курсором на глубину [depth]: по вертикали вдвое с лишним меньше,

@@ -33,9 +33,14 @@ class EvPlayButton extends StatefulWidget {
     this.requireHold = true,
     this.height = 56,
     this.onCharge,
+    this.caption,
+    this.cool = false,
   });
 
-  final VoidCallback onLaunch;
+  /// `null` — действия пока нет: кнопка выглядит так же, но не
+  /// нажимается, не удерживается и фокус не получает.
+  final VoidCallback? onLaunch;
+
   final String label;
   final String icon;
 
@@ -47,6 +52,14 @@ class EvPlayButton extends StatefulWidget {
   /// Заряд 0…1 на каждом кадре удержания и сброса — для тех, кто греется
   /// вместе с кнопкой: герой дрожит тепловым маревом.
   final ValueChanged<double>? onCharge;
+
+  /// Приписка мелким моноширинным справа от подписи. По умолчанию
+  /// «УДЕРЖАТЬ», когда кнопку нужно держать; в карточке игры там стоит
+  /// размер загрузки или её процент.
+  final String? caption;
+
+  /// Холодная заливка: так помечена загрузка — данные, а не запуск.
+  final bool cool;
 
   @override
   State<EvPlayButton> createState() => _EvPlayButtonState();
@@ -91,7 +104,8 @@ class _EvPlayButtonState extends State<EvPlayButton>
     // Дыхание ядра — единственная бесконечная анимация в системе. При
     // «уменьшить анимацию» она останавливается: иначе окно перерисовывается
     // вечно, а тесты не досчитываются до покоя.
-    final reduced = MediaQuery.disableAnimationsOf(context);
+    final reduced =
+        MediaQuery.disableAnimationsOf(context) || widget.onLaunch == null;
     if (reduced) {
       _breathe.stop();
       _breathe.value = 0.5;
@@ -104,7 +118,7 @@ class _EvPlayButtonState extends State<EvPlayButton>
     if (s == AnimationStatus.completed) {
       _hold.value = 0;
       setState(() => _down = false);
-      widget.onLaunch();
+      widget.onLaunch?.call();
     }
   }
 
@@ -131,8 +145,10 @@ class _EvPlayButtonState extends State<EvPlayButton>
   }
 
   void _press() {
+    final launch = widget.onLaunch;
+    if (launch == null) return;
     if (!widget.requireHold) {
-      widget.onLaunch();
+      launch();
       return;
     }
     setState(() => _down = true);
@@ -152,6 +168,7 @@ class _EvPlayButtonState extends State<EvPlayButton>
     final r = ev.radii.pill.clamp(0.0, widget.height / 2);
 
     return FocusableActionDetector(
+      enabled: widget.onLaunch != null,
       focusNode: _focus,
       mouseCursor: SystemMouseCursors.click,
       onShowFocusHighlight: (value) => setState(() => _ring = value),
@@ -169,7 +186,7 @@ class _EvPlayButtonState extends State<EvPlayButton>
         onPointerCancel: (_) => _release(),
         child: Semantics(
           button: true,
-          label: widget.requireHold
+          label: widget.requireHold && widget.onLaunch != null
               ? '${widget.label}. Удерживайте, чтобы запустить'
               : widget.label,
           child: AnimatedBuilder(
@@ -191,16 +208,20 @@ class _EvPlayButtonState extends State<EvPlayButton>
                     padding: const EdgeInsets.only(left: 22, right: 26),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(r),
-                      gradient: c.playFill,
+                      gradient: widget.cool ? _coolFill(c) : c.playFill,
                       boxShadow: [
                         BoxShadow(
-                          color: c.hot1.withValues(alpha: _hover ? 0.55 : 0.42),
+                          color: (widget.cool ? c.cool : c.hot1).withValues(
+                            alpha: _hover ? 0.55 : 0.42,
+                          ),
                           blurRadius: _hover ? 46 : 34,
                           offset: Offset(0, _hover ? 16 : 10),
                         ),
                       ],
                       border: Border.all(
-                        color: c.hot1.withValues(alpha: _hover ? 0.5 : 0.35),
+                        color: (widget.cool ? c.cool : c.hot1).withValues(
+                          alpha: _hover ? 0.5 : 0.35,
+                        ),
                       ),
                     ),
                     child: ClipRRect(
@@ -284,8 +305,18 @@ class _EvPlayButtonState extends State<EvPlayButton>
     );
   }
 
+  /// `.pbtn.cool` — заливка загрузки: цвет данных, а не запуска.
+  static LinearGradient _coolFill(EvColors c) => LinearGradient(
+    begin: const Alignment(-0.9, -0.6),
+    end: const Alignment(0.9, 0.6),
+    colors: [const Color(0xFFA9F2FF), c.cool, const Color(0xFF1B6F8A)],
+    stops: const [0.0, 0.58, 1.0],
+  );
+
   Widget _content(EvTheme ev) {
-    const onFill = Color(0xFF170800);
+    final onFill = widget.cool
+        ? const Color(0xFF031318)
+        : const Color(0xFF170800);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -299,10 +330,10 @@ class _EvPlayButtonState extends State<EvPlayButton>
             color: onFill,
           ),
         ),
-        if (widget.requireHold) ...[
+        if (widget.caption != null || widget.requireHold) ...[
           const SizedBox(width: 13),
           Text(
-            'УДЕРЖАТЬ',
+            widget.caption ?? 'УДЕРЖАТЬ',
             style: ev.text.data.copyWith(
               color: onFill.withValues(alpha: 0.62),
               fontSize: 10,

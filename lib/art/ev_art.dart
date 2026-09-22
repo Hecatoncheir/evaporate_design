@@ -37,6 +37,38 @@ enum EvHeroLayer {
   };
 }
 
+/// Слой обложки в карточке игры. Кадр шире карточки на 5 % с каждой
+/// стороны и ходит за курсором на 6 и 22 px — `.sheet-art .sl` и
+/// `data-d` в прототипе.
+enum EvSheetLayer {
+  sky(depth: 6),
+  waves(depth: 22);
+
+  const EvSheetLayer({required this.depth});
+
+  final double depth;
+
+  /// Запас с каждой стороны — `inset:-5%`.
+  static const bleed = .05;
+
+  /// Холст карточки в прототипе — 1100 × 420.
+  static const scene = Size(1100, 420);
+
+  void paint(Canvas canvas, EvCoverPalette palette, int seed) => switch (this) {
+    sky => paintKeyScene(
+      canvas,
+      scene,
+      palette,
+      seed + 3,
+      ridges: 0,
+      monolith: false,
+      sunX: .64,
+      sunY: .34,
+    ),
+    waves => paintSheetWaves(canvas, scene, palette, seed),
+  };
+}
+
 /// Растры ключевых кадров.
 ///
 /// Процедурный кадр дорог: три размытых слоя шума, свечения, сотня звёзд.
@@ -52,6 +84,7 @@ abstract final class EvArtCache {
   // давно нужная картинка.
   static final _covers = <Object, ui.Image>{};
   static final _heroLayers = <Object, ui.Image>{};
+  static final _sheetLayers = <Object, ui.Image>{};
 
   /// Обложки: полка, продолжение, палитра, загрузки — с запасом на смену
   /// размеров окна.
@@ -59,6 +92,10 @@ abstract final class EvArtCache {
 
   /// Слои героя: три слоя на пару масштабов.
   static const _heroCapacity = 6;
+
+  /// Карточка открыта одна, и слоёв в ней два — с запасом на ступень
+  /// масштаба при перетаскивании края окна.
+  static const _sheetCapacity = 4;
 
   /// Обложка — сцена 300 × 400 прототипа в текстуре [width] × [height].
   static ui.Image cover(
@@ -96,17 +133,41 @@ abstract final class EvArtCache {
     ),
   );
 
+  /// Слой карточки игры: сцена 1100 × 420 с масштабом [scale].
+  static ui.Image sheetLayer(
+    EvSheetLayer layer,
+    EvCoverPalette palette,
+    int seed,
+    double scale,
+  ) => _lookup(
+    _sheetLayers,
+    (layer, palette, seed, scale),
+    _sheetCapacity,
+    () => _rasterize(
+      EvSheetLayer.scene,
+      (EvSheetLayer.scene.width * scale).round(),
+      (EvSheetLayer.scene.height * scale).round(),
+      (canvas) => layer.paint(canvas, palette, seed),
+    ),
+  );
+
   /// Сколько растров сейчас в кэше.
   @visibleForTesting
-  static int get length => _covers.length + _heroLayers.length;
+  static int get length =>
+      _covers.length + _heroLayers.length + _sheetLayers.length;
 
   @visibleForTesting
   static void clear() {
-    for (final image in [..._covers.values, ..._heroLayers.values]) {
+    for (final image in [
+      ..._covers.values,
+      ..._heroLayers.values,
+      ..._sheetLayers.values,
+    ]) {
       image.dispose();
     }
     _covers.clear();
     _heroLayers.clear();
+    _sheetLayers.clear();
   }
 
   static ui.Image _lookup(

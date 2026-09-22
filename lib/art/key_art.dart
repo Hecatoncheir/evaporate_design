@@ -375,6 +375,73 @@ void paintHeroRidges(
   }
 }
 
+/// Передний слой обложки в карточке игры: тёплое ядро, два гребня
+/// с горячей кромкой и россыпь искр над ними. Перенос второго холста
+/// `sheetLayers` из прототипа; небо там же рисует [paintKeyScene]
+/// с ядром в точке (0.64, 0.34) и без хребтов.
+void paintSheetWaves(
+  Canvas canvas,
+  Size size,
+  EvCoverPalette palette,
+  int seed,
+) {
+  final w = size.width, h = size.height;
+  final rnd = EvArtRandom(seed + 91);
+
+  // ядро за гребнями
+  canvas.drawRect(
+    Offset.zero & size,
+    Paint()
+      ..blendMode = BlendMode.screen
+      ..shader = ui.Gradient.radial(
+        Offset(w * .64, h * .52),
+        w * .2,
+        [
+          palette.hot2.withValues(alpha: .4),
+          palette.hot.withValues(alpha: .4),
+          palette.hot.withValues(alpha: 0),
+        ],
+        const [0, .42, 1],
+      ),
+  );
+
+  for (var k = 0; k < 2; k++) {
+    final base = h * (.66 + k * .14), amp = h * .16;
+    final ph = rnd.next() * 9;
+    final path = Path()..moveTo(-2, h + 2);
+    for (var x = -2.0; x <= w + 2; x += w / 30) {
+      path.lineTo(
+        x,
+        base +
+            math.sin(x / w * 5.2 + ph) * amp * .7 +
+            math.sin(x / w * 13 + ph * 2) * amp * .3,
+      );
+    }
+    path
+      ..lineTo(w + 2, h + 2)
+      ..close();
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = k == 0
+            ? const Color.fromRGBO(4, 4, 8, .8)
+            : const Color(0xFF010104),
+    );
+    _glowStroke(canvas, path, palette.hot, .46 - k * .2, 1.5, 14);
+  }
+
+  // искры над гребнями
+  final spark = Paint()..blendMode = BlendMode.screen;
+  for (var i = 0; i < 60; i++) {
+    spark.color = Color.fromRGBO(255, 236, 206, rnd.next() * .5);
+    canvas.drawCircle(
+      Offset(rnd.next() * w, h * .3 + rnd.next() * h * .66),
+      rnd.next() * 2 + .5,
+      spark,
+    );
+  }
+}
+
 /// Передний слой героя: одинокая фигура на уступе даёт масштаб и сюжет,
 /// за ней свечение, перед ней пылинки.
 void paintHeroLedge(

@@ -26,6 +26,7 @@ class LibraryPage extends StatelessWidget {
     required this.friendsOnline,
     required this.downloadSlots,
     this.onLaunch,
+    this.onOpen,
   });
 
   final List<SampleGame> games;
@@ -44,6 +45,9 @@ class LibraryPage extends StatelessWidget {
 
   /// Удержание «Играть» в герое дошло до конца.
   final ValueChanged<SampleGame>? onLaunch;
+
+  /// Открыть карточку игры: «Подробнее», строка «Продолжить», обложка.
+  final ValueChanged<SampleGame>? onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +86,7 @@ class LibraryPage extends StatelessWidget {
           blurb: hero.blurb,
           chips: hero.chips,
           onLaunch: onLaunch == null ? null : () => onLaunch!(hero),
+          onDetails: onOpen == null ? null : () => onOpen!(hero),
         ),
         if (layout.showSessions && sessions.isNotEmpty)
           section(
@@ -97,6 +102,7 @@ class LibraryPage extends StatelessWidget {
                     subtitle: '${formatPlayed(g.played)} · ${g.lastPlayed}',
                     palette: g.palette,
                     seed: g.seed,
+                    onTap: onOpen == null ? null : () => onOpen!(g),
                   ),
               ],
             ),
@@ -105,13 +111,13 @@ class LibraryPage extends StatelessWidget {
           'Библиотека',
           '${installed.length} '
               '${ruPlural(installed.length, 'установлена', 'установлено', 'установлено')}',
-          _Shelf(games: installed, layout: layout),
+          _Shelf(games: installed, layout: layout, onOpen: onOpen),
         ),
         if (incoming.isNotEmpty)
           section(
             'Скоро на диске',
             'качается',
-            _Shelf(games: incoming, layout: layout),
+            _Shelf(games: incoming, layout: layout, onOpen: onOpen),
           ),
       ],
     );
@@ -161,10 +167,11 @@ class LibraryPage extends StatelessWidget {
 /// Полка: ряд обложек с горизонтальной прокруткой. Сверху запас на подъём
 /// карточки при наведении, иначе её кромку срезало бы.
 class _Shelf extends StatelessWidget {
-  const _Shelf({required this.games, required this.layout});
+  const _Shelf({required this.games, required this.layout, this.onOpen});
 
   final List<SampleGame> games;
   final EvLibraryLayout layout;
+  final ValueChanged<SampleGame>? onOpen;
 
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
@@ -186,6 +193,7 @@ class _Shelf extends StatelessWidget {
             progress: g.progress,
             badge: g.badge,
             width: layout.cardWidth,
+            onTap: onOpen == null ? null : () => onOpen!(g),
           ),
         ],
       ],

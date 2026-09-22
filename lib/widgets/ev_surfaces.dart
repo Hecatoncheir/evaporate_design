@@ -230,6 +230,58 @@ class EvBar extends StatelessWidget {
   }
 }
 
+/// Надглавие: короткая горячая черта и капс моноширинным. Стоит над
+/// заголовком героя и над названием в карточке игры.
+class EvEyebrow extends StatelessWidget {
+  const EvEyebrow(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final ev = context.ev;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 22,
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [ev.colors.hot1, ev.colors.hot1.withValues(alpha: 0)],
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Text(
+            text.toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ev.text.data.copyWith(
+              fontSize: 10.5,
+              height: 1.5,
+              letterSpacing: 2.31,
+              color: ev.colors.hot2,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Ширина знака «0» — единица `ch` в CSS: ею меряются колонки текста.
+double evCharWidth(TextStyle style) {
+  final painter = TextPainter(
+    text: TextSpan(text: '0', style: style),
+    textDirection: TextDirection.ltr,
+  )..layout();
+  final width = painter.width;
+  painter.dispose();
+  return width;
+}
+
 /// Заголовок раздела: капс, счётчик и линия в никуда.
 class EvSectionHeader extends StatelessWidget {
   const EvSectionHeader(this.title, {super.key, this.count, this.trailing});

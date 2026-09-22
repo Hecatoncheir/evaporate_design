@@ -21,7 +21,20 @@ class EvGhostButton extends StatefulWidget {
     this.height = 56,
     this.danger = false,
     this.grouped = false,
-  });
+  }) : iconOnly = false;
+
+  /// Только иконка, квадратом по высоте: место в полосе действий дорого,
+  /// а «проверить файлы» и «открыть папку» узнаются по знаку. [label]
+  /// остаётся — его читает экранный диктор и показывает подсказка.
+  const EvGhostButton.icon({
+    super.key,
+    required String this.icon,
+    required this.label,
+    required this.onPressed,
+    this.height = 56,
+    this.danger = false,
+    this.grouped = false,
+  }) : iconOnly = true;
 
   final String label;
 
@@ -36,6 +49,9 @@ class EvGhostButton extends StatefulWidget {
 
   /// Кнопки одной строки читают фон один раз на всех.
   final bool grouped;
+
+  /// Подпись не показывается, кнопка становится квадратной.
+  final bool iconOnly;
 
   @override
   State<EvGhostButton> createState() => _EvGhostButtonState();
@@ -64,7 +80,10 @@ class _EvGhostButtonState extends State<EvGhostButton> {
         child: EvFocusable(
           onActivate: widget.onPressed,
           radius: ev.radii.pill,
-          child: EvGlass(
+          child: Semantics(
+            button: true,
+            label: widget.iconOnly ? widget.label : null,
+            child: EvGlass(
             style: EvGlassStyle.lens,
             borderRadius: ev.radii.bPill,
             grouped: widget.grouped,
@@ -74,11 +93,15 @@ class _EvGhostButtonState extends State<EvGhostButton> {
             tint: lit
                 ? c.surface.withValues(alpha: 0.6)
                 : c.sub.withValues(alpha: 0.5),
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.iconOnly ? 0 : 20,
+            ),
             child: SizedBox(
               height: widget.height,
+              width: widget.iconOnly ? widget.height : null,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (widget.icon != null) ...[
                     EvIcon(
@@ -86,17 +109,19 @@ class _EvGhostButtonState extends State<EvGhostButton> {
                       size: 17,
                       color: lit ? accent : c.ink2,
                     ),
-                    const SizedBox(width: 9),
+                    if (!widget.iconOnly) const SizedBox(width: 9),
                   ],
                   // 15 px, как у «Играть»: кнопки одной строки — одним кеглем
-                  Text(
-                    widget.label,
-                    style: ev.text.body.copyWith(
-                      fontSize: 15,
-                      color: lit ? accent : c.ink2,
+                  if (!widget.iconOnly)
+                    Text(
+                      widget.label,
+                      style: ev.text.body.copyWith(
+                        fontSize: 15,
+                        color: lit ? accent : c.ink2,
+                      ),
                     ),
-                  ),
                 ],
+                ),
               ),
             ),
           ),
