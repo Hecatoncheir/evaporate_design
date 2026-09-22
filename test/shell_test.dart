@@ -173,7 +173,10 @@ void main() {
     await _settle(tester);
     expect(effects.holdToPlay, isFalse);
 
-    await tester.tap(find.text('Эко'));
+    final eco = find.text('Эко');
+    await tester.ensureVisible(eco);
+    await _settle(tester);
+    await tester.tap(eco);
     await _settle(tester);
     expect(effects.quality, EvEffectsQuality.eco);
   });

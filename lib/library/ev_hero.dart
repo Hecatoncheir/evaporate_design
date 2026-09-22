@@ -13,6 +13,8 @@ import '../widgets/ev_controls.dart';
 import '../widgets/ev_icon.dart';
 import '../widgets/ev_play_button.dart';
 import '../widgets/ev_surfaces.dart';
+import 'hero_cta.dart';
+import 'hero_state.dart';
 import 'library_layout.dart';
 
 /// Чип героя: подпись и горячий ли он. Горячий — состояние игры, первым.
@@ -35,32 +37,43 @@ class EvHero extends StatefulWidget {
     required this.layout,
     required this.palette,
     required this.seed,
-    required this.eyebrow,
     required this.title,
-    required this.blurb,
-    required this.chips,
+    required this.content,
+    this.state = EvHeroState.ready,
     this.onLaunch,
     this.onDetails,
+    this.onInstall,
+    this.onQuit,
+    this.onOverlay,
   });
 
   final EvLibraryLayout layout;
   final EvCoverPalette palette;
   final int seed;
 
-  /// Надглавие: «Продолжить · сыграно 24 ч 10 мин».
-  final String eyebrow;
-
   /// Название. Последнее слово набирается жирным отдельной строкой.
   final String title;
 
-  final String blurb;
-  final List<EvHeroChip> chips;
+  /// Что герой говорит об игре в этом состоянии.
+  final EvHeroContent content;
+
+  /// Состояние игры: оно решает, что стоит на месте «Играть».
+  final EvHeroState state;
 
   /// Удержание «Играть» дошло до конца.
   final VoidCallback? onLaunch;
 
   /// «Подробнее». `null` — карточки игры ещё нет, кнопка не нажимается.
   final VoidCallback? onDetails;
+
+  /// «Установить» и «Обновить и играть».
+  final VoidCallback? onInstall;
+
+  /// «Завершить» — игра закончилась.
+  final VoidCallback? onQuit;
+
+  /// «Оверлей» поверх игры. `null` — оверлея ещё нет.
+  final VoidCallback? onOverlay;
 
   @override
   State<EvHero> createState() => _EvHeroState();
@@ -161,6 +174,69 @@ class _EvHeroState extends State<EvHero> {
     );
   }
 
+  /// Что стоит на месте «Играть» в этом состоянии.
+  ///
+  /// Установленную игру держат, у не установленной на том же месте
+  /// «Установить», у обновляемой — две кнопки, во время установки —
+  /// прогресс, а у запущенной кнопка становится статусом.
+  List<Widget> _cta(BuildContext context, EvEffects? effects) {
+    final m = widget.layout;
+    final content = widget.content;
+
+    if (content.install != null) {
+      return [EvInstallBox(content.install!)];
+    }
+    if (content.runningFor != null) {
+      return [
+        EvRunningPill(content.runningFor!, height: m.buttonHeight),
+        EvGhostButton(
+          label: 'Оверлей',
+          icon: EvIcons.library,
+          height: m.buttonHeight,
+          grouped: true,
+          onPressed: widget.onOverlay,
+        ),
+        EvGhostButton(
+          label: 'Завершить',
+          icon: EvIcons.power,
+          height: m.buttonHeight,
+          danger: true,
+          grouped: true,
+          onPressed: widget.onQuit,
+        ),
+      ];
+    }
+    return [
+      if (content.action == null)
+        EvPlayButton(
+          height: m.buttonHeight,
+          requireHold: effects?.holdToPlay ?? true,
+          onLaunch: widget.onLaunch ?? () {},
+          onCharge: (value) => _charge.value = value,
+        )
+      else
+        EvPlayButton(
+          label: content.action!,
+          icon: EvIcons.download,
+          caption: content.actionCaption,
+          height: m.buttonHeight,
+          requireHold: false,
+          onLaunch: widget.onInstall,
+        ),
+      EvGhostButton(
+        label: content.second ?? 'Подробнее',
+        icon: content.secondIcon ?? EvIcons.info,
+        height: m.buttonHeight,
+        grouped: true,
+        // «Играть без обновления» запускает ту же игру; «Указать папку» —
+        // дело движка, которого ещё нет.
+        onPressed: content.second == null
+            ? widget.onDetails
+            : (content.secondIcon == EvIcons.play ? widget.onLaunch : null),
+      ),
+    ];
+  }
+
   Widget _body(BuildContext context) {
     final ev = context.ev;
     final c = ev.colors;
@@ -179,12 +255,17 @@ class _EvHeroState extends State<EvHero> {
           ],
         );
     final blurbStyle = ev.text.body.copyWith(fontSize: m.blurbSize);
+    final content = widget.content;
+    // На низком окне высокая полоса действий и строка под ней забирают
+    // место у описания — в прототипе оно там же и прячется.
+    final tall = content.install != null || content.action != null;
+    final showBlurb = !(m.low && (tall || content.note != null));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        EvEyebrow(widget.eyebrow),
+        EvEyebrow(content.eyebrow),
         SizedBox(height: m.bodyGap),
         // две строки на экране, одно название для экранного диктора
         Semantics(
@@ -202,13 +283,15 @@ class _EvHeroState extends State<EvHero> {
             ],
           ),
         ),
-        SizedBox(height: m.bodyGap),
-        ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: m.blurbChars * evCharWidth(blurbStyle),
+        if (showBlurb) ...[
+          SizedBox(height: m.bodyGap),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: m.blurbChars * evCharWidth(blurbStyle),
+            ),
+            child: Text(content.blurb, style: blurbStyle),
           ),
-          child: Text(widget.blurb, style: blurbStyle),
-        ),
+        ],
         SizedBox(height: m.bodyGap),
         // Чипы и «Подробнее» — линзы поверх одного и того же кадра:
         // фон они читают один раз на всех.
@@ -221,7 +304,7 @@ class _EvHeroState extends State<EvHero> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  for (final (label, hot) in widget.chips)
+                  for (final (label, hot) in content.chips)
                     EvChip(label, hot: hot, grouped: true),
                 ],
               ),
@@ -230,29 +313,18 @@ class _EvHeroState extends State<EvHero> {
                 spacing: 12,
                 runSpacing: 12,
                 crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  EvPlayButton(
-                    height: m.buttonHeight,
-                    requireHold: effects?.holdToPlay ?? true,
-                    onLaunch: widget.onLaunch ?? () {},
-                    onCharge: (value) => _charge.value = value,
-                  ),
-                  EvGhostButton(
-                    label: 'Подробнее',
-                    icon: EvIcons.info,
-                    height: m.buttonHeight,
-                    grouped: true,
-                    onPressed: widget.onDetails,
-                  ),
-                ],
+                children: _cta(context, effects),
               ),
+              if (content.note != null) ...[
+                SizedBox(height: m.bodyGap),
+                EvCtaNote(content.note!),
+              ],
             ],
           ),
         ),
       ],
     );
   }
-
 }
 
 /// Сдвиг за курсором на глубину [depth]: по вертикали вдвое с лишним меньше,

@@ -1,5 +1,7 @@
 import '../art/key_art.dart';
+import '../library/hero_state.dart';
 import '../launch/ev_launch_ritual.dart';
+import '../widgets/ev_icon.dart';
 import '../library/ev_side_cards.dart';
 import '../util/units.dart';
 import '../widgets/ev_game_card.dart';
@@ -283,6 +285,108 @@ const sampleDownloadSlots = 3;
 final sampleRateKb = sampleDownloading.fold(0, (sum, g) => sum + g.rateKb!);
 
 final sampleDownloadsActive = sampleDownloading.length;
+
+/// Шесть состояний героя — то же содержимое, что у `HERO` в прототипе.
+/// Всё про «Пепельный Предел»: это игра в герое.
+const sampleHeroStates = <EvHeroState, EvHeroContent>{
+  EvHeroState.ready: EvHeroContent(
+    eyebrow: 'Продолжить · сыграно 24 ч 10 мин',
+    blurb:
+        'Пятая глава разблокирована. Ваш отряд ждёт у Кузни Сумерек — '
+        'последнее сохранение синхронизировано 6 минут назад.',
+    chips: [
+      ('Установлена', true),
+      ('v2.4.1', false),
+      ('68.4 ГБ', false),
+      ('Action-RPG', false),
+      ('Одиночная', false),
+    ],
+  ),
+  EvHeroState.notInstalled: EvHeroContent(
+    eyebrow: 'В библиотеке · на диске нет',
+    blurb:
+        'Игра куплена и привязана к аккаунту, но файлов на этом компьютере '
+        'нет. Установка займёт около 40 минут на текущей скорости.',
+    chips: [
+      ('Не установлена', true),
+      ('v2.4.1', false),
+      ('68.4 ГБ', false),
+      ('Свободно 214 ГБ', false),
+    ],
+    action: 'Установить',
+    actionCaption: '68.4 ГБ',
+    second: 'Указать папку вручную',
+    secondIcon: EvIcons.folder,
+    note: EvHeroNote(
+      r'D:\Игры · свободно 214 ГБ · после установки останется 146 ГБ',
+      icon: EvIcons.drive,
+    ),
+  ),
+  EvHeroState.update: EvHeroContent(
+    eyebrow: 'Установлена · доступно обновление',
+    blurb:
+        'Патч 2.4.2 чинит вылет на Кузне Сумерек и добавляет русскую '
+        'озвучку. Сетевая игра со старой версией недоступна.',
+    chips: [
+      ('Обновление 2.4.2', true),
+      ('1.8 ГБ', false),
+      ('установлена 2.4.1', false),
+      ('Action-RPG', false),
+    ],
+    action: 'Обновить и играть',
+    actionCaption: '1.8 ГБ · ~4 МИН',
+    second: 'Играть без обновления',
+    secondIcon: EvIcons.play,
+    note: EvHeroNote(
+      'Со старой версией не работает совместное прохождение',
+      icon: EvIcons.alert,
+      tone: EvNoteTone.warn,
+    ),
+  ),
+  EvHeroState.installing: EvHeroContent(
+    eyebrow: 'Установка · осталось 12 мин',
+    blurb:
+        'Файлы распаковываются на диск. Можно свернуть окно — установка '
+        'продолжится в фоне.',
+    chips: [('Устанавливается', true), ('v2.4.1', false), ('68.4 ГБ', false)],
+    install: EvInstallProgress(
+      label: 'Распаковка и проверка',
+      value: .41,
+      detail: '28.0 ГБ из 68.4 ГБ · 84 МБ/с на диск · осталось 12 мин',
+    ),
+  ),
+  EvHeroState.running: EvHeroContent(
+    eyebrow: 'Идёт игра · запущена 1 ч 04 мин назад',
+    blurb:
+        'Глава 5, Кузня Сумерек. Сохранение выгружается в облако каждые '
+        'пять минут, загрузки ограничены до 1 МБ/с.',
+    chips: [
+      ('Идёт игра', true),
+      ('v2.4.1', false),
+      ('PID 8842', false),
+      ('144 к/с', false),
+    ],
+    runningFor: '01:04:12',
+  ),
+  EvHeroState.offline: EvHeroContent(
+    eyebrow: 'Нет сети · играть можно',
+    blurb:
+        'Одиночное прохождение не требует сети. Сохранения копятся локально '
+        'и уйдут в облако, как только связь вернётся.',
+    chips: [
+      ('Установлена', true),
+      ('v2.4.1', false),
+      ('68.4 ГБ', false),
+      ('Офлайн', false),
+    ],
+    note: EvHeroNote(
+      'Загрузки на паузе · 2 сохранения ждут выгрузки · достижения не '
+      'засчитаются',
+      icon: EvIcons.alert,
+      tone: EvNoteTone.warn,
+    ),
+  ),
+};
 
 /// Стадии ритуала запуска и строки журнала под полосой — те же, что
 /// в прототипе, для любой игры. Числа — пример: стадии будет называть

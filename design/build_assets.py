@@ -188,6 +188,13 @@ ICONS = {
                       '<path d="M8.5 20h7M12 16.5V20"/>'),
     "laptop": stroke('<rect x="4.5" y="5" width="15" height="10" rx="1.6"/>'
                      '<path d="M2 18.5h20"/>'),
+    "alert": stroke('<path d="M12 4.4 21 19.6H3L12 4.4Z"/>'
+                    '<path d="M12 10.2v4M12 17.1v.3"/>'),
+    "drive": stroke('<rect x="2.8" y="12.4" width="18.4" height="7.4" rx="2"/>'
+                    '<path d="M5.4 4.4h13.2l2.6 8H2.8l2.6-8Z"/>'
+                    '<path d="M6.4 16.2h.3M9.6 16.2h.3"/>'),
+    "power": stroke('<path d="M12 3.4v8"/>'
+                    '<path d="M7.2 6.6a7.6 7.6 0 1 0 9.6 0"/>'),
 }
 
 for name, data in ICONS.items():

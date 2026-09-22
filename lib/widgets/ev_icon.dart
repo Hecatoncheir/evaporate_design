@@ -69,4 +69,13 @@ abstract final class EvIcons {
   static const audio = 'audio';
   static const desktop = 'desktop';
   static const laptop = 'laptop';
+
+  /// Внимание: ждём внешнего — жёлтая строка под кнопкой.
+  static const alert = 'alert';
+
+  /// Диск: куда встанет установка и сколько там места.
+  static const drive = 'drive';
+
+  /// Завершить игру.
+  static const power = 'power';
 }

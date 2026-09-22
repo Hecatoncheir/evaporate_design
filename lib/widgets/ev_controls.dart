@@ -142,7 +142,11 @@ class EvMiniButton extends StatefulWidget {
   });
 
   final String label;
-  final VoidCallback onPressed;
+
+  /// `null` — действия пока нет: кнопка выглядит так же, но не
+  /// нажимается и фокус не получает.
+  final VoidCallback? onPressed;
+
   final String? icon;
   final bool danger;
 

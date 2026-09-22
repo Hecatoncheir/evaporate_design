@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../data/sample_data.dart';
 import '../library/ev_hero.dart';
+import '../library/hero_state.dart';
 import '../library/ev_session_row.dart';
 import '../library/ev_side_cards.dart';
 import '../library/library_layout.dart';
@@ -25,8 +26,11 @@ class LibraryPage extends StatelessWidget {
     required this.friends,
     required this.friendsOnline,
     required this.downloadSlots,
+    this.state = EvHeroState.ready,
     this.onLaunch,
     this.onOpen,
+    this.onInstall,
+    this.onQuit,
   });
 
   final List<SampleGame> games;
@@ -43,8 +47,17 @@ class LibraryPage extends StatelessWidget {
   /// Сколько раздач качается одновременно.
   final int downloadSlots;
 
+  /// Состояние игры в герое: установлена, качается, идёт, офлайн.
+  final EvHeroState state;
+
   /// Удержание «Играть» в герое дошло до конца.
   final ValueChanged<SampleGame>? onLaunch;
+
+  /// «Установить» и «Обновить и играть».
+  final VoidCallback? onInstall;
+
+  /// «Завершить» — игра закончилась.
+  final VoidCallback? onQuit;
 
   /// Открыть карточку игры: «Подробнее», строка «Продолжить», обложка.
   final ValueChanged<SampleGame>? onOpen;
@@ -81,12 +94,13 @@ class LibraryPage extends StatelessWidget {
           layout: layout,
           palette: hero.palette,
           seed: hero.seed,
-          eyebrow: 'Продолжить · сыграно ${formatPlayed(hero.played)}',
           title: hero.title,
-          blurb: hero.blurb,
-          chips: hero.chips,
+          state: state,
+          content: sampleHeroStates[state]!,
           onLaunch: onLaunch == null ? null : () => onLaunch!(hero),
           onDetails: onOpen == null ? null : () => onOpen!(hero),
+          onInstall: onInstall,
+          onQuit: onQuit,
         ),
         if (layout.showSessions && sessions.isNotEmpty)
           section(

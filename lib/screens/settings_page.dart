@@ -6,6 +6,8 @@ import '../design/theme.dart';
 import '../design/tokens.dart';
 import '../gallery/gallery_page.dart';
 import '../glass/glass_lens.dart';
+import '../library/hero_state.dart';
+import '../widgets/ev_focusable.dart';
 import '../widgets/ev_controls.dart';
 import '../widgets/ev_icon.dart';
 import '../widgets/ev_surfaces.dart';
@@ -13,7 +15,12 @@ import '../widgets/ev_surfaces.dart';
 /// Настройки в каркасе: облик и вход в галерею компонентов. Полный экран —
 /// десять разделов, поиск по настройкам, расписание — пока в макете.
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({super.key, required this.state, required this.onState});
+
+  /// Состояние игры в герое. Движка нет, поэтому его переключают здесь.
+  final EvHeroState state;
+
+  final ValueChanged<EvHeroState> onState;
 
   @override
   Widget build(BuildContext context) {
@@ -183,6 +190,28 @@ class SettingsPage extends StatelessWidget {
         const EvSectionHeader('Разработка'),
         const SizedBox(height: EvSpace.l),
         EvPanel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              EvOption(
+                title: 'Состояние библиотеки',
+                description:
+                    'Движка ещё нет: состояния героя переключаются здесь. '
+                    'В прототипе это панель «Состояния», в продукте её нет',
+                control: const SizedBox.shrink(),
+              ),
+              for (final (value, name, hint) in _states)
+                _StateRow(
+                  name: name,
+                  hint: hint,
+                  selected: value == state,
+                  onTap: () => onState(value),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: EvSpace.m),
+        EvPanel(
           child: EvOption(
             last: true,
             title: 'Галерея компонентов',
@@ -205,6 +234,109 @@ class SettingsPage extends StatelessWidget {
           style: ev.text.bodySmall.copyWith(color: ev.colors.ink4),
         ),
       ],
+    );
+  }
+
+  /// Те же состояния и подписи, что в панели прототипа.
+  static const _states = [
+    (EvHeroState.ready, 'Обычное состояние', 'установлена, можно играть'),
+    (
+      EvHeroState.notInstalled,
+      'Не установлена',
+      'есть в аккаунте, нет на диске',
+    ),
+    (EvHeroState.update, 'Есть обновление', 'патч 2.4.2 · 1.8 ГБ'),
+    (EvHeroState.installing, 'Идёт установка', 'распаковка 41 %'),
+    (EvHeroState.running, 'Игра запущена', 'кнопка стала статусом'),
+    (EvHeroState.offline, 'Нет сети', 'локальное живёт, сетевое нет'),
+  ];
+}
+
+/// Строка списка состояний: точка, название и чем это состояние
+/// отличается.
+class _StateRow extends StatefulWidget {
+  const _StateRow({
+    required this.name,
+    required this.hint,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String name;
+  final String hint;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  State<_StateRow> createState() => _StateRowState();
+}
+
+class _StateRowState extends State<_StateRow> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final ev = context.ev;
+    final c = ev.colors;
+    final lit = widget.selected || _hover;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: EvFocusable(
+        onActivate: widget.onTap,
+        radius: ev.radii.r2,
+        child: Semantics(
+          button: true,
+          selected: widget.selected,
+          child: GestureDetector(
+            onTap: widget.onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+              decoration: BoxDecoration(
+                borderRadius: ev.radii.b2,
+                color: _hover ? c.ink.withValues(alpha: .04) : null,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: widget.selected ? c.hot2 : c.line,
+                      boxShadow: widget.selected
+                          ? [BoxShadow(color: c.hot2, blurRadius: 8)]
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(width: 11),
+                  Text(
+                    widget.name,
+                    style: ev.text.body.copyWith(
+                      fontSize: 13,
+                      color: lit ? c.ink : c.ink2,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      widget.hint,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: ev.text.data.copyWith(
+                        fontSize: 10.5,
+                        color: c.ink4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

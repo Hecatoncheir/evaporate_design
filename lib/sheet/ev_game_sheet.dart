@@ -12,6 +12,8 @@ import '../design/effects.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
 import '../glass/ev_glass.dart';
+import '../library/hero_cta.dart';
+import '../library/hero_state.dart';
 import '../util/units.dart';
 import '../widgets/ev_controls.dart';
 import '../widgets/ev_focusable.dart';
@@ -33,22 +35,39 @@ import 'sheet_blocks.dart';
 Future<void> showEvGameSheet(
   BuildContext context, {
   required SampleGame game,
+  EvHeroState? state,
   VoidCallback? onLaunch,
+  VoidCallback? onInstall,
+  VoidCallback? onQuit,
 }) {
   final reduced = MediaQuery.disableAnimationsOf(context);
-  return Navigator.of(context)
-      .push(_EvSheetRoute(game: game, onLaunch: onLaunch, reduced: reduced));
+  return Navigator.of(context).push(
+    _EvSheetRoute(
+      game: game,
+      state: state,
+      onLaunch: onLaunch,
+      onInstall: onInstall,
+      onQuit: onQuit,
+      reduced: reduced,
+    ),
+  );
 }
 
 class _EvSheetRoute extends PopupRoute<void> {
   _EvSheetRoute({
     required this.game,
+    required this.state,
     required this.onLaunch,
+    required this.onInstall,
+    required this.onQuit,
     required this.reduced,
   });
 
   final SampleGame game;
+  final EvHeroState? state;
   final VoidCallback? onLaunch;
+  final VoidCallback? onInstall;
+  final VoidCallback? onQuit;
   final bool reduced;
 
   CurvedAnimation? _fade;
@@ -76,7 +95,13 @@ class _EvSheetRoute extends PopupRoute<void> {
     BuildContext context,
     Animation<double> animation,
     Animation<double> secondaryAnimation,
-  ) => EvGameSheet(game: game, onLaunch: onLaunch);
+  ) => EvGameSheet(
+    game: game,
+    state: state,
+    onLaunch: onLaunch,
+    onInstall: onInstall,
+    onQuit: onQuit,
+  );
 
   /// Затемнение проявляется за 300 мс, лист за 420 приезжает снизу на
   /// 18 px и дорастает с 98,5 % — `.sheet` и `.sheet-in` в прототипе.
@@ -122,12 +147,29 @@ class _EvSheetRoute extends PopupRoute<void> {
 /// Карточка игры: обложка с параллаксом, липкая полоса действий и всё,
 /// что знает лаунчер, — история, достижения, состав на диске, раздача.
 class EvGameSheet extends StatelessWidget {
-  const EvGameSheet({super.key, required this.game, this.onLaunch});
+  const EvGameSheet({
+    super.key,
+    required this.game,
+    this.state,
+    this.onLaunch,
+    this.onInstall,
+    this.onQuit,
+  });
 
   final SampleGame game;
 
+  /// Состояние игры в окне — у той, что стоит в герое. `null` — читаем
+  /// состояние самой раздачи: качается, в очереди, лежит на диске.
+  final EvHeroState? state;
+
   /// Удержание «Играть» в полосе дошло до конца.
   final VoidCallback? onLaunch;
+
+  /// «Установить» и «Обновить и играть».
+  final VoidCallback? onInstall;
+
+  /// «Завершить».
+  final VoidCallback? onQuit;
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +251,12 @@ class EvGameSheet extends StatelessWidget {
           shrinkWrap: true,
           slivers: [
             SliverToBoxAdapter(
-              child: _SheetArt(game: game, facts: facts, side: side),
+              child: _SheetArt(
+                game: game,
+                facts: facts,
+                state: state,
+                side: side,
+              ),
             ),
             SliverPersistentHeader(
               pinned: true,
@@ -217,11 +264,24 @@ class EvGameSheet extends StatelessWidget {
                 bar: _SheetBar(
                   game: game,
                   facts: facts,
+                  state: state,
                   side: side,
                   onLaunch: () {
                     Navigator.of(context).pop();
                     onLaunch?.call();
                   },
+                  onInstall: onInstall == null
+                      ? null
+                      : () {
+                          Navigator.of(context).pop();
+                          onInstall!();
+                        },
+                  onQuit: onQuit == null
+                      ? null
+                      : () {
+                          Navigator.of(context).pop();
+                          onQuit!();
+                        },
                 ),
                 // 12 + 46 + 12 и кромка снизу
                 height: 71,
@@ -254,11 +314,13 @@ class _SheetArt extends StatefulWidget {
   const _SheetArt({
     required this.game,
     required this.facts,
+    required this.state,
     required this.side,
   });
 
   final SampleGame game;
   final EvGameFacts facts;
+  final EvHeroState? state;
   final double side;
 
   @override
@@ -339,7 +401,9 @@ class _SheetArtState extends State<_SheetArt> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        EvEyebrow(_eyebrow(widget.game, widget.facts)),
+                        EvEyebrow(
+                          _eyebrow(widget.game, widget.facts, widget.state),
+                        ),
                         const SizedBox(height: 9),
                         Semantics(
                           header: true,
@@ -390,16 +454,24 @@ class _SheetArtState extends State<_SheetArt> {
   }
 
   /// Надглавие читает состояние игры, как в прототипе.
-  static String _eyebrow(SampleGame game, EvGameFacts facts) =>
-      switch (game.state) {
-        EvGameState.downloading =>
-          'Качается · ${percent(game.progress ?? 0)} %',
-        EvGameState.queued => 'В очереди на загрузку',
-        EvGameState.ready =>
-          facts.hours > 0
-              ? 'В библиотеке · сыграно ${facts.hours} ч'
-              : 'В библиотеке',
-      };
+  static String _eyebrow(
+    SampleGame game,
+    EvGameFacts facts,
+    EvHeroState? state,
+  ) => switch (state) {
+    EvHeroState.running => 'Идёт игра · запущена 1 ч 04 мин назад',
+    EvHeroState.installing => 'Установка · осталось 12 мин',
+    EvHeroState.update => 'Установлена · доступно обновление',
+    EvHeroState.notInstalled => 'В библиотеке · на диске нет',
+    _ => switch (game.state) {
+      EvGameState.downloading => 'Качается · ${percent(game.progress ?? 0)} %',
+      EvGameState.queued => 'В очереди на загрузку',
+      EvGameState.ready =>
+        facts.hours > 0
+            ? 'В библиотеке · сыграно ${facts.hours} ч'
+            : 'В библиотеке',
+    },
+  };
 }
 
 /// Кнопка закрытия в углу обложки: 34 px тёмного стекла.
@@ -570,14 +642,20 @@ class _SheetBar extends StatelessWidget {
   const _SheetBar({
     required this.game,
     required this.facts,
+    required this.state,
     required this.side,
     required this.onLaunch,
+    required this.onInstall,
+    required this.onQuit,
   });
 
   final SampleGame game;
   final EvGameFacts facts;
+  final EvHeroState? state;
   final double side;
   final VoidCallback onLaunch;
+  final VoidCallback? onInstall;
+  final VoidCallback? onQuit;
 
   @override
   Widget build(BuildContext context) {
@@ -604,6 +682,102 @@ class _SheetBar extends StatelessWidget {
 
     final actions = <Widget>[];
     Widget? progress;
+
+    // Состояние окна сильнее состояния раздачи: игра идёт — в полосе
+    // статус, идёт установка — прогресс. Так же решает `cardState`.
+    switch (state) {
+      case EvHeroState.running:
+        actions.addAll([
+          const EvRunningPill('01:04:12', height: 46),
+          EvGhostButton(
+            label: 'Оверлей',
+            icon: EvIcons.library,
+            height: 46,
+            onPressed: null,
+          ),
+          EvGhostButton(
+            label: 'Завершить',
+            icon: EvIcons.power,
+            height: 46,
+            danger: true,
+            onPressed: onQuit,
+          ),
+          const Spacer(),
+          hint([('Глава 5 · ', false), ('Кузня Сумерек', true)]),
+        ]);
+        return _wrap(context, c, actions, null);
+      case EvHeroState.installing:
+        actions.addAll([
+          const EvRunningPill(
+            '41 %',
+            label: 'Установка',
+            height: 46,
+            hot: true,
+          ),
+          EvGhostButton(
+            label: 'Пауза',
+            icon: EvIcons.pause,
+            height: 46,
+            onPressed: null,
+          ),
+          EvGhostButton(
+            label: 'Отменить',
+            icon: EvIcons.close,
+            height: 46,
+            danger: true,
+            onPressed: null,
+          ),
+          const Spacer(),
+          hint([('28.0 из 68.4 ГБ · ', false), ('осталось 12 мин', true)]),
+        ]);
+        return _wrap(context, c, actions, const EvBar(.41, height: 2));
+      case EvHeroState.update:
+        actions.addAll([
+          EvPlayButton(
+            label: 'Обновить и играть',
+            icon: EvIcons.download,
+            caption: '1.8 ГБ',
+            height: 46,
+            requireHold: false,
+            onLaunch: onInstall,
+          ),
+          EvGhostButton(
+            label: 'Без обновления',
+            icon: EvIcons.play,
+            height: 46,
+            onPressed: onLaunch,
+          ),
+          ..._icons(context),
+          const Spacer(),
+          hint([('установлена ', false), ('2.4.1', true)]),
+        ]);
+        return _wrap(context, c, actions, null);
+      case EvHeroState.notInstalled:
+        actions.addAll([
+          EvPlayButton(
+            label: 'Установить',
+            icon: EvIcons.download,
+            caption: game.size.toUpperCase(),
+            height: 46,
+            requireHold: false,
+            onLaunch: onInstall,
+          ),
+          EvGhostButton(
+            label: 'Указать папку',
+            icon: EvIcons.folder,
+            height: 46,
+            onPressed: null,
+          ),
+          const Spacer(),
+          hint([('свободно ', false), ('214 ГБ', true)]),
+        ]);
+        return _wrap(context, c, actions, null);
+      case EvHeroState.ready:
+      case EvHeroState.offline:
+      case null:
+        break;
+    }
+
     switch (game.state) {
       case EvGameState.ready:
         actions.addAll([
@@ -669,36 +843,44 @@ class _SheetBar extends StatelessWidget {
         ]);
     }
 
-    return EvGlass(
-      style: EvGlassStyle.frost,
-      borderRadius: BorderRadius.zero,
-      // Полоса почти непрозрачна — `rgba(14,15,22,.94)` в прототипе:
-      // под ней проезжает текст, и он не должен читаться сквозь неё.
-      tint: c.surface.withValues(alpha: .94),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: c.lineSoft)),
-        ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: side, vertical: 12),
-              child: Row(
-                children: [
-                  for (final (i, action) in actions.indexed) ...[
-                    if (i > 0 && action is! Spacer) const SizedBox(width: 9),
-                    action,
-                  ],
-                ],
-              ),
-            ),
-            if (progress != null)
-              Positioned(left: 0, right: 0, bottom: 0, child: progress),
-          ],
-        ),
-      ),
-    );
+    return _wrap(context, c, actions, progress);
   }
+
+  /// Стекло полосы: почти непрозрачное — `rgba(14,15,22,.94)`
+  /// в прототипе, — под ним проезжает текст, и он не должен читаться
+  /// сквозь него.
+  Widget _wrap(
+    BuildContext context,
+    EvColors c,
+    List<Widget> actions,
+    Widget? progress,
+  ) => EvGlass(
+    style: EvGlassStyle.frost,
+    borderRadius: BorderRadius.zero,
+    tint: c.surface.withValues(alpha: .94),
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: c.lineSoft)),
+      ),
+      child: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: side, vertical: 12),
+            child: Row(
+              children: [
+                for (final (i, action) in actions.indexed) ...[
+                  if (i > 0 && action is! Spacer) const SizedBox(width: 9),
+                  action,
+                ],
+              ],
+            ),
+          ),
+          if (progress != null)
+            Positioned(left: 0, right: 0, bottom: 0, child: progress),
+        ],
+      ),
+    ),
+  );
 
   /// Три глагола, которые нужны чаще всего, — иконками.
   List<Widget> _icons(BuildContext context) => const [
