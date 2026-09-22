@@ -161,6 +161,12 @@ void main() {
     await _settle(tester);
     expect(effects.parallax, isTrue);
 
+    final ritual = find.bySemanticsLabel('Ритуал запуска');
+    await tester.ensureVisible(ritual);
+    await tester.tap(ritual);
+    await _settle(tester);
+    expect(effects.ritual, isFalse);
+
     final hold = find.bySemanticsLabel('Удержание');
     await tester.ensureVisible(hold);
     await tester.tap(hold);

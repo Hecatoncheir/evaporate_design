@@ -54,11 +54,14 @@ class EvPlayButton extends StatefulWidget {
 
 class _EvPlayButtonState extends State<EvPlayButton>
     with TickerProviderStateMixin {
+  // Удержание — защита, а не анимация: при «уменьшить движение» обычный
+  // контроллер шёл бы в двадцать раз быстрее, и 620 мс стали бы 31.
   late final AnimationController _hold =
       AnimationController(
           vsync: this,
           duration: EvMotion.hold,
           reverseDuration: const Duration(milliseconds: 160),
+          animationBehavior: AnimationBehavior.preserve,
         )
         ..addStatusListener(_onHold)
         ..addListener(() => widget.onCharge?.call(_hold.value));

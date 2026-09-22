@@ -1,4 +1,5 @@
 import '../art/key_art.dart';
+import '../launch/ev_launch_ritual.dart';
 import '../library/ev_side_cards.dart';
 import '../util/units.dart';
 import '../widgets/ev_game_card.dart';
@@ -282,6 +283,18 @@ const sampleDownloadSlots = 3;
 final sampleRateKb = sampleDownloading.fold(0, (sum, g) => sum + g.rateKb!);
 
 final sampleDownloadsActive = sampleDownloading.length;
+
+/// Стадии ритуала запуска и строки журнала под полосой — те же, что
+/// в прототипе, для любой игры. Числа — пример: стадии будет называть
+/// движок, когда он появится.
+const List<EvLaunchStage> sampleLaunchStages = [
+  ('Подготовка среды', 'монтирование тома…'),
+  ('Проверка файлов', 'проверка целостности 118 421 файла'),
+  ('Графический слой', 'инициализация графического слоя'),
+  ('Шейдерный кэш', 'загрузка шейдерного кэша · 2 148'),
+  ('Облако сохранений', 'синхронизация сохранений с облаком'),
+  ('Запуск', 'передача управления'),
+];
 
 const sampleUserInitials = 'ВВ';
 const sampleUserName = 'Виталий В.';

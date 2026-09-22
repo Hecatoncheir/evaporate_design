@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../art/key_art.dart';
+import '../data/sample_data.dart';
 import '../design/appearance.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../launch/ev_launch_ritual.dart';
 import '../widgets/ev_controls.dart';
 import '../widgets/ev_game_card.dart';
 import '../widgets/ev_icon.dart';
@@ -65,7 +67,7 @@ class _GalleryBodyState extends State<_GalleryBody> {
             _header(context, ev),
             const SizedBox(height: EvSpace.xxl),
 
-            const EvSectionHeader('Запуск', count: 'удержание 620 мс'),
+            const EvSectionHeader('Запуск', count: 'удержание 620 мс · ритуал'),
             const SizedBox(height: EvSpace.l),
             EvPanel(
               glowCorner: true,
@@ -82,8 +84,16 @@ class _GalleryBodyState extends State<_GalleryBody> {
                     children: [
                       EvPlayButton(
                         requireHold: _hold,
-                        onLaunch: () =>
-                            setState(() => _launched = 'Пепельный Предел'),
+                        onLaunch: () async {
+                          await showEvLaunchRitual(
+                            context,
+                            title: 'Пепельный Предел',
+                            stages: sampleLaunchStages,
+                          );
+                          if (mounted) {
+                            setState(() => _launched = 'Пепельный Предел');
+                          }
+                        },
                       ),
                       EvGhostButton(
                         label: 'Подробнее',

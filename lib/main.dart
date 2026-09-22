@@ -5,6 +5,7 @@ import 'design/appearance.dart';
 import 'design/effects.dart';
 import 'design/theme.dart';
 import 'design/tokens.dart';
+import 'launch/ev_launch_ritual.dart';
 import 'screens/library_page.dart';
 import 'screens/placeholder_page.dart';
 import 'screens/settings_page.dart';
@@ -12,6 +13,7 @@ import 'shell/ev_palette.dart';
 import 'shell/ev_section.dart';
 import 'shell/ev_shell.dart';
 import 'util/units.dart';
+import 'widgets/ev_game_card.dart';
 import 'widgets/ev_icon.dart';
 import 'widgets/ev_surfaces.dart';
 
@@ -71,6 +73,14 @@ class _Home extends StatelessWidget {
 
   final EvShellController shell;
 
+  /// Запуск игры — ритуал поверх всего окна.
+  static void _launch(BuildContext context, SampleGame game) =>
+      showEvLaunchRitual(
+        context,
+        title: game.title,
+        stages: sampleLaunchStages,
+      );
+
   @override
   Widget build(BuildContext context) {
     final appearance = EvAppearanceScope.of(context);
@@ -92,6 +102,11 @@ class _Home extends StatelessWidget {
             cover: (g.palette, g.seed),
             hint: '↵ к полке',
             onRun: () => shell.go(EvSection.library),
+            // Запускать можно только то, что уже на диске; остальное ведёт
+            // туда, где оно качается, — как «Стена» и «Пульт» в прототипе.
+            onLaunch: g.state == EvGameState.ready
+                ? () => _launch(context, g)
+                : () => shell.go(EvSection.downloads),
           ),
         for (final s in EvSection.values)
           EvCommand(
@@ -124,6 +139,7 @@ class _Home extends StatelessWidget {
           friends: sampleFriends,
           friendsOnline: sampleFriendsOnline,
           downloadSlots: sampleDownloadSlots,
+          onLaunch: (g) => _launch(context, g),
         ),
         EvSection.settings => const SettingsPage(),
         _ => PlaceholderPage(section: section),

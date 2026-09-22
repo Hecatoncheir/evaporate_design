@@ -10,6 +10,7 @@ import '../design/effects.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
 import 'ember_field.dart';
+import 'ember_paint.dart';
 import 'ev_pointer.dart';
 import 'static_backdrop.dart';
 
@@ -62,7 +63,7 @@ class EvAtmosphereState extends State<EvAtmosphere>
 
   ui.FragmentShader? _plume;
   bool _plumeUnavailable = false;
-  late final ui.Image _glowSprite = _makeGlowSprite();
+  late final ui.Image _glowSprite = makeEvEmberSprite();
   ui.Image? _grain;
 
   /// Секунды времени плюма — для тестов.
@@ -344,8 +345,6 @@ class _AtmospherePainter extends CustomPainter {
   final ui.Image glowSprite;
   final ui.Image? grain;
 
-  static const _spriteSize = 32.0;
-
   @override
   void paint(Canvas canvas, Size size) {
     if (size.isEmpty) return;
@@ -362,7 +361,13 @@ class _AtmospherePainter extends CustomPainter {
     if (sparks) {
       // размер окна известен только здесь
       scene.embers.resize(size, quality.factor);
-      _paintEmbers(canvas);
+      paintEvEmbers(
+        canvas,
+        scene.embers.embers,
+        sprite: glowSprite,
+        hot: colors.hot2,
+        cool: colors.cool,
+      );
     }
 
     final noise = grain;
@@ -414,52 +419,6 @@ class _AtmospherePainter extends CustomPainter {
     image.dispose();
   }
 
-  /// Угли: свечение одним вызовом drawAtlas из белого спрайта, окрашенного
-  /// под каждую искру, и светлое ядро поверх. Смешение «экран», как у
-  /// холста частиц в прототипе.
-  void _paintEmbers(Canvas canvas) {
-    final transforms = <RSTransform>[];
-    final rects = <Rect>[];
-    final tints = <Color>[];
-    final cores = <(Offset, double, double)>[];
-    const sprite = Rect.fromLTWH(0, 0, _spriteSize, _spriteSize);
-    for (final e in scene.embers.embers) {
-      final a = e.opacity;
-      if (a <= 0.004) continue;
-      final rr = e.coreRadius;
-      transforms.add(
-        RSTransform.fromComponents(
-          rotation: 0,
-          scale: rr * 5.5 / (_spriteSize / 2),
-          anchorX: _spriteSize / 2,
-          anchorY: _spriteSize / 2,
-          translateX: e.x,
-          translateY: e.y,
-        ),
-      );
-      rects.add(sprite);
-      tints.add((e.cool ? colors.cool : colors.hot2).withValues(alpha: a));
-      cores.add((Offset(e.x, e.y), rr * 0.55, a * 0.9));
-    }
-    if (transforms.isEmpty) return;
-    canvas.drawAtlas(
-      glowSprite,
-      transforms,
-      rects,
-      tints,
-      BlendMode.modulate,
-      null,
-      Paint()
-        ..blendMode = BlendMode.screen
-        ..filterQuality = FilterQuality.low,
-    );
-    final core = Paint()..blendMode = BlendMode.screen;
-    for (final (center, radius, alpha) in cores) {
-      core.color = Color.fromRGBO(255, 246, 230, alpha);
-      canvas.drawCircle(center, radius, core);
-    }
-  }
-
   @override
   bool shouldRepaint(_AtmospherePainter old) =>
       old.colors != colors ||
@@ -469,29 +428,6 @@ class _AtmospherePainter extends CustomPainter {
       old.staticFallback != staticFallback ||
       old.sparks != sparks ||
       old.grain != grain;
-}
-
-/// Белый спрайт свечения: те же ступени, что у градиента искры в
-/// прототипе, — ядро, 28 % на трети радиуса, ноль на краю.
-ui.Image _makeGlowSprite() {
-  const size = _AtmospherePainter._spriteSize;
-  const center = Offset(size / 2, size / 2);
-  final recorder = ui.PictureRecorder();
-  Canvas(recorder).drawCircle(
-    center,
-    size / 2,
-    Paint()
-      ..shader = ui.Gradient.radial(
-        center,
-        size / 2,
-        const [Color(0xFFFFFFFF), Color(0x47FFFFFF), Color(0x00FFFFFF)],
-        const [0, 0.35, 1],
-      ),
-  );
-  final picture = recorder.endRecording();
-  final image = picture.toImageSync(size.toInt(), size.toInt());
-  picture.dispose();
-  return image;
 }
 
 /// Плитка зерна 128 × 128: серый 110…200 — как в прототипе.

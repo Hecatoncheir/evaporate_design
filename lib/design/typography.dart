@@ -26,8 +26,17 @@ class EvType {
   );
 
   /// Ударная часть заголовка.
-  TextStyle displayBold(double size) =>
-      display(size).copyWith(fontWeight: FontWeight.w800);
+  ///
+  /// Отдельный вызов `google_fonts`, а не `display(size).copyWith(…)`:
+  /// у загруженного стиля семейство — `Unbounded_300`, и с весом 800 движок
+  /// утолщал лёгкое начертание сам вместо настоящего ExtraBold.
+  TextStyle displayBold(double size) => GoogleFonts.unbounded(
+    fontSize: size,
+    fontWeight: FontWeight.w800,
+    height: 0.94,
+    letterSpacing: size * -0.022,
+    color: ink,
+  );
 
   /// Заголовок раздела: капс с разрядкой.
   TextStyle get section => GoogleFonts.unbounded(

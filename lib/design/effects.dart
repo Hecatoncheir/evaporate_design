@@ -30,12 +30,14 @@ class EvEffects extends ChangeNotifier {
     this._parallax = true,
     this._grain = true,
     this._quality = EvEffectsQuality.full,
+    this._ritual = true,
     this._holdToPlay = true,
     this._throttleInBackground = true,
   });
 
   /// Всё выключено: для превью и тестов, где кадры не должны идти сами.
-  /// Удержание «Играть» остаётся — оно кадров не заводит.
+  /// Удержание «Играть» и ритуал запуска остаются — сами они кадров не
+  /// заводят.
   EvEffects.still()
     : this(
         livingBackground: false,
@@ -49,6 +51,7 @@ class EvEffects extends ChangeNotifier {
   bool _parallax;
   bool _grain;
   EvEffectsQuality _quality;
+  bool _ritual;
   bool _holdToPlay;
   bool _throttleInBackground;
 
@@ -88,6 +91,15 @@ class EvEffects extends ChangeNotifier {
   set quality(EvEffectsQuality value) {
     if (value == _quality) return;
     _quality = value;
+    notifyListeners();
+  }
+
+  /// Ритуал запуска: шесть стадий за 2,6 с, выброс искр, вспышка, волна
+  /// и ирис. Выключен — игра запускается под коротким затемнением на 0,9 с.
+  bool get ritual => _ritual;
+  set ritual(bool value) {
+    if (value == _ritual) return;
+    _ritual = value;
     notifyListeners();
   }
 

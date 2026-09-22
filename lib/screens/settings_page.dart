@@ -108,6 +108,16 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ),
                 EvOption(
+                  title: 'Ритуал запуска',
+                  description:
+                      'Испарение интерфейса и ударная волна при старте',
+                  control: EvSwitch(
+                    value: effects.ritual,
+                    semanticLabel: 'Ритуал запуска',
+                    onChanged: (v) => effects.ritual = v,
+                  ),
+                ),
+                EvOption(
                   title: 'Удержание кнопки «Играть»',
                   description: 'Защита от случайного запуска · 620 мс',
                   control: EvSwitch(
@@ -133,7 +143,8 @@ class SettingsPage extends StatelessWidget {
             const SizedBox(height: EvSpace.m),
             Text(
               'В системе включено «уменьшить движение» — атмосфера стоит '
-              'неподвижным кадром, что бы здесь ни было выбрано.',
+              'неподвижным кадром, а игра запускается без ритуала, что бы '
+              'здесь ни было выбрано.',
               style: ev.text.bodySmall.copyWith(color: ev.colors.ink4),
             ),
           ],
@@ -160,8 +171,7 @@ class SettingsPage extends StatelessWidget {
         Text(
           'Остальные разделы — звук, библиотека, загрузки, раздача, '
           'сохранения, запуск, клавиши, «О программе» — и поиск по настройкам '
-          'пока живут в макете design/evaporate-launcher.html. Из эффектов '
-          'там же пока ритуал запуска.',
+          'пока живут в макете design/evaporate-launcher.html.',
           style: ev.text.bodySmall.copyWith(color: ev.colors.ink4),
         ),
       ],

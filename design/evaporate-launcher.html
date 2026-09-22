@@ -570,9 +570,13 @@ h1.title b{font-weight:800;display:block}
   background:radial-gradient(70% 70% at 50% 52%,rgba(8,4,2,.5),rgba(3,3,6,.97));
 }
 .launch.on{opacity:1;visibility:visible}
+/* на время ритуала холст углей переезжает сюда: над пустотой, под ядром */
+.launch #fx{z-index:auto}
+/* В покое отверстие −1 %: с 0 % посередине окна оставалась мягкая
+   точка в 17 px, сквозь которую было видно интерфейс. */
 .iris{
   position:absolute;inset:0;
-  background:radial-gradient(circle at 50% 50%,transparent var(--ir,0%),var(--void) calc(var(--ir,0%) + 1%));
+  background:radial-gradient(circle at 50% 50%,transparent var(--ir,-1%),var(--void) calc(var(--ir,-1%) + 1%));
 }
 .lz{position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:22px}
 .core{position:relative;width:170px;height:170px;display:grid;place-items:center}
@@ -1907,8 +1911,9 @@ h1.title b{font-weight:800;display:block}
 
 /* Ядро ритуала — не элемент интерфейса, а нарисованный источник света
    с радиальным бликом. Квадратное ядро ломает метафору, поэтому
-   иллюстративные круги потолку не подчиняются никогда. */
-.core .orb,.empty-mk::before,
+   иллюстративные круги потолку не подчиняются никогда. Ударная волна
+   из ядра — тоже: с потолком 8 px она расходилась скруглённым квадратом. */
+.core .orb,.shock,.empty-mk::before,
 .me-av.st-play::after,.me-av.st-on::after,.me-av.st-off::after,
 .dot,.f-dot,.runpill .pip,.fnow .who .av::after,.fr .av::after,.trow .st{border-radius:50%}
 </style>
@@ -3689,7 +3694,7 @@ function cmdMove(d){if(!cRes.length)return;cSel=(cSel+d+cRes.length)%cRes.length
   $$(".ci",cmdL)[cSel]?.scrollIntoView({block:"nearest"})}
 function cmdRun(i,shift){
   const r=cRes[i]; if(!r)return; cmdClose();
-  if(r.g){ if(shift) launch(r.g); else openSheet(r.g); }
+  if(r.g){ if(shift) r.g.state === "ready" ? launch(r.g) : go("downloads"); else openSheet(r.g); }
   else if(r.go) go(r.go);
   else if(r.skin) setSkin(r.skin);
 }
@@ -3920,14 +3925,24 @@ let launching=false;
 function launch(g){
   if(launching)return; launching=true;
   Snd.play(FLAGS.ritual ? "ritual" : "ok");
-  const L=$("#launch"),bar=$("#lBar"),ring=$("#lRing");
+  const L=$("#launch"),bar=$("#lBar"),ring=$("#lRing"),ir=$("#iris");
   $(".l-t",L).innerHTML=g.t.split(" ").length>1
     ? g.t.split(" ").slice(0,-1).join(" ")+" <b>"+g.t.split(" ").slice(-1)+"</b>"
     : "<b>"+g.t+"</b>";
+  /* Каждый запуск — с первой стадии. Раньше сбрасывалась только подпись,
+     и под «Подготовкой среды» оставалась «передача управления». */
+  $("#lStage").textContent=STAGES[0];$("#lLog").textContent=LOGS[0];
+  bar.style.width="0";ring.style.strokeDashoffset="100";ir.style.setProperty("--ir","-1%");
   L.classList.add("on");L.setAttribute("aria-hidden","false");
-  if(!FLAGS.ritual){setTimeout(()=>{L.classList.remove("on");launching=false},900);return}
-  // burst the embers upward — the UI "evaporates"
-  parts.forEach(p=>{p.vy=-(1.4+Math.random()*2.6);p.vx=(Math.random()-.5)*1.5;p.r*=1.5;p.life=0;p.max=1400});
+  if(!FLAGS.ritual){setTimeout(()=>{L.classList.remove("on");L.setAttribute("aria-hidden","true");launching=false},900);return}
+  /* Интерфейс испаряется: угли срываются вверх. Холст углей лежит под
+     интерфейсом, а через 300 мс его закрыла бы пустота ритуала, поэтому
+     на время ритуала он переезжает внутрь затемнения, под ядро. Жизнь
+     выброса — в кадрах, как у всех углей: 84 кадра, 1,4 с. Записанные
+     здесь раньше 1400 были миллисекундами, а в кадрах это 23 с — искры
+     не успевали разгореться. */
+  L.insertBefore(fxc,$("#shock"));
+  parts.forEach(p=>{p.vy=-(1.4+Math.random()*2.6);p.vx=(Math.random()-.5)*1.5;p.r*=1.5;p.life=0;p.max=84});
   let i=0;
   const t0=performance.now(),DUR=2600;
   (function step(now){
@@ -3940,17 +3955,24 @@ function launch(g){
     else{
       $("#flash").classList.add("go");
       $("#shock").classList.add("go");
-      const ir=$("#iris"); let k=0;
-      (function iris(){k+=.022;ir.style.setProperty("--ir",(k*100)+"%");
-        if(k<1.3)requestAnimationFrame(iris);
+      /* Ирис раскрывается за секунду от времени, а не от кадров: по 2,2 %
+         за кадр на 144 Гц он проходил вдвое с лишним быстрее. */
+      const t1=now;
+      (function iris(now){
+        const k=Math.min(1.32,1.32*(now-t1)/1000);
+        ir.style.setProperty("--ir",(k*100)+"%");
+        if(k<1.32)requestAnimationFrame(iris);
         else setTimeout(()=>{
           L.classList.remove("on");L.setAttribute("aria-hidden","true");
-          $("#flash").classList.remove("go");$("#shock").classList.remove("go");
-          ir.style.setProperty("--ir","0%");bar.style.width="0";
-          ring.style.strokeDashoffset="100";$("#lStage").textContent=STAGES[0];
-          resizeFX();launching=false;
+          /* Сброс — когда затемнение ушло. Раньше он шёл в начале ухода,
+             и раскрытое окно на 300 мс снова закрывала пустота. */
+          setTimeout(()=>{
+            $("#flash").classList.remove("go");$("#shock").classList.remove("go");
+            document.body.insertBefore(fxc,$("#grain"));
+            resizeFX();launching=false;
+          },300);
         },420);
-      })();
+      })(now);
     }
   })(performance.now());
 }

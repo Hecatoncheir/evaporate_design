@@ -21,6 +21,7 @@ class EvCommand {
     this.hint = '↵ выполнить',
     this.cover,
     this.icon = EvIcons.go,
+    this.onLaunch,
   });
 
   final String title;
@@ -35,13 +36,18 @@ class EvCommand {
   final (EvCoverPalette, int)? cover;
 
   final String icon;
+
+  /// `Shift+Enter` и клик с Shift: запустить игру сразу, минуя её
+  /// карточку. `null` — то же, что Enter.
+  final VoidCallback? onLaunch;
 }
 
 /// Открывает палитру «Поиск и команды» поверх окна.
 ///
 /// Как в прототипе: затемнение с размытием, панель 620 px на 15 % высоты
-/// сверху, не больше девяти строк. Закрывается по Esc, клику мимо панели
-/// и после выполнения команды.
+/// сверху, не больше девяти строк. `Enter` выполняет строку, `Shift+Enter`
+/// запускает игру. Закрывается по Esc, клику мимо панели и после
+/// выполнения команды.
 Future<void> showEvPalette(BuildContext context, List<EvCommand> commands) {
   final reduced = MediaQuery.disableAnimationsOf(context);
   return Navigator.of(context).push(
@@ -97,6 +103,7 @@ class _EvPaletteState extends State<EvPalette> {
   final _scroll = ScrollController();
   late List<EvCommand> _results = _filter('');
   int _selected = 0;
+  bool _closing = false;
 
   @override
   void dispose() {
@@ -149,11 +156,16 @@ class _EvPaletteState extends State<EvPalette> {
     _scroll.jumpTo(target.clamp(0, p.maxScrollExtent));
   }
 
-  void _run(int index) {
-    if (index < 0 || index >= _results.length) return;
+  /// Выполнить строку [index]; [launch] — запустить игру вместо Enter.
+  ///
+  /// Выполняется один раз: `Enter` может дойти и сюда, и до поля ввода
+  /// как отправка, а второй вызов закрыл бы уже не палитру, а окно под ней.
+  void _run(int index, {bool launch = false}) {
+    if (_closing || index < 0 || index >= _results.length) return;
+    _closing = true;
     final command = _results[index];
     Navigator.of(context).pop();
-    command.onRun();
+    (launch ? command.onLaunch ?? command.onRun : command.onRun)();
   }
 
   @override
@@ -164,6 +176,13 @@ class _EvPaletteState extends State<EvPalette> {
       bindings: {
         const SingleActivator(LogicalKeyboardKey.arrowDown): () => _move(1),
         const SingleActivator(LogicalKeyboardKey.arrowUp): () => _move(-1),
+        const SingleActivator(LogicalKeyboardKey.enter, shift: true): () =>
+            _run(_selected, launch: true),
+        const SingleActivator(
+          LogicalKeyboardKey.numpadEnter,
+          shift: true,
+        ): () =>
+            _run(_selected, launch: true),
         const SingleActivator(LogicalKeyboardKey.escape): () =>
             Navigator.of(context).pop(),
       },
@@ -301,7 +320,10 @@ class _EvPaletteState extends State<EvPalette> {
                           onHover: () {
                             if (_selected != i) setState(() => _selected = i);
                           },
-                          onTap: () => _run(i),
+                          onTap: () => _run(
+                            i,
+                            launch: HardwareKeyboard.instance.isShiftPressed,
+                          ),
                         ),
                       ),
               ),
@@ -318,6 +340,8 @@ class _EvPaletteState extends State<EvPalette> {
                     Text('↑↓ выбрать', style: small),
                     const SizedBox(width: 16),
                     Text('↵ открыть', style: small),
+                    const SizedBox(width: 16),
+                    Text('⇧↵ запустить', style: small),
                   ],
                 ),
               ),
