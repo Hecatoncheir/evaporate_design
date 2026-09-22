@@ -169,21 +169,14 @@ class _EvHeroState extends State<EvHero> {
     final words = widget.title.trim().split(' ');
     final light = words.sublist(0, words.length - 1).join(' ');
 
-    final shadows = [
-      const Shadow(color: Color(0xCC000000), blurRadius: 44),
-      Shadow(color: c.hot1.withValues(alpha: .16), blurRadius: 90),
-    ];
     final titleStyle = ev.text
         .display(m.titleSize)
         .copyWith(
           leadingDistribution: TextLeadingDistribution.even,
-          shadows: shadows,
-        );
-    final boldStyle = ev.text
-        .displayBold(m.titleSize)
-        .copyWith(
-          leadingDistribution: TextLeadingDistribution.even,
-          shadows: shadows,
+          shadows: [
+            const Shadow(color: Color(0xCC000000), blurRadius: 44),
+            Shadow(color: c.hot1.withValues(alpha: .16), blurRadius: 90),
+          ],
         );
     final blurbStyle = ev.text.body.copyWith(fontSize: m.blurbSize);
 
@@ -202,7 +195,10 @@ class _EvHeroState extends State<EvHero> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (light.isNotEmpty) Text(light, style: titleStyle),
-              Text(words.last, style: boldStyle),
+              Text(
+                words.last,
+                style: ev.text.dsp(titleStyle, weight: FontWeight.w800),
+              ),
             ],
           ),
         ),

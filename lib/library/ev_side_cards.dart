@@ -118,9 +118,10 @@ class EvFriendsCard extends StatelessWidget {
                   ),
                   child: Text(
                     f.initials,
-                    style: ev.text.title.copyWith(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                    style: ev.text.ui(
+                      ev.text.title,
+                      weight: FontWeight.w600,
+                      size: 11,
                       color: const Color(0xFF0B0B10),
                     ),
                   ),
@@ -131,9 +132,10 @@ class EvFriendsCard extends StatelessWidget {
                     f.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: ev.text.title.copyWith(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w400,
+                    style: ev.text.ui(
+                      ev.text.title,
+                      weight: FontWeight.w400,
+                      size: 12.5,
                     ),
                   ),
                 ),
@@ -201,9 +203,10 @@ class EvDownloadsNowCard extends StatelessWidget {
                         d.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: ev.text.title.copyWith(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w400,
+                        style: ev.text.ui(
+                          ev.text.title,
+                          weight: FontWeight.w400,
+                          size: 12.5,
                         ),
                       ),
                       const SizedBox(height: 3),

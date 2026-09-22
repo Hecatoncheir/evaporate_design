@@ -154,10 +154,11 @@ class _EvGameCardState extends State<EvGameCard> {
                 widget.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: ev.text.body.copyWith(
+                style: ev.text.ui(
+                  ev.text.body,
+                  weight: FontWeight.w500,
+                  size: 13,
                   color: c.ink,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 13,
                 ),
               ),
               const SizedBox(height: 4),
