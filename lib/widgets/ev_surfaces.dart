@@ -61,6 +61,138 @@ class EvPanel extends StatelessWidget {
   }
 }
 
+/// Два прибора в ряд: слева тот, что говорит, что происходит сейчас,
+/// справа — из чего это складывается. На окне уже 900 они встают друг
+/// под друга: правый прибор в колонку не читается.
+class EvHeadPanels extends StatelessWidget {
+  const EvHeadPanels({super.key, required this.left, required this.right});
+
+  final Widget left;
+  final Widget right;
+
+  static const breakpoint = 900.0;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.sizeOf(context).width < breakpoint) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          left,
+          const SizedBox(height: EvSpace.l),
+          right,
+        ],
+      );
+    }
+    // Панели одной высоты, как колонки сетки в прототипе: правая
+    // дотягивается до левой, а не висит короче неё.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(flex: 125, child: left),
+          const SizedBox(width: EvSpace.l),
+          Expanded(flex: 100, child: right),
+        ],
+      ),
+    );
+  }
+}
+
+/// Главное число панели: крупно, лёгким начертанием, с единицей рядом
+/// в моноширинном. Единица мельче в три раза — она не число.
+class EvBigNumber extends StatelessWidget {
+  const EvBigNumber(this.value, {super.key, required this.unit});
+
+  final String value;
+  final String unit;
+
+  /// `clamp(30px, 4.4vw, 50px)` из прототипа.
+  static double sizeFor(Size window) => (window.width * .044).clamp(30, 50);
+
+  @override
+  Widget build(BuildContext context) {
+    final ev = context.ev;
+    final size = sizeFor(MediaQuery.sizeOf(context));
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: value),
+          TextSpan(
+            text: '  $unit',
+            style: ev.text.mono(
+              ev.text.data,
+              size: size * .36,
+              color: ev.colors.ink3,
+              letterSpacing: size * .018,
+            ),
+          ),
+        ],
+      ),
+      style: ev.text.big(size),
+    );
+  }
+}
+
+/// Четыре числа сеткой два на два. Тонкие линии между ними — не рамки,
+/// а швы: приборы одного прибора.
+class EvKpiGrid extends StatelessWidget {
+  const EvKpiGrid({super.key, required this.items});
+
+  /// Подпись, значение и цвет значения.
+  final List<(String, String, Color)> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final ev = context.ev;
+    final c = ev.colors;
+    Widget cell((String, String, Color) item) => Container(
+      color: c.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(item.$1.toUpperCase(), style: ev.text.label),
+          const SizedBox(height: 5),
+          Text(
+            item.$2,
+            maxLines: 1,
+            style: ev.text.mono(
+              ev.text.data,
+              size: 17,
+              weight: FontWeight.w500,
+              color: item.$3,
+            ),
+          ),
+        ],
+      ),
+    );
+    return ClipRRect(
+      borderRadius: ev.radii.b2,
+      child: ColoredBox(
+        color: c.lineSoft,
+        child: Column(
+          children: [
+            for (var row = 0; row * 2 < items.length; row++) ...[
+              if (row > 0) const SizedBox(height: 1),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: cell(items[row * 2])),
+                    const SizedBox(width: 1),
+                    Expanded(child: cell(items[row * 2 + 1])),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Чип: короткая метка на 24 px. Лежит поверх картинки, поэтому сделан
 /// из линзы — кадр под ним виден и гнётся у кромки. Горячий вариант —
 /// единственный цветной, им помечают текущее состояние объекта.
@@ -251,7 +383,13 @@ class EvBar extends StatelessWidget {
       borderRadius: BorderRadius.circular(height),
       child: Stack(
         children: [
-          Container(height: height, color: c.ink.withValues(alpha: 0.055)),
+          // Во всю доступную ширину: под свободными ограничениями полоса
+          // иначе схлопнулась бы в ничто.
+          SizedBox(
+            width: double.infinity,
+            height: height,
+            child: ColoredBox(color: c.ink.withValues(alpha: 0.055)),
+          ),
           FractionallySizedBox(
             widthFactor: value.clamp(0.0, 1.0),
             child: Opacity(

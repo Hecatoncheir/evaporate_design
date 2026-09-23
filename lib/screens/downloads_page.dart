@@ -102,11 +102,6 @@ class _DownloadsPageState extends State<DownloadsPage>
     final chrome = MediaQuery.paddingOf(context);
     final d = widget.downloads;
 
-    final head = [
-      _RatePanel(downloads: d, series: _series.history),
-      _SwarmPanel(downloads: d, heat: _heat),
-    ];
-
     Widget section(String title, String count, Widget child) => Padding(
       padding: const EdgeInsets.only(top: 30),
       child: Column(
@@ -128,30 +123,10 @@ class _DownloadsPageState extends State<DownloadsPage>
         26 + chrome.bottom,
       ),
       children: [
-        // Ниже 900 приборы встают друг под друга: кольцо с подписями
-        // в колонку уже, чем в один ряд, не читается.
-        if (window.width < 900)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              head.first,
-              const SizedBox(height: EvSpace.l),
-              head.last,
-            ],
-          )
-        else
-          // Панели одной высоты, как колонки сетки в прототипе: правая
-          // дотягивается до левой, а не висит короче неё.
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(flex: 125, child: head.first),
-                const SizedBox(width: EvSpace.l),
-                Expanded(flex: 100, child: head.last),
-              ],
-            ),
-          ),
+        EvHeadPanels(
+          left: _RatePanel(downloads: d, series: _series.history),
+          right: _SwarmPanel(downloads: d, heat: _heat),
+        ),
         section(
           'Сейчас качается',
           '${d.torrents.length} '
@@ -212,7 +187,6 @@ class _RatePanel extends StatelessWidget {
     final ev = context.ev;
     final c = ev.colors;
     final d = downloads;
-    final window = MediaQuery.sizeOf(context);
     final rate = series.last;
     return EvPanel(
       glowCorner: true,
@@ -222,28 +196,11 @@ class _RatePanel extends StatelessWidget {
         children: [
           Text('ПРИЁМ · СЕЙЧАС', style: ev.text.label),
           const SizedBox(height: 8),
-          Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(text: rate.toStringAsFixed(2)),
-                TextSpan(
-                  text: '  МБ/с',
-                  style: ev.text.mono(
-                    ev.text.data,
-                    // 0.36 от кегля числа — те же пропорции, что в макете.
-                    size: _bigSize(window) * .36,
-                    color: c.ink3,
-                    letterSpacing: _bigSize(window) * .018,
-                  ),
-                ),
-              ],
-            ),
-            style: ev.text.big(_bigSize(window)),
-          ),
+          EvBigNumber(rate.toStringAsFixed(2), unit: 'МБ/с'),
           const SizedBox(height: 10),
           EvRateGraph(series),
           const SizedBox(height: EvSpace.l),
-          _Kpis(
+          EvKpiGrid(
             items: [
               ('Отдача', formatRate(d.upKb), c.cool),
               ('Пик за час', formatRate(d.peakKb, digits: 1), c.hot2),
@@ -252,66 +209,6 @@ class _RatePanel extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  /// `clamp(30px, 4.4vw, 50px)` из прототипа.
-  static double _bigSize(Size window) => (window.width * .044).clamp(30, 50);
-}
-
-/// Четыре числа сеткой: тонкие линии между ними — не рамки, а швы.
-class _Kpis extends StatelessWidget {
-  const _Kpis({required this.items});
-
-  final List<(String, String, Color)> items;
-
-  @override
-  Widget build(BuildContext context) {
-    final ev = context.ev;
-    final c = ev.colors;
-    Widget cell((String, String, Color) item) => Container(
-      color: c.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(item.$1.toUpperCase(), style: ev.text.label),
-          const SizedBox(height: 5),
-          Text(
-            item.$2,
-            maxLines: 1,
-            style: ev.text.mono(
-              ev.text.data,
-              size: 17,
-              weight: FontWeight.w500,
-              color: item.$3,
-            ),
-          ),
-        ],
-      ),
-    );
-    return ClipRRect(
-      borderRadius: ev.radii.b2,
-      child: ColoredBox(
-        color: c.lineSoft,
-        child: Column(
-          children: [
-            for (var row = 0; row < 2; row++) ...[
-              if (row > 0) const SizedBox(height: 1),
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(child: cell(items[row * 2])),
-                    const SizedBox(width: 1),
-                    Expanded(child: cell(items[row * 2 + 1])),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }

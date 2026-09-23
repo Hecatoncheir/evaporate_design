@@ -8,6 +8,7 @@ import '../downloads/download_data.dart';
 import '../gallery/gallery_page.dart';
 import '../glass/glass_lens.dart';
 import '../library/hero_state.dart';
+import '../saves/saves_data.dart';
 import '../widgets/ev_focusable.dart';
 import '../widgets/ev_controls.dart';
 import '../widgets/ev_icon.dart';
@@ -22,6 +23,8 @@ class SettingsPage extends StatelessWidget {
     required this.onState,
     required this.downloads,
     required this.onDownloads,
+    required this.saves,
+    required this.onSaves,
   });
 
   /// Состояние игры в герое. Движка нет, поэтому его переключают здесь.
@@ -33,6 +36,11 @@ class SettingsPage extends StatelessWidget {
   final EvDownloadsState downloads;
 
   final ValueChanged<EvDownloadsState> onDownloads;
+
+  /// Состояние облака сохранений — по тем же причинам и рядом.
+  final EvSavesState saves;
+
+  final ValueChanged<EvSavesState> onSaves;
 
   @override
   Widget build(BuildContext context) {
@@ -240,6 +248,28 @@ class SettingsPage extends StatelessWidget {
                   hint: value.hint,
                   selected: value == downloads,
                   onTap: () => onDownloads(value),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: EvSpace.m),
+        EvPanel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              EvOption(
+                title: 'Состояние сохранений',
+                description:
+                    'Облако, лента и расхождение версий. Разрешить конфликт '
+                    'можно по-настоящему — любой из трёх кнопок',
+                control: const SizedBox.shrink(),
+              ),
+              for (final value in EvSavesState.values)
+                _StateRow(
+                  name: value.label,
+                  hint: value.hint,
+                  selected: value == saves,
+                  onTap: () => onSaves(value),
                 ),
             ],
           ),

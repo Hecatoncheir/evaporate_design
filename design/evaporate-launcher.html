@@ -2219,10 +2219,10 @@ h1.title b{font-weight:800;display:block}
             <div class="big">4.1<u>ГБ из 20</u></div>
             <div class="bar c" style="margin-top:16px"><i style="width:20.5%"></i></div>
             <div class="kpis">
-              <div class="kpi"><div class="p-lab">Игр под защитой</div><div class="v">17</div></div>
+              <div class="kpi"><div class="p-lab">Игр под защитой</div><div class="v">8</div></div>
               <div class="kpi"><div class="p-lab">Точек отката</div><div class="v h">248</div></div>
-              <div class="kpi"><div class="p-lab">Последняя выгрузка</div><div class="v c">6 мин</div></div>
-              <div class="kpi"><div class="p-lab">Конфликтов</div><div class="v" style="color:var(--warn)">1</div></div>
+              <div class="kpi"><div class="p-lab">Последняя выгрузка</div><div class="v c" id="svLast">6 мин</div></div>
+              <div class="kpi"><div class="p-lab">Конфликтов</div><div class="v" id="svConf">0</div></div>
             </div>
           </div>
           <div class="panel">
@@ -3332,18 +3332,37 @@ $("#torrents").innerHTML = TOR.map(t=>`
 const SAVES=[
   {n:"Пепельный Предел · Глава 5 «Кузня Сумерек»",t:"6 минут назад",now:true,dev:[["sync","выгружено"],["pc","КУЗНЯ"]],note:"автосохранение · 148 МБ"},
   {n:"Красный Меридиан · Кампания «Излом», ход 42",t:"1 ч 20 мин назад",dev:[["sync","выгружено"],["pc","КУЗНЯ"]],note:"ручное · 22 МБ"},
-  {n:"Глубина 9 · Уровень 6, кислород 41 %",t:"вчера, 23:41",dev:[["conf","конфликт версий"],["lap","ДОРОГА"]],note:"две ветки · выберите, какую оставить"},
+  {n:"Глубина 9 · Уровень 5, кислород 73 %",t:"вчера, 23:41",branch:true,dev:[["sync","выгружено"],["lap","ДОРОГА"]],note:"автосохранение · 141 МБ"},
   {n:"Волчья Тропа · Зимовье у Чёрной реки",t:"вчера, 19:08",dev:[["sync","выгружено"],["lap","ДОРОГА"]],note:"автосохранение · 310 МБ"},
   {n:"Стеклянный Сад · Комната 88",t:"3 дня назад",dev:[["sync","выгружено"],["pc","КУЗНЯ"]],note:"ручное · 4 МБ"},
 ];
-$("#timeline").innerHTML=SAVES.map(s=>`
-  <div class="ev${s.now?" now":""}">
+function savesHTML(conflicted, uploading){
+  return SAVES.map(s=>{
+    // Точка, которая уходит прямо сейчас, — это та же верхняя точка,
+    // а не вторая такая же строкой выше.
+    if(uploading && s.now) return `<div class="ev now">
+    <div class="ev-h"><span class="n">${s.n}</span><span class="t">сейчас</span></div>
+    <div class="bar c" style="margin-top:10px;max-width:420px"><i style="width:62%"></i></div>
+    <div class="ev-d">
+      <span class="dev" style="color:var(--cool);border-color:rgb(var(--glow-cool)/.33)"><svg><use href="#i-cloud"/></svg>выгружается · 62 %</span>
+      <span class="dev"><svg><use href="#i-pc"/></svg>КУЗНЯ</span>
+      <span class="dev" style="border:0;color:var(--ink-4);padding-left:2px">92 МБ из 148 МБ</span>
+    </div>
+  </div>`;
+    const dev = conflicted && s.branch
+      ? [["conf","конфликт версий"],["lap","ДОРОГА"]] : s.dev;
+    const note = conflicted && s.branch
+      ? "две ветки · выберите, какую оставить" : s.note;
+    return `<div class="ev${s.now?" now":""}">
     <div class="ev-h"><span class="n">${s.n}</span><span class="t">${s.t}</span></div>
     <div class="ev-d">
-      ${s.dev.map(([k,l])=>`<span class="dev ${k==="sync"?"sync":k==="conf"?"conf":""}"><svg><use href="#i-${k==="sync"?"cloud":k==="conf"?"info":k}"/></svg>${l}</span>`).join("")}
-      <span class="dev" style="border:0;color:var(--ink-4);padding-left:2px">${s.note}</span>
+      ${dev.map(([k,l])=>`<span class="dev ${k==="sync"?"sync":k==="conf"?"conf":""}"><svg><use href="#i-${k==="sync"?"cloud":k==="conf"?"merge":k}"/></svg>${l}</span>`).join("")}
+      <span class="dev" style="border:0;color:var(--ink-4);padding-left:2px">${note}</span>
     </div>
-  </div>`).join("");
+  </div>`;
+  }).join("");
+}
+$("#timeline").innerHTML=savesHTML(false);
 
 /* ── routing ───────────────────────────────────────────────── */
 const NAMES={library:"Библиотека",downloads:"Загрузки",saves:"Сохранения",settings:"Настройки",friends:"Друзья",profile:"Профиль",fprofile:"Профиль друга"};
@@ -4235,6 +4254,10 @@ function resetAll(){
   conflictSec.hidden = true;
   conflictSec.innerHTML = conflictHTML;
   svTimeline.innerHTML = svTimelineHTML;
+  $("#svConf").textContent = "0";
+  $("#svLast").textContent = "6 мин";
+  { const vault = $$("#sc-saves .opt .dev")[2];
+    vault.className = "dev sync"; vault.textContent = "активно"; }
   svTimeline.parentElement.hidden = false;
   pills[0].className = "pill"; pills[0].innerHTML = `<span class="dot busy"></span><span id="netRate">1.6 МБ/с</span>`;
   pills[1].className = "pill"; pills[1].innerHTML = `<span class="dot"></span>Движок готов`;
@@ -4340,21 +4363,23 @@ function applyState(id){
     case "sv-conflict":
       setHero(HERO.ready);
       conflictSec.hidden = false;
+      svTimeline.innerHTML = savesHTML(true);
+      $("#svConf").textContent = "1";
       pills[1].className = "pill off"; pills[1].innerHTML = `<span class="dot"></span>1 конфликт`;
       break;
     case "sv-uploading":
       setHero(HERO.ready);
       pills[1].innerHTML = `<span class="dot busy"></span>Выгрузка 3 из 5`;
-      svTimeline.innerHTML =
-        `<div class="ev now"><div class="ev-h"><span class="n">Пепельный Предел · Глава 5 «Кузня Сумерек»</span><span class="t">выгружается</span></div>
-           <div class="bar c" style="margin-top:10px;max-width:420px"><i style="width:62%"></i></div>
-           <div class="ev-d"><span class="dev"><svg><use href="#i-cloud"/></svg>62 % · 92 МБ из 148 МБ</span></div></div>`
-        + svTimelineHTML;
+      svTimeline.innerHTML = savesHTML(false, true);
+      $("#svLast").textContent = "1 ч 20 мин";
       break;
     case "sv-nocloud":
       setHero(HERO.ready);
       pills[1].className = "pill off"; pills[1].innerHTML = `<span class="dot"></span>Облако недоступно`;
       svTimeline.parentElement.hidden = true;
+      $$("#sc-saves .opt .dev")[2].className = "dev";
+      $$("#sc-saves .opt .dev")[2].textContent = "офлайн";
+      $("#svLast").textContent = "—";
       conflictSec.hidden = false;
       conflictSec.innerHTML =
         `<div class="sec-h"><h2>Облако</h2><span class="count">недоступно</span><span class="rule"></span></div>

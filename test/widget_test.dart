@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:evaporate_design/design/theme.dart';
 import 'package:evaporate_design/design/tokens.dart';
+import 'package:evaporate_design/widgets/ev_controls.dart';
 import 'package:evaporate_design/widgets/ev_play_button.dart';
 
 Widget _host(Widget child, {EvSkin skin = EvSkin.magma}) => MaterialApp(
@@ -11,7 +13,9 @@ Widget _host(Widget child, {EvSkin skin = EvSkin.magma}) => MaterialApp(
 );
 
 void main() {
-  testWidgets('токены доходят до виджетов через ThemeExtension', (tester) async {
+  testWidgets('токены доходят до виджетов через ThemeExtension', (
+    tester,
+  ) async {
     late EvTheme ev;
     await tester.pumpWidget(
       _host(
@@ -26,7 +30,11 @@ void main() {
     // Расширение должно находиться: поле с именем `type` когда-то перекрывало
     // ключ ThemeExtension.type и ломало этот поиск.
     expect(ev.colors.hot1, EvColors.magma.hot1);
-    expect(ev.radii.pill, EvRadii.tight.pill, reason: 'по умолчанию потолок 8 px');
+    expect(
+      ev.radii.pill,
+      EvRadii.tight.pill,
+      reason: 'по умолчанию потолок 8 px',
+    );
   });
 
   testWidgets('облик меняет палитру, не трогая виджеты', (tester) async {
@@ -45,11 +53,11 @@ void main() {
     expect(c.hot1, EvColors.cryo.hot1);
   });
 
-  testWidgets('нажатие не запускает игру — кнопку нужно удержать', (tester) async {
+  testWidgets('нажатие не запускает игру — кнопку нужно удержать', (
+    tester,
+  ) async {
     var launched = 0;
-    await tester.pumpWidget(
-      _host(EvPlayButton(onLaunch: () => launched++)),
-    );
+    await tester.pumpWidget(_host(EvPlayButton(onLaunch: () => launched++)));
 
     // короткое нажатие: заряд не добран
     final gesture = await tester.startGesture(
@@ -72,7 +80,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
   });
 
-  testWidgets('с выключенным удержанием кнопка срабатывает сразу', (tester) async {
+  testWidgets('с выключенным удержанием кнопка срабатывает сразу', (
+    tester,
+  ) async {
     var launched = 0;
     await tester.pumpWidget(
       _host(EvPlayButton(requireHold: false, onLaunch: () => launched++)),
@@ -80,5 +90,49 @@ void main() {
     await tester.tap(find.byType(EvPlayButton));
     await tester.pump();
     expect(launched, 1);
+  });
+
+  // Стекло само по себе не проходит проверку попадания, поэтому нажатие
+  // по мелкой кнопке до действия не доходило: она была нарисована, но
+  // не работала. Клавиатура — вторая половина той же проверки.
+  testWidgets('мелкая кнопка нажимается мышью и с клавиатуры', (tester) async {
+    var pressed = 0;
+    await tester.pumpWidget(
+      _host(EvMiniButton(label: 'Проверить', onPressed: () => pressed++)),
+    );
+    await tester.tap(find.text('Проверить'));
+    await tester.pump();
+    expect(pressed, 1);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(pressed, 2);
+  });
+
+  testWidgets('без действия мелкая кнопка выпадает из обхода', (tester) async {
+    var pressed = 0;
+    await tester.pumpWidget(
+      _host(
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const EvMiniButton(label: 'Нечего', onPressed: null),
+            EvMiniButton(label: 'Можно', onPressed: () => pressed++),
+          ],
+        ),
+      ),
+    );
+    // Tab пропускает неактивную и встаёт на вторую.
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(pressed, 1);
+
+    await tester.tap(find.text('Нечего'));
+    await tester.pump();
+    expect(pressed, 1, reason: 'нажатие по неактивной ничего не делает');
   });
 }

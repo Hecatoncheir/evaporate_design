@@ -166,36 +166,43 @@ class _EvMiniButtonState extends State<EvMiniButton> {
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        child: EvGlass(
-          style: EvGlassStyle.chip,
-          backdrop: false,
-          interactive: true,
-          borderRadius: ev.radii.bPill,
-          keyLight: widget.danger && _hover ? EvColors.bad : null,
-          tint: c.ink.withValues(alpha: _hover ? 0.07 : 0.03),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: SizedBox(
-            height: 30,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (widget.icon != null) ...[
-                  EvIcon(
-                    widget.icon!,
-                    size: 13,
-                    color: _hover ? accent : c.ink3,
+      // Через EvFocusable, а не голым GestureDetector: стекло само
+      // по себе не проходит проверку попадания, и нажатие по кнопке
+      // не доходило до действия. Заодно до неё доводит Tab.
+      child: EvFocusable(
+        onActivate: widget.onPressed,
+        radius: ev.radii.pill,
+        child: Semantics(
+          button: true,
+          child: EvGlass(
+            style: EvGlassStyle.chip,
+            backdrop: false,
+            interactive: true,
+            borderRadius: ev.radii.bPill,
+            keyLight: widget.danger && _hover ? EvColors.bad : null,
+            tint: c.ink.withValues(alpha: _hover ? 0.07 : 0.03),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: SizedBox(
+              height: 30,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.icon != null) ...[
+                    EvIcon(
+                      widget.icon!,
+                      size: 13,
+                      color: _hover ? accent : c.ink3,
+                    ),
+                    const SizedBox(width: 7),
+                  ],
+                  Text(
+                    widget.label,
+                    style: ev.text.bodySmall.copyWith(
+                      color: _hover ? accent : c.ink3,
+                    ),
                   ),
-                  const SizedBox(width: 7),
                 ],
-                Text(
-                  widget.label,
-                  style: ev.text.bodySmall.copyWith(
-                    color: _hover ? accent : c.ink3,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

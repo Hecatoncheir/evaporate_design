@@ -82,6 +82,12 @@ abstract final class EvIcons {
   /// Сети нет.
   static const wifiOff = 'wifi-off';
 
+  /// Галочка: выбрать эту версию сохранения.
+  static const check = 'check';
+
+  /// Две ветки сохранения разошлись.
+  static const merge = 'merge';
+
   /// Magnet-ссылка вместо файла раздачи.
   static const magnet = 'magnet';
 

@@ -17,7 +17,7 @@ void main() {
             .where((f) => f.path.endsWith('.svg'))
             .toList()
           ..sort((a, b) => a.path.compareTo(b.path));
-    expect(files, hasLength(greaterThanOrEqualTo(39)));
+    expect(files, hasLength(greaterThanOrEqualTo(41)));
 
     for (final file in files) {
       final picture = await vg.loadPicture(

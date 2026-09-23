@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'data/sample_data.dart';
 import 'data/sample_downloads.dart';
+import 'data/sample_saves.dart';
 import 'design/appearance.dart';
 import 'design/effects.dart';
 import 'design/theme.dart';
@@ -9,9 +10,11 @@ import 'design/tokens.dart';
 import 'downloads/download_data.dart';
 import 'launch/ev_launch_ritual.dart';
 import 'library/hero_state.dart';
+import 'saves/saves_data.dart';
 import 'sheet/ev_game_sheet.dart';
 import 'screens/downloads_page.dart';
 import 'screens/library_page.dart';
+import 'screens/saves_page.dart';
 import 'screens/placeholder_page.dart';
 import 'screens/settings_page.dart';
 import 'shell/ev_palette.dart';
@@ -41,6 +44,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
   // в настройках — как панель состояний в прототипе.
   final _state = ValueNotifier<EvHeroState>(EvHeroState.ready);
   final _downloads = ValueNotifier<EvDownloadsState>(EvDownloadsState.active);
+  final _saves = ValueNotifier<EvSavesState>(EvSavesState.synced);
   late final _ownEffects = widget.effects == null ? EvEffects() : null;
   final _shell = EvShellController();
 
@@ -69,6 +73,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
 
   @override
   void dispose() {
+    _saves.dispose();
     _downloads.dispose();
     _state.dispose();
     _appearance.dispose();
@@ -93,13 +98,15 @@ class _EvaporateAppState extends State<EvaporateApp> {
             themeAnimationDuration: EvMotion.screen,
             themeAnimationCurve: EvMotion.easeOut,
             home: ListenableBuilder(
-              listenable: Listenable.merge([_state, _downloads]),
+              listenable: Listenable.merge([_state, _downloads, _saves]),
               builder: (context, _) => _Home(
                 shell: _shell,
                 state: _state.value,
                 onState: _setHero,
                 downloads: _downloads.value,
                 onDownloads: _setDownloads,
+                saves: _saves.value,
+                onSaves: (next) => _saves.value = next,
               ),
             ),
           ),
@@ -116,6 +123,8 @@ class _Home extends StatelessWidget {
     required this.onState,
     required this.downloads,
     required this.onDownloads,
+    required this.saves,
+    required this.onSaves,
   });
 
   final EvShellController shell;
@@ -131,6 +140,11 @@ class _Home extends StatelessWidget {
   final EvDownloadsState downloads;
 
   final ValueChanged<EvDownloadsState> onDownloads;
+
+  /// Состояние облака сохранений — третье состояние окна.
+  final EvSavesState saves;
+
+  final ValueChanged<EvSavesState> onSaves;
 
   /// Запуск игры — ритуал поверх всего окна.
   static void _launch(BuildContext context, SampleGame game) =>
@@ -168,25 +182,34 @@ class _Home extends StatelessWidget {
         formatRate(queue.downKb, digits: 1),
         status: queue.downKb == 0 ? EvStatus.idle : EvStatus.busy,
       ),
-      switch (downloads) {
-        EvDownloadsState.noSeeds => const EvPill(
-          'Нет раздающих',
-          status: EvStatus.warn,
-        ),
-        EvDownloadsState.noSpace => const EvPill(
-          'Диск переполнен',
-          status: EvStatus.bad,
-        ),
-        EvDownloadsState.hash => const EvPill(
-          'Перепроверка',
-          status: EvStatus.busy,
-        ),
-        EvDownloadsState.empty => const EvPill(
-          'Движок простаивает',
-          status: EvStatus.idle,
-        ),
-        _ => const EvPill('Движок готов'),
-      },
+      // Сохранения просят внимания громче очереди: потерять точку
+      // отката хуже, чем медленно качать.
+      if (saves == EvSavesState.conflict)
+        const EvPill('1 конфликт', status: EvStatus.warn)
+      else if (saves == EvSavesState.noCloud)
+        const EvPill('Облако недоступно', status: EvStatus.idle)
+      else if (saves == EvSavesState.uploading)
+        const EvPill('Выгрузка 3 из 5', status: EvStatus.busy)
+      else
+        switch (downloads) {
+          EvDownloadsState.noSeeds => const EvPill(
+            'Нет раздающих',
+            status: EvStatus.warn,
+          ),
+          EvDownloadsState.noSpace => const EvPill(
+            'Диск переполнен',
+            status: EvStatus.bad,
+          ),
+          EvDownloadsState.hash => const EvPill(
+            'Перепроверка',
+            status: EvStatus.busy,
+          ),
+          EvDownloadsState.empty => const EvPill(
+            'Движок простаивает',
+            status: EvStatus.idle,
+          ),
+          _ => const EvPill('Движок готов'),
+        },
     ],
   };
 
@@ -253,11 +276,18 @@ class _Home extends StatelessWidget {
           onOpen: (g) => _open(context, g),
         ),
         EvSection.downloads => DownloadsPage(downloads: queue),
+        EvSection.saves => SavesPage(
+          saves: sampleSavesFor(saves),
+          onResolve: () => onSaves(EvSavesState.synced),
+          onRetry: () => onSaves(EvSavesState.synced),
+        ),
         EvSection.settings => SettingsPage(
           state: state,
           onState: onState,
           downloads: downloads,
           onDownloads: onDownloads,
+          saves: saves,
+          onSaves: onSaves,
         ),
         _ => PlaceholderPage(section: section),
       },
