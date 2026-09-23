@@ -1,30 +1,11 @@
-import 'dart:math' as math;
-
 import 'package:flutter/widgets.dart';
 
 import '../art/ev_art.dart';
 import '../art/key_art.dart';
 import '../design/theme.dart';
-import '../design/tokens.dart';
+import '../friends/ev_avatar.dart';
+import '../friends/friends_data.dart';
 import '../widgets/ev_surfaces.dart';
-
-/// Цвет аватара друга. Градиенты — из прототипа, первые три идут
-/// от облика, последний — зелёный «в сети».
-enum EvAvatarTint { hot, cool, arc, ok }
-
-/// Друг в правой колонке: инициалы, имя и во что играет.
-@immutable
-class EvFriendLine {
-  const EvFriendLine(this.initials, this.name, this.status, this.tint);
-
-  final String initials;
-  final String name;
-
-  /// Игра или «в сети».
-  final String status;
-
-  final EvAvatarTint tint;
-}
 
 /// Загрузка в правой колонке.
 @immutable
@@ -74,54 +55,11 @@ class _SideCard extends StatelessWidget {
   );
 }
 
-/// Аватар друга: инициалы на градиенте своего цвета. Тот же кружок
-/// стоит и в правой колонке, и в карточке игры.
-class EvFriendAvatar extends StatelessWidget {
-  const EvFriendAvatar({super.key, required this.friend, this.size = 28});
-
-  final EvFriendLine friend;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final ev = context.ev;
-    final c = ev.colors;
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(math.min(ev.radii.pill, size / 2)),
-        gradient: LinearGradient(
-          // 140° в CSS
-          begin: const Alignment(-.64, -.77),
-          end: const Alignment(.64, .77),
-          colors: switch (friend.tint) {
-            EvAvatarTint.hot => [c.hot2, c.hot1],
-            EvAvatarTint.cool => [c.cool, const Color(0xFF1B6F8A)],
-            EvAvatarTint.arc => [c.arc, const Color(0xFF5A2FA8)],
-            EvAvatarTint.ok => const [EvColors.ok, Color(0xFF146C48)],
-          },
-        ),
-      ),
-      child: Text(
-        friend.initials,
-        style: ev.text.ui(
-          ev.text.title,
-          weight: FontWeight.w600,
-          size: size * .39,
-          color: const Color(0xFF0B0B10),
-        ),
-      ),
-    );
-  }
-}
-
 /// «Друзья · 6 в сети».
 class EvFriendsCard extends StatelessWidget {
   const EvFriendsCard({super.key, required this.friends, required this.online});
 
-  final List<EvFriendLine> friends;
+  final List<EvPerson> friends;
   final int online;
 
   @override
@@ -136,7 +74,7 @@ class EvFriendsCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 7),
             child: Row(
               children: [
-                EvFriendAvatar(friend: f),
+                EvFriendAvatar(initials: f.initials, tint: f.tint),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -152,7 +90,7 @@ class EvFriendsCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  f.status,
+                  f.shortLine,
                   style: ev.text.data.copyWith(fontSize: 10, color: c.ink4),
                 ),
               ],

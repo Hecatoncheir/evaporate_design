@@ -237,6 +237,11 @@ abstract final class EvMotion {
 }
 
 /// Шаг сетки. Отступы кратны четырём.
+/// Цвет аватара. Градиенты из прототипа: первые три идут от облика,
+/// четвёртый — зелёный «в сети», два последних в палитру интерфейса
+/// не входят и нужны только чтобы шесть соседних кружков различались.
+enum EvAvatarTint { hot, cool, arc, ok, rose, sky }
+
 abstract final class EvSpace {
   static const xs = 4.0;
   static const s = 8.0;

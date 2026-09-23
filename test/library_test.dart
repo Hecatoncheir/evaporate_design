@@ -13,6 +13,7 @@ import 'package:evaporate_design/art/key_art.dart';
 import 'package:evaporate_design/atmosphere/ev_atmosphere.dart';
 import 'package:evaporate_design/atmosphere/ev_pointer.dart';
 import 'package:evaporate_design/data/sample_data.dart';
+import 'package:evaporate_design/data/sample_friends.dart';
 import 'package:evaporate_design/design/effects.dart';
 import 'package:evaporate_design/design/theme.dart';
 import 'package:evaporate_design/design/tokens.dart';

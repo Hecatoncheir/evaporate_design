@@ -4,6 +4,7 @@ import '../data/sample_data.dart';
 import '../library/ev_hero.dart';
 import '../library/hero_state.dart';
 import '../library/ev_session_row.dart';
+import '../friends/friends_data.dart';
 import '../library/ev_side_cards.dart';
 import '../library/library_layout.dart';
 import '../util/plural.dart';
@@ -41,7 +42,7 @@ class LibraryPage extends StatelessWidget {
   /// Недавние сессии, без игры в герое.
   final List<SampleGame> sessions;
 
-  final List<EvFriendLine> friends;
+  final List<EvPerson> friends;
   final int friendsOnline;
 
   /// Сколько раздач качается одновременно.
@@ -225,7 +226,7 @@ class _SideColumn extends StatelessWidget {
     required this.slots,
   });
 
-  final List<EvFriendLine> friends;
+  final List<EvPerson> friends;
   final int friendsOnline;
   final List<SampleGame> downloading;
   final int slots;

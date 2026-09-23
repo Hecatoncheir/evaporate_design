@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:evaporate_design/data/sample_data.dart';
+import 'package:evaporate_design/data/sample_friends.dart';
 import 'package:evaporate_design/design/effects.dart';
 import 'package:evaporate_design/design/theme.dart';
 import 'package:evaporate_design/launch/ev_launch_ritual.dart';

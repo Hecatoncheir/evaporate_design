@@ -1,5 +1,6 @@
 import '../art/key_art.dart';
-import '../library/ev_side_cards.dart';
+import '../friends/friends_data.dart';
+import 'sample_friends.dart';
 import '../widgets/ev_game_card.dart';
 import 'sample_data.dart';
 
@@ -118,7 +119,7 @@ class EvGameFacts {
   final int peers;
 
   /// Друзья, у которых эта игра.
-  final List<EvFriendLine> friends;
+  final List<EvPerson> friends;
 
   /// Отдано, ГБ.
   double get uploaded => total * ratio;

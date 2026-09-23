@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'data/sample_data.dart';
+import 'data/sample_friends.dart';
 import 'data/sample_downloads.dart';
 import 'data/sample_saves.dart';
 import 'design/appearance.dart';
@@ -8,11 +9,13 @@ import 'design/effects.dart';
 import 'design/theme.dart';
 import 'design/tokens.dart';
 import 'downloads/download_data.dart';
+import 'friends/friends_data.dart';
 import 'launch/ev_launch_ritual.dart';
 import 'library/hero_state.dart';
 import 'saves/saves_data.dart';
 import 'sheet/ev_game_sheet.dart';
 import 'screens/downloads_page.dart';
+import 'screens/friends_page.dart';
 import 'screens/library_page.dart';
 import 'screens/saves_page.dart';
 import 'screens/placeholder_page.dart';
@@ -45,6 +48,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
   final _state = ValueNotifier<EvHeroState>(EvHeroState.ready);
   final _downloads = ValueNotifier<EvDownloadsState>(EvDownloadsState.active);
   final _saves = ValueNotifier<EvSavesState>(EvSavesState.synced);
+  final _friendsState = ValueNotifier<EvFriendsState>(EvFriendsState.normal);
   late final _ownEffects = widget.effects == null ? EvEffects() : null;
   final _shell = EvShellController();
 
@@ -73,6 +77,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
 
   @override
   void dispose() {
+    _friendsState.dispose();
     _saves.dispose();
     _downloads.dispose();
     _state.dispose();
@@ -98,7 +103,12 @@ class _EvaporateAppState extends State<EvaporateApp> {
             themeAnimationDuration: EvMotion.screen,
             themeAnimationCurve: EvMotion.easeOut,
             home: ListenableBuilder(
-              listenable: Listenable.merge([_state, _downloads, _saves]),
+              listenable: Listenable.merge([
+                _state,
+                _downloads,
+                _saves,
+                _friendsState,
+              ]),
               builder: (context, _) => _Home(
                 shell: _shell,
                 state: _state.value,
@@ -107,6 +117,8 @@ class _EvaporateAppState extends State<EvaporateApp> {
                 onDownloads: _setDownloads,
                 saves: _saves.value,
                 onSaves: (next) => _saves.value = next,
+                friendsState: _friendsState.value,
+                onFriends: (next) => _friendsState.value = next,
               ),
             ),
           ),
@@ -125,6 +137,8 @@ class _Home extends StatelessWidget {
     required this.onDownloads,
     required this.saves,
     required this.onSaves,
+    required this.friendsState,
+    required this.onFriends,
   });
 
   final EvShellController shell;
@@ -145,6 +159,12 @@ class _Home extends StatelessWidget {
   final EvSavesState saves;
 
   final ValueChanged<EvSavesState> onSaves;
+
+  /// Состояние раздела «Друзья». «Нет сети» сюда не входит: это
+  /// состояние окна, и раздел читает его из состояния героя.
+  final EvFriendsState friendsState;
+
+  final ValueChanged<EvFriendsState> onFriends;
 
   /// Запуск игры — ритуал поверх всего окна.
   static void _launch(BuildContext context, SampleGame game) =>
@@ -217,11 +237,13 @@ class _Home extends StatelessWidget {
   Widget build(BuildContext context) {
     final appearance = EvAppearanceScope.of(context);
     final queue = sampleDownloadsFor(downloads);
+    final offline = state == EvHeroState.offline;
+    final friends = sampleFriendsFor(friendsState, offline: offline);
     return EvShell(
       controller: shell,
       initials: sampleUserInitials,
       userName: sampleUserName,
-      friendsOnline: sampleFriendsOnline,
+      friendsOnline: friends.online,
       downloadsActive: queue.torrents.length,
       status: _pills(queue),
       commands: [
@@ -269,13 +291,21 @@ class _Home extends StatelessWidget {
           games: sampleLibrary,
           hero: sampleHero,
           sessions: sampleSessions,
-          friends: sampleFriends,
-          friendsOnline: sampleFriendsOnline,
+          // Правая колонка библиотеки показывает тех же друзей, что
+          // и раздел, — и так же гаснет без сети.
+          friends: friends.people.take(4).toList(),
+          friendsOnline: friends.online,
           downloadSlots: sampleDownloadSlots,
           onLaunch: (g) => _launch(context, g),
           onOpen: (g) => _open(context, g),
         ),
         EvSection.downloads => DownloadsPage(downloads: queue),
+        EvSection.friends => FriendsPage(
+          friends: friends,
+          rateKb: queue.downKb,
+          onInvite: () => onFriends(EvFriendsState.normal),
+          onDownloads: () => shell.go(EvSection.downloads),
+        ),
         EvSection.saves => SavesPage(
           saves: sampleSavesFor(saves),
           onResolve: () => onSaves(EvSavesState.synced),
@@ -288,6 +318,8 @@ class _Home extends StatelessWidget {
           onDownloads: onDownloads,
           saves: saves,
           onSaves: onSaves,
+          friendsState: friendsState,
+          onFriends: onFriends,
         ),
         _ => PlaceholderPage(section: section),
       },

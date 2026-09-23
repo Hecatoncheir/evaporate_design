@@ -2518,9 +2518,9 @@ h1.title b{font-weight:800;display:block}
             <div class="big" id="frBig">1,34<u>МБ/с</u></div>
             <div class="cta-note cool" style="margin-top:12px"><svg><use href="#i-peers"/></svg><span id="frShare">83 % вашей скорости приёма дают друзья, а не рой</span></div>
             <div class="kpis">
-              <div class="kpi"><div class="p-lab">В сети</div><div class="v ok" id="frOn">4</div></div>
-              <div class="kpi"><div class="p-lab">Всего</div><div class="v">12</div></div>
-              <div class="kpi"><div class="p-lab">Раздают вам</div><div class="v c">3</div></div>
+              <div class="kpi"><div class="p-lab">В сети</div><div class="v ok" id="frOn">6</div></div>
+              <div class="kpi"><div class="p-lab">Всего</div><div class="v" id="frTotal">12</div></div>
+              <div class="kpi"><div class="p-lab">Раздают вам</div><div class="v c" id="frSeeds">3</div></div>
               <div class="kpi"><div class="p-lab">Отдано друзьям</div><div class="v h">214 ГБ</div></div>
             </div>
           </div>
@@ -2528,14 +2528,14 @@ h1.title b{font-weight:800;display:block}
             <div class="p-lab">Заявка в друзья</div>
             <div id="frInvite" style="margin-top:12px"></div>
             <div class="p-lab" style="margin-top:20px">Общая библиотека</div>
-            <div class="cta-note" style="margin-top:10px"><svg><use href="#i-lib"/></svg>У вас 31 игра, которая есть хотя бы у одного друга</div>
+            <div class="cta-note" style="margin-top:10px"><svg><use href="#i-lib"/></svg>У вас 8 игр, которые есть хотя бы у одного друга</div>
             <div class="stack" style="margin-top:14px">
-              <i style="width:42%;background:var(--hot-1)"></i><i style="width:23%;background:var(--cool)"></i><i style="width:14%;background:var(--arc)"></i>
+              <i style="width:25%;background:var(--hot-1)"></i><i style="width:41.7%;background:var(--cool)"></i><i style="width:33.3%;background:var(--arc)"></i>
             </div>
             <div class="stats" style="margin-top:12px">
-              <span class="st"><svg><use href="#i-seed"/></svg>у всех<b>13</b></span>
-              <span class="st"><svg><use href="#i-peers"/></svg>у половины<b>7</b></span>
-              <span class="st"><svg><use href="#i-disk"/></svg>только у вас<b>11</b></span>
+              <span class="st"><svg><use href="#i-seed"/></svg>у всех<b>3</b></span>
+              <span class="st"><svg><use href="#i-peers"/></svg>у половины<b>5</b></span>
+              <span class="st"><svg><use href="#i-disk"/></svg>только у вас<b>4</b></span>
             </div>
           </div>
         </div>
@@ -4810,13 +4810,13 @@ const AV = [
   "linear-gradient(140deg,#8fb6ff,#2b4a8f)"
 ];
 const PEOPLE = [
-  {i:"АК", n:"Антон К.",  st:"play", g:"ashen",   t:"2 ч 14 мин · Глава 5",        common:14},
+  {i:"АК", n:"Антон К.",  st:"play", g:"ashen",   t:"2 ч 14 мин · Глава 5",        common:11},
   {i:"МС", n:"Мира С.",   st:"play", g:"crimson", t:"41 мин · Излом, ход 42",      common:9},
-  {i:"ЛП", n:"Лена П.",   st:"play", g:"wolf",    t:"5 ч 02 мин · Чёрная река",    common:11},
+  {i:"ЛП", n:"Лена П.",   st:"play", g:"wolf",    t:"5 ч 02 мин · Чёрная река",    common:10},
   {i:"ДР", n:"Дан Р.",    st:"on",   was:"в сети",                                  common:6},
   {i:"НТ", n:"Ника Т.",   st:"on",   was:"в сети",                                  common:8},
   {i:"ЮС", n:"Юля С.",    st:"on",   was:"в сети",                                  common:5},
-  {i:"ИВ", n:"Игорь В.",  st:"off",  was:"был вчера в 22:10",                       common:12},
+  {i:"ИВ", n:"Игорь В.",  st:"off",  was:"был вчера в 22:10",                       common:9},
   {i:"СМ", n:"Саша М.",   st:"off",  was:"3 дня назад",                             common:4},
   {i:"РБ", n:"Рома Б.",   st:"off",  was:"неделю назад",                            common:7},
   {i:"МЛ", n:"Марк Л.",   st:"off",  was:"месяц назад",                             common:2},
@@ -4828,10 +4828,11 @@ PEOPLE.forEach((p, i) => p.av = AV[i % AV.length]);
 /* скорости сходятся с экраном загрузок: 592 КБ/с на «Орбиту»,
    1.03 МБ/с на «Эхо» — друзья дают 83 % из 1.62 МБ/с */
 const SEEDERS = [
-  {p:0, g:"orbita", rate:"402 КБ/с", share:68, of:"592 КБ/с"},
-  {p:5, g:"halc2",  rate:"870 КБ/с", share:84, of:"1.03 МБ/с"},
-  {p:4, g:"orbita", rate:"68 КБ/с",  share:11, of:"592 КБ/с"}
+  {p:0, g:"orbita", kb:402, ofKb:592},
+  {p:5, g:"halc2",  kb:870, ofKb:1030},
+  {p:4, g:"orbita", kb:68,  ofKb:592}
 ];
+const kbs = kb => kb < 1000 ? kb + " КБ/с" : (kb / 1000).toFixed(2) + " МБ/с";
 const FEED = [
   {who:0, line:'получил <em>«Тихий шаг»</em> в «Пепельном Пределе»', t:"3 часа назад", now:true},
   {who:2, line:'раздала вам <b>14.2 ГБ</b> за неделю', t:"вчера"},
@@ -4870,24 +4871,31 @@ function renderFriends(mode){
          <span class="d">Загрузки идут только из общего роя, скорость просядет</span></div>`
     : SEEDERS.map(s => {
         const p = PEOPLE[s.p];
+        const share = Math.round(s.kb / s.ofKb * 100);
         return `<div class="seedrow" data-friend="${s.p}" style="cursor:pointer">
           ${frAv(p)}
           <span class="mid">
             <span class="top"><span class="nm">${p.n}</span>
-              <span class="to">раздаёт <b>${byId(s.g).t}</b> · ${s.share} % из ${s.of}</span></span>
-            <span class="contrib"><i style="width:${s.share}%"></i><u style="width:${100 - s.share}%"></u></span>
+              <span class="to">раздаёт <b>${byId(s.g).t}</b> · ${share} % из ${kbs(s.ofKb)}</span></span>
+            <span class="contrib"><i style="width:${share}%"></i><u style="width:${100 - share}%"></u></span>
           </span>
-          <span class="rate"><span class="v">${s.rate}</span><span class="k">от него</span></span>
+          <span class="rate"><span class="v">${kbs(s.kb)}</span><span class="k">от него</span></span>
         </div>`;
       }).join("");
 
   const onCount = off ? 0 : PEOPLE.filter(p => p.st !== "off").length;
   $("#frOn").textContent = onCount;
+  $("#frTotal").textContent = PEOPLE.length;
+  $("#frSeeds").textContent = off ? 0 : SEEDERS.length;
   $("#frAllCount").textContent = `${onCount} в сети из ${PEOPLE.length}`;
-  $("#frBig").innerHTML = off ? `0<u>МБ/с</u>` : `1,34<u>МБ/с</u>`;
+  // Приём от друзей — сумма по раздающим, доля — из общего приёма:
+  // 402 + 870 + 68 КБ/с из 1622 КБ/с раздела «Загрузки».
+  const fromFriends = off ? 0 : SEEDERS.reduce((sum, s) => sum + s.kb, 0);
+  const totalKb = 592 + 1030;
+  $("#frBig").innerHTML = `${(fromFriends / 1000).toFixed(2)}<u>МБ/с</u>`;
   $("#frShare").textContent = off
     ? "Нет сети — весь приём идёт из общего роя"
-    : "83 % вашей скорости приёма дают друзья, а не рой";
+    : `${Math.round(fromFriends / totalKb * 100)} % вашей скорости приёма дают друзья, а не рой`;
 
   $("#frList").innerHTML = PEOPLE.map(p => {
     const st = off ? "off" : p.st;

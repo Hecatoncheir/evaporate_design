@@ -85,6 +85,9 @@ abstract final class EvIcons {
   /// Галочка: выбрать эту версию сохранения.
   static const check = 'check';
 
+  /// Написать другу.
+  static const note = 'note';
+
   /// Две ветки сохранения разошлись.
   static const merge = 'merge';
 

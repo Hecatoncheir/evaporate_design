@@ -2,7 +2,6 @@ import '../art/key_art.dart';
 import '../library/hero_state.dart';
 import '../launch/ev_launch_ritual.dart';
 import '../widgets/ev_icon.dart';
-import '../library/ev_side_cards.dart';
 import '../util/units.dart';
 import '../widgets/ev_game_card.dart';
 
@@ -402,11 +401,3 @@ const List<EvLaunchStage> sampleLaunchStages = [
 
 const sampleUserInitials = 'ВВ';
 const sampleUserName = 'Виталий В.';
-const sampleFriendsOnline = 6;
-
-const sampleFriends = [
-  EvFriendLine('АК', 'Антон К.', 'Пепельный Предел', EvAvatarTint.hot),
-  EvFriendLine('МС', 'Мира С.', 'Красный Меридиан', EvAvatarTint.cool),
-  EvFriendLine('ДР', 'Дан Р.', 'в сети', EvAvatarTint.arc),
-  EvFriendLine('ЛП', 'Лена П.', 'Волчья Тропа', EvAvatarTint.ok),
-];

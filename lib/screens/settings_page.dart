@@ -8,6 +8,7 @@ import '../downloads/download_data.dart';
 import '../gallery/gallery_page.dart';
 import '../glass/glass_lens.dart';
 import '../library/hero_state.dart';
+import '../friends/friends_data.dart';
 import '../saves/saves_data.dart';
 import '../widgets/ev_focusable.dart';
 import '../widgets/ev_controls.dart';
@@ -25,6 +26,8 @@ class SettingsPage extends StatelessWidget {
     required this.onDownloads,
     required this.saves,
     required this.onSaves,
+    required this.friendsState,
+    required this.onFriends,
   });
 
   /// Состояние игры в герое. Движка нет, поэтому его переключают здесь.
@@ -41,6 +44,11 @@ class SettingsPage extends StatelessWidget {
   final EvSavesState saves;
 
   final ValueChanged<EvSavesState> onSaves;
+
+  /// Состояние раздела «Друзья» — по тем же причинам и рядом.
+  final EvFriendsState friendsState;
+
+  final ValueChanged<EvFriendsState> onFriends;
 
   @override
   Widget build(BuildContext context) {
@@ -270,6 +278,28 @@ class SettingsPage extends StatelessWidget {
                   hint: value.hint,
                   selected: value == saves,
                   onTap: () => onSaves(value),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: EvSpace.m),
+        EvPanel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              EvOption(
+                title: 'Состояние друзей',
+                description:
+                    'Заявку можно принять по-настоящему. «Нет сети» здесь '
+                    'нет: это состояние окна, из библиотеки',
+                control: const SizedBox.shrink(),
+              ),
+              for (final value in EvFriendsState.values)
+                _StateRow(
+                  name: value.label,
+                  hint: value.hint,
+                  selected: value == friendsState,
+                  onTap: () => onFriends(value),
                 ),
             ],
           ),

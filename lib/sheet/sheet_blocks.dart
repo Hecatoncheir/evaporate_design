@@ -7,7 +7,7 @@ import '../data/game_facts.dart';
 import '../data/sample_data.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
-import '../library/ev_side_cards.dart';
+import '../friends/ev_avatar.dart';
 import '../util/units.dart';
 import '../widgets/ev_focusable.dart';
 import '../widgets/ev_icon.dart';
@@ -1025,7 +1025,11 @@ class _Friends extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 7),
             child: Row(
               children: [
-                EvFriendAvatar(friend: friend, size: 26),
+                EvFriendAvatar(
+                  initials: friend.initials,
+                  tint: friend.tint,
+                  size: 26,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
