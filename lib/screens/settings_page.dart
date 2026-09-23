@@ -4,6 +4,7 @@ import '../design/appearance.dart';
 import '../design/effects.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../downloads/download_data.dart';
 import '../gallery/gallery_page.dart';
 import '../glass/glass_lens.dart';
 import '../library/hero_state.dart';
@@ -15,12 +16,23 @@ import '../widgets/ev_surfaces.dart';
 /// Настройки в каркасе: облик и вход в галерею компонентов. Полный экран —
 /// десять разделов, поиск по настройкам, расписание — пока в макете.
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key, required this.state, required this.onState});
+  const SettingsPage({
+    super.key,
+    required this.state,
+    required this.onState,
+    required this.downloads,
+    required this.onDownloads,
+  });
 
   /// Состояние игры в герое. Движка нет, поэтому его переключают здесь.
   final EvHeroState state;
 
   final ValueChanged<EvHeroState> onState;
+
+  /// Состояние очереди раздач — по тем же причинам и рядом.
+  final EvDownloadsState downloads;
+
+  final ValueChanged<EvDownloadsState> onDownloads;
 
   @override
   Widget build(BuildContext context) {
@@ -206,6 +218,28 @@ class SettingsPage extends StatelessWidget {
                   hint: hint,
                   selected: value == state,
                   onTap: () => onState(value),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: EvSpace.m),
+        EvPanel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              EvOption(
+                title: 'Состояние загрузок',
+                description:
+                    'Шесть состояний очереди. «Сеть пропала» — состояние '
+                    'окна: его же увидит герой',
+                control: const SizedBox.shrink(),
+              ),
+              for (final value in EvDownloadsState.values)
+                _StateRow(
+                  name: value.label,
+                  hint: value.hint,
+                  selected: value == downloads,
+                  onTap: () => onDownloads(value),
                 ),
             ],
           ),

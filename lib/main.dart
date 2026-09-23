@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
 import 'data/sample_data.dart';
+import 'data/sample_downloads.dart';
 import 'design/appearance.dart';
 import 'design/effects.dart';
 import 'design/theme.dart';
 import 'design/tokens.dart';
+import 'downloads/download_data.dart';
 import 'launch/ev_launch_ritual.dart';
 import 'library/hero_state.dart';
 import 'sheet/ev_game_sheet.dart';
+import 'screens/downloads_page.dart';
 import 'screens/library_page.dart';
 import 'screens/placeholder_page.dart';
 import 'screens/settings_page.dart';
@@ -37,13 +40,36 @@ class _EvaporateAppState extends State<EvaporateApp> {
   // Движка нет, а состояния продукта есть: их переключает «Разработка»
   // в настройках — как панель состояний в прототипе.
   final _state = ValueNotifier<EvHeroState>(EvHeroState.ready);
+  final _downloads = ValueNotifier<EvDownloadsState>(EvDownloadsState.active);
   late final _ownEffects = widget.effects == null ? EvEffects() : null;
   final _shell = EvShellController();
 
   EvEffects get _effects => widget.effects ?? _ownEffects!;
 
+  /// Состояние игры и состояние очереди — разные вещи, но «нет сети» —
+  /// свойство окна, и его видят оба. Поэтому офлайн ходит парой: включить
+  /// его с одной стороны — значит включить с обеих.
+  void _setHero(EvHeroState next) {
+    _state.value = next;
+    if (next == EvHeroState.offline) {
+      _downloads.value = EvDownloadsState.offline;
+    } else if (_downloads.value == EvDownloadsState.offline) {
+      _downloads.value = EvDownloadsState.active;
+    }
+  }
+
+  void _setDownloads(EvDownloadsState next) {
+    _downloads.value = next;
+    if (next == EvDownloadsState.offline) {
+      _state.value = EvHeroState.offline;
+    } else if (_state.value == EvHeroState.offline) {
+      _state.value = EvHeroState.ready;
+    }
+  }
+
   @override
   void dispose() {
+    _downloads.dispose();
     _state.dispose();
     _appearance.dispose();
     _ownEffects?.dispose();
@@ -66,12 +92,14 @@ class _EvaporateAppState extends State<EvaporateApp> {
             theme: _appearance.theme,
             themeAnimationDuration: EvMotion.screen,
             themeAnimationCurve: EvMotion.easeOut,
-            home: ValueListenableBuilder<EvHeroState>(
-              valueListenable: _state,
-              builder: (context, state, _) => _Home(
+            home: ListenableBuilder(
+              listenable: Listenable.merge([_state, _downloads]),
+              builder: (context, _) => _Home(
                 shell: _shell,
-                state: state,
-                onState: (next) => _state.value = next,
+                state: _state.value,
+                onState: _setHero,
+                downloads: _downloads.value,
+                onDownloads: _setDownloads,
               ),
             ),
           ),
@@ -86,6 +114,8 @@ class _Home extends StatelessWidget {
     required this.shell,
     required this.state,
     required this.onState,
+    required this.downloads,
+    required this.onDownloads,
   });
 
   final EvShellController shell;
@@ -95,6 +125,12 @@ class _Home extends StatelessWidget {
   final EvHeroState state;
 
   final ValueChanged<EvHeroState> onState;
+
+  /// Состояние очереди раздач — одно на окно: его видят раздел
+  /// «Загрузки» и плашки в верхней полосе.
+  final EvDownloadsState downloads;
+
+  final ValueChanged<EvDownloadsState> onDownloads;
 
   /// Запуск игры — ритуал поверх всего окна.
   static void _launch(BuildContext context, SampleGame game) =>
@@ -115,31 +151,56 @@ class _Home extends StatelessWidget {
     onQuit: () => onState(EvHeroState.ready),
   );
 
+  /// Плашки верхней полосы читают оба состояния окна. Левая — всегда
+  /// приём, и он складывается из раздач, а не пишется отдельным числом.
+  List<EvPill> _pills(EvDownloads queue) => switch (state) {
+    EvHeroState.offline => const [
+      EvPill('Нет сети', status: EvStatus.idle),
+      EvPill('Движок на паузе', status: EvStatus.idle),
+    ],
+    // Пока игра идёт, приём ограничен, чтобы не отнимать у неё сеть.
+    EvHeroState.running => [
+      EvPill(formatRate(1024, digits: 1), status: EvStatus.busy),
+      const EvPill('Игра запущена'),
+    ],
+    _ => [
+      EvPill(
+        formatRate(queue.downKb, digits: 1),
+        status: queue.downKb == 0 ? EvStatus.idle : EvStatus.busy,
+      ),
+      switch (downloads) {
+        EvDownloadsState.noSeeds => const EvPill(
+          'Нет раздающих',
+          status: EvStatus.warn,
+        ),
+        EvDownloadsState.noSpace => const EvPill(
+          'Диск переполнен',
+          status: EvStatus.bad,
+        ),
+        EvDownloadsState.hash => const EvPill(
+          'Перепроверка',
+          status: EvStatus.busy,
+        ),
+        EvDownloadsState.empty => const EvPill(
+          'Движок простаивает',
+          status: EvStatus.idle,
+        ),
+        _ => const EvPill('Движок готов'),
+      },
+    ],
+  };
+
   @override
   Widget build(BuildContext context) {
     final appearance = EvAppearanceScope.of(context);
+    final queue = sampleDownloadsFor(downloads);
     return EvShell(
       controller: shell,
       initials: sampleUserInitials,
       userName: sampleUserName,
       friendsOnline: sampleFriendsOnline,
-      downloadsActive: sampleDownloadsActive,
-      status: switch (state) {
-        // Плашки читают то же состояние: офлайн гасит сетевое, запущенная
-        // игра ограничивает приём.
-        EvHeroState.offline => const [
-          EvPill('Нет сети', status: EvStatus.idle),
-          EvPill('Движок на паузе', status: EvStatus.idle),
-        ],
-        EvHeroState.running => [
-          EvPill(formatRate(1024, digits: 1), status: EvStatus.busy),
-          const EvPill('Игра запущена'),
-        ],
-        _ => [
-          EvPill(formatRate(sampleRateKb, digits: 1), status: EvStatus.busy),
-          const EvPill('Движок готов'),
-        ],
-      },
+      downloadsActive: queue.torrents.length,
+      status: _pills(queue),
       commands: [
         for (final g in sampleLibrary)
           EvCommand(
@@ -191,7 +252,13 @@ class _Home extends StatelessWidget {
           onLaunch: (g) => _launch(context, g),
           onOpen: (g) => _open(context, g),
         ),
-        EvSection.settings => SettingsPage(state: state, onState: onState),
+        EvSection.downloads => DownloadsPage(downloads: queue),
+        EvSection.settings => SettingsPage(
+          state: state,
+          onState: onState,
+          downloads: downloads,
+          onDownloads: onDownloads,
+        ),
         _ => PlaceholderPage(section: section),
       },
     );

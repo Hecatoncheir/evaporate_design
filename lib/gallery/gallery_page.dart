@@ -182,7 +182,61 @@ class _GalleryBodyState extends State<_GalleryBody> {
                   Text('Завершено', style: ev.text.label),
                   const SizedBox(height: EvSpace.s),
                   const EvBar(1, muted: true),
+                  const SizedBox(height: EvSpace.m),
+                  Text('Ждём раздающих', style: ev.text.label),
+                  const SizedBox(height: EvSpace.s),
+                  const EvBar(0.41, tone: EvBarTone.stall),
+                  const SizedBox(height: EvSpace.m),
+                  Text('Остановлено ошибкой', style: ev.text.label),
+                  const SizedBox(height: EvSpace.s),
+                  const EvBar(0.41, tone: EvBarTone.dead),
+                  const SizedBox(height: EvSpace.m),
+                  Text('Перепроверка частей', style: ev.text.label),
+                  const SizedBox(height: EvSpace.s),
+                  const EvBar(0.38, tone: EvBarTone.arc),
+                  const SizedBox(height: EvSpace.xl),
+                  Text('Действие одним знаком', style: ev.text.label),
+                  const SizedBox(height: EvSpace.s),
+                  Row(
+                    children: [
+                      EvIconButton(
+                        icon: EvIcons.pause,
+                        label: 'Пауза',
+                        onPressed: () {},
+                      ),
+                      const SizedBox(width: 7),
+                      EvIconButton(
+                        icon: EvIcons.folder,
+                        label: 'Открыть папку',
+                        accent: EvIconButtonAccent.hot,
+                        onPressed: () {},
+                      ),
+                      const SizedBox(width: 7),
+                      EvIconButton(
+                        icon: EvIcons.close,
+                        label: 'Отменить',
+                        accent: EvIconButtonAccent.danger,
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
                 ],
+              ),
+            ),
+
+            const SizedBox(height: EvSpace.xxl),
+            const EvSectionHeader('Пусто', count: 'раздел без содержимого'),
+            const SizedBox(height: EvSpace.l),
+            EvNothing(
+              icon: EvIcons.download,
+              title: 'Ничего не качается',
+              detail:
+                  'Перетащите .torrent в окно или вставьте magnet-ссылку — '
+                  'движок подхватит её сам',
+              action: EvMiniButton(
+                label: 'Вставить ссылку',
+                icon: EvIcons.magnet,
+                onPressed: () {},
               ),
             ),
 

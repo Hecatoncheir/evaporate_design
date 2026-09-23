@@ -78,4 +78,13 @@ abstract final class EvIcons {
 
   /// Завершить игру.
   static const power = 'power';
+
+  /// Сети нет.
+  static const wifiOff = 'wifi-off';
+
+  /// Magnet-ссылка вместо файла раздачи.
+  static const magnet = 'magnet';
+
+  /// Повторить: перекачать части, проверить связь.
+  static const retry = 'retry';
 }

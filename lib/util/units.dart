@@ -1,7 +1,10 @@
 /// Скорость в КБ/с так, как её пишет прототип: до тысячи — килобайты,
-/// дальше — мегабайты с [digits] знаками после точки.
+/// дальше — мегабайты с [digits] знаками после точки. Ноль — байты:
+/// «0 КБ/с» читалось бы как «немного», а приёма нет совсем.
 String formatRate(int kilobytesPerSecond, {int digits = 2}) =>
-    kilobytesPerSecond < 1000
+    kilobytesPerSecond == 0
+    ? '0 Б/с'
+    : kilobytesPerSecond < 1000
     ? '$kilobytesPerSecond КБ/с'
     : '${(kilobytesPerSecond / 1000).toStringAsFixed(digits)} МБ/с';
 

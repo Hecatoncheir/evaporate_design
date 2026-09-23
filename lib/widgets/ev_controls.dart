@@ -84,43 +84,43 @@ class _EvGhostButtonState extends State<EvGhostButton> {
             button: true,
             label: widget.iconOnly ? widget.label : null,
             child: EvGlass(
-            style: EvGlassStyle.lens,
-            borderRadius: ev.radii.bPill,
-            grouped: widget.grouped,
-            interactive: true,
-            pressed: _pressed,
-            keyLight: widget.danger && lit ? EvColors.bad : null,
-            tint: lit
-                ? c.surface.withValues(alpha: 0.6)
-                : c.sub.withValues(alpha: 0.5),
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.iconOnly ? 0 : 20,
-            ),
-            child: SizedBox(
-              height: widget.height,
-              width: widget.iconOnly ? widget.height : null,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (widget.icon != null) ...[
-                    EvIcon(
-                      widget.icon!,
-                      size: 17,
-                      color: lit ? accent : c.ink2,
-                    ),
-                    if (!widget.iconOnly) const SizedBox(width: 9),
-                  ],
-                  // 15 px, как у «Играть»: кнопки одной строки — одним кеглем
-                  if (!widget.iconOnly)
-                    Text(
-                      widget.label,
-                      style: ev.text.body.copyWith(
-                        fontSize: 15,
+              style: EvGlassStyle.lens,
+              borderRadius: ev.radii.bPill,
+              grouped: widget.grouped,
+              interactive: true,
+              pressed: _pressed,
+              keyLight: widget.danger && lit ? EvColors.bad : null,
+              tint: lit
+                  ? c.surface.withValues(alpha: 0.6)
+                  : c.sub.withValues(alpha: 0.5),
+              padding: EdgeInsets.symmetric(
+                horizontal: widget.iconOnly ? 0 : 20,
+              ),
+              child: SizedBox(
+                height: widget.height,
+                width: widget.iconOnly ? widget.height : null,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (widget.icon != null) ...[
+                      EvIcon(
+                        widget.icon!,
+                        size: 17,
                         color: lit ? accent : c.ink2,
                       ),
-                    ),
-                ],
+                      if (!widget.iconOnly) const SizedBox(width: 9),
+                    ],
+                    // 15 px, как у «Играть»: кнопки одной строки — одним кеглем
+                    if (!widget.iconOnly)
+                      Text(
+                        widget.label,
+                        style: ev.text.body.copyWith(
+                          fontSize: 15,
+                          color: lit ? accent : c.ink2,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -196,6 +196,104 @@ class _EvMiniButtonState extends State<EvMiniButton> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Чем разгорается квадратная кнопка под курсором.
+enum EvIconButtonAccent {
+  /// Обычное действие: белеет кромка.
+  plain,
+
+  /// Ведёт наружу — в папку, в проводник.
+  hot,
+
+  /// Необратимое: отменить, убрать из очереди.
+  danger,
+}
+
+/// Действие одним знаком: квадрат по высоте, скругление как у панели,
+/// а не таблетка. Стоит там, где подпись не поместится, — в строке
+/// раздачи их три подряд, и подписи съели бы имя раздачи.
+class EvIconButton extends StatefulWidget {
+  const EvIconButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.accent = EvIconButtonAccent.plain,
+    this.size = 32,
+    this.bare = false,
+  });
+
+  final String icon;
+
+  /// Подпись читает экранный диктор: знака ему мало.
+  final String label;
+
+  /// `null` — действия пока нет: кнопка выглядит так же, но не
+  /// нажимается и фокус не получает.
+  final VoidCallback? onPressed;
+
+  final EvIconButtonAccent accent;
+  final double size;
+
+  /// Без рамки: знак сам по себе. Так стоит крестик в строке очереди.
+  final bool bare;
+
+  @override
+  State<EvIconButton> createState() => _EvIconButtonState();
+}
+
+class _EvIconButtonState extends State<EvIconButton> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final ev = context.ev;
+    final c = ev.colors;
+    final lit = _hover && widget.onPressed != null;
+    final accent = switch (widget.accent) {
+      EvIconButtonAccent.plain => c.ink,
+      EvIconButtonAccent.hot => c.hot2,
+      EvIconButtonAccent.danger => EvColors.bad,
+    };
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: EvFocusable(
+        onActivate: widget.onPressed,
+        radius: widget.bare ? ev.radii.r1 : ev.radii.r4,
+        child: Semantics(
+          button: true,
+          label: widget.label,
+          child: GestureDetector(
+            onTap: widget.onPressed,
+            child: AnimatedContainer(
+              duration: EvMotion.fast,
+              curve: EvMotion.ease,
+              width: widget.size,
+              height: widget.size,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: widget.bare ? ev.radii.b1 : ev.radii.b4,
+                border: widget.bare
+                    ? null
+                    : Border.all(color: lit ? accent : c.line),
+                color: lit && !widget.bare
+                    ? c.ink.withValues(alpha: .05)
+                    : null,
+              ),
+              child: EvIcon(
+                widget.icon,
+                size: widget.size * .44,
+                color: lit ? accent : c.ink3,
+              ),
             ),
           ),
         ),

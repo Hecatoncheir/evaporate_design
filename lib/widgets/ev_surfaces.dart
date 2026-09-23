@@ -1,8 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
 
 import '../design/theme.dart';
 import '../design/tokens.dart';
 import '../glass/ev_glass.dart';
+import 'ev_icon.dart';
 
 /// Панель: матовое стекло на ступень выше земли. Сквозь него видно, что
 /// делает фон, но ровно настолько, чтобы текст оставался текстом.
@@ -171,12 +174,33 @@ class EvPill extends StatelessWidget {
   }
 }
 
+/// Чем закрашена полоса. Цвет кодирует причину, а не громкость.
+enum EvBarTone {
+  /// Приём идёт.
+  hot,
+
+  /// Данные: проверка, выгрузка.
+  cool,
+
+  /// Приём встал, но не сломался.
+  stall,
+
+  /// Приём остановлен ошибкой.
+  dead,
+
+  /// Перепроверка частей.
+  arc,
+}
+
 /// Полоса прогресса. Янтарная — приём, циановая — данные и проверка.
+/// Погасшие варианты не светятся: полоса, которая никуда не движется,
+/// не должна тянуть на себя взгляд.
 class EvBar extends StatelessWidget {
   const EvBar(
     this.value, {
     super.key,
     this.cool = false,
+    this.tone,
     this.height = 5,
     this.muted = false,
   });
@@ -184,8 +208,12 @@ class EvBar extends StatelessWidget {
   /// 0…1
   final double value;
 
-  /// Циановый вариант — для данных.
+  /// Циановый вариант — для данных. То же, что `tone: EvBarTone.cool`,
+  /// и оставлено ради коротких вызовов.
   final bool cool;
+
+  /// Заливка. Не задана — [cool] решает между янтарной и циановой.
+  final EvBarTone? tone;
 
   final double height;
 
@@ -196,12 +224,29 @@ class EvBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final ev = context.ev;
     final c = ev.colors;
+    final look = tone ?? (cool ? EvBarTone.cool : EvBarTone.hot);
     final fill = muted
         ? [c.ink4.withValues(alpha: 0.5), c.ink4]
-        : cool
-        ? [const Color(0xFF1B6F8A), c.cool]
-        : [c.hotDeep, c.hot1, c.hot2];
-    final glowColor = cool ? c.cool : c.hot1;
+        : switch (look) {
+            EvBarTone.hot => [c.hotDeep, c.hot1, c.hot2],
+            EvBarTone.cool => [const Color(0xFF1B6F8A), c.cool],
+            EvBarTone.stall => [const Color(0xFF4A3410), EvColors.warn],
+            EvBarTone.dead => [const Color(0xFF4A1218), EvColors.bad],
+            EvBarTone.arc => [const Color(0xFF3A1E63), c.arc],
+          };
+    // Вставшая полоса не светится и держится приглушённее: она сообщает
+    // положение, а не движение.
+    final glow = switch (look) {
+      EvBarTone.hot => c.hot1,
+      EvBarTone.cool => c.cool,
+      EvBarTone.arc => c.arc,
+      EvBarTone.stall || EvBarTone.dead => null,
+    };
+    final fade = switch (look) {
+      EvBarTone.stall => .7,
+      EvBarTone.dead => .75,
+      _ => 1.0,
+    };
     return ClipRRect(
       borderRadius: BorderRadius.circular(height),
       child: Stack(
@@ -209,18 +254,21 @@ class EvBar extends StatelessWidget {
           Container(height: height, color: c.ink.withValues(alpha: 0.055)),
           FractionallySizedBox(
             widthFactor: value.clamp(0.0, 1.0),
-            child: Container(
-              height: height,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: fill),
-                boxShadow: muted
-                    ? null
-                    : [
-                        BoxShadow(
-                          color: glowColor.withValues(alpha: 0.5),
-                          blurRadius: 14,
-                        ),
-                      ],
+            child: Opacity(
+              opacity: fade,
+              child: Container(
+                height: height,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: fill),
+                  boxShadow: muted || glow == null
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: glow.withValues(alpha: 0.5),
+                            blurRadius: 14,
+                          ),
+                        ],
+                ),
               ),
             ),
           ),
@@ -228,6 +276,106 @@ class EvBar extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Пустой раздел: знак, что здесь ничего нет, и чем это заполнить.
+/// Не «ошибка» и не «скоро будет» — место, у которого есть вход.
+class EvNothing extends StatelessWidget {
+  const EvNothing({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.detail,
+    this.action,
+  });
+
+  final String icon;
+  final String title;
+  final String detail;
+
+  /// Что можно сделать прямо отсюда.
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    final ev = context.ev;
+    final c = ev.colors;
+    final detailStyle = ev.text.data.copyWith(fontSize: 11, height: 1.5);
+    return CustomPaint(
+      painter: EvDashedBorder(color: c.lineSoft, radius: ev.radii.r4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 42),
+        child: Column(
+          children: [
+            EvIcon(icon, size: 24, color: c.ink4),
+            const SizedBox(height: 11),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: ev.text.body.copyWith(fontSize: 14, color: c.ink2),
+            ),
+            const SizedBox(height: 11),
+            ConstrainedBox(
+              // 44ch моноширинным — та же мера, что в прототипе.
+              constraints: BoxConstraints(
+                maxWidth: evCharWidth(detailStyle) * 44,
+              ),
+              child: Text(
+                detail,
+                textAlign: TextAlign.center,
+                style: detailStyle,
+              ),
+            ),
+            if (action != null) ...[const SizedBox(height: 15), action!],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Пунктирная рамка. Ею обведено то, что ещё не занимает места:
+/// раздача в очереди, пустой раздел. Сплошная рамка обещала бы, что
+/// внутри уже что-то лежит.
+class EvDashedBorder extends CustomPainter {
+  EvDashedBorder({
+    required this.color,
+    required this.radius,
+    this.dash = 4,
+    this.gap = 4,
+  });
+
+  final Color color;
+  final double radius;
+  final double dash;
+  final double gap;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final outline = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(.5, .5, size.width - 1, size.height - 1),
+          Radius.circular(radius),
+        ),
+      );
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = color;
+    for (final metric in outline.computeMetrics()) {
+      for (var at = 0.0; at < metric.length; at += dash + gap) {
+        canvas.drawPath(
+          metric.extractPath(at, math.min(at + dash, metric.length)),
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(EvDashedBorder old) =>
+      old.color != color || old.radius != radius;
 }
 
 /// Надглавие: короткая горячая черта и капс моноширинным. Стоит над

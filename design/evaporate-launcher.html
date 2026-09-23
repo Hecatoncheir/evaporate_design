@@ -2166,8 +2166,8 @@ h1.title b{font-weight:800;display:block}
             <div class="big" id="bigRate">1.62<u>МБ/с</u></div>
             <svg class="spark" id="spark" viewBox="0 0 600 74" preserveAspectRatio="none" aria-label="График скорости за 60 секунд"></svg>
             <div class="kpis">
-              <div class="kpi"><div class="p-lab">Отдача</div><div class="v c" id="kUp">612 КБ/с</div></div>
-              <div class="kpi"><div class="p-lab">Пик за час</div><div class="v h">7.04 МБ/с</div></div>
+              <div class="kpi"><div class="p-lab">Отдача</div><div class="v c">1.94 МБ/с</div></div>
+              <div class="kpi"><div class="p-lab">Пик за час</div><div class="v h">11.0 МБ/с</div></div>
               <div class="kpi"><div class="p-lab">Активных</div><div class="v">2 / 3</div></div>
               <div class="kpi"><div class="p-lab">На диск</div><div class="v">1.48 МБ/с</div></div>
             </div>
@@ -2187,10 +2187,10 @@ h1.title b{font-weight:800;display:block}
                 <text x="60" y="72" text-anchor="middle" fill="var(--ink-4)" style="font:500 9px var(--font-mono);letter-spacing:.14em">% ГОТОВО</text>
               </svg>
               <div class="lgd">
-                <div class="lg"><i style="background:var(--hot-1)"></i>Получено<b>11.5 ГБ</b></div>
-                <div class="lg"><i style="background:var(--cool)"></i>В работе<b>4.8 ГБ</b></div>
-                <div class="lg"><i style="background:var(--arc)"></i>Проверка<b>2.5 ГБ</b></div>
-                <div class="lg"><i style="background:rgba(255,255,255,.12)"></i>Осталось<b>17.3 ГБ</b></div>
+                <div class="lg"><i style="background:var(--hot-1)"></i>Получено<b>11.8 ГБ</b></div>
+                <div class="lg"><i style="background:var(--cool)"></i>В работе<b>4.9 ГБ</b></div>
+                <div class="lg"><i style="background:var(--arc)"></i>Проверка<b>2.6 ГБ</b></div>
+                <div class="lg"><i style="background:rgba(255,255,255,.12)"></i>Осталось<b>9.5 ГБ</b></div>
               </div>
             </div>
             <div class="p-lab" style="margin-top:18px">Активность пиров · 60 с</div>
@@ -3250,7 +3250,7 @@ $("#contRows").innerHTML = ["depth","crimson","wolf"].map(id=>{const g=byId(id);
 /* ── downloads ─────────────────────────────────────────────── */
 const TOR=[
   {g:"orbita", name:"orbita-7 · Полное издание [RU+ENG] (2026) v5.2 + 3 DLC", path:"D:\\Игры\\Orbita7\\ · 24 файла · rutracker-6904761",
-   pct:40,size:"11.5 ГБ / 28.8 ГБ",dn:"592 КБ/с",up:"1.6 МБ/с",peak:"7.0 МБ/с",seeds:27,peers:31,eta:"осталось 4 ч 12 мин",cool:false},
+   pct:41,size:"11.8 ГБ / 28.8 ГБ",dn:"592 КБ/с",up:"1.6 МБ/с",peak:"7.0 МБ/с",seeds:27,peers:31,eta:"осталось 4 ч 12 мин",cool:false},
   {g:"halc2", name:"neon-halcyon-echo · дополнение «Эхо» v1.0", path:"D:\\Игры\\NeonHalcyon\\dlc · 6 файлов · rutracker-6913022",
    pct:66,size:"6.2 ГБ / 9.4 ГБ",dn:"1.03 МБ/с",up:"340 КБ/с",peak:"11.0 МБ/с",seeds:81,peers:82,eta:"осталось 51 мин",cool:true},
 ];
@@ -3295,6 +3295,7 @@ $("#torrents").innerHTML = TOR.map(t=>`
 (() => {
   const svg=$("#spark"),W=600,H=74,N=60;
   const hist=Array.from({length:N},(_,i)=>1.2+Math.sin(i/5)*.5+Math.random()*.9);
+  hist[N-1]=1.622;  // 592 КБ/с + 1.03 МБ/с — сумма активных раздач
   const area=document.createElementNS("http://www.w3.org/2000/svg","path");
   const line=document.createElementNS("http://www.w3.org/2000/svg","path");
   const tipC=document.createElementNS("http://www.w3.org/2000/svg","circle");
@@ -3322,7 +3323,6 @@ $("#torrents").innerHTML = TOR.map(t=>`
     const v=hist[N-1];
     $("#bigRate").innerHTML=v.toFixed(2)+"<u>МБ/с</u>";
     $("#netRate").textContent=v.toFixed(1)+" МБ/с";
-    $("#kUp").textContent=(380+Math.random()*420|0)+" КБ/с";
   }
   draw();
   if(!RM) setInterval(()=>{hist.push(clamp(hist[N-1]+(Math.random()-.48)*.7,.25,4.2));hist.shift();draw()},1100);
@@ -4128,7 +4128,7 @@ function torRow(t){
 }
 const BASE_A = {g:"orbita", name:"orbita-7 · Полное издание [RU+ENG] (2026) v5.2 + 3 DLC",
   path:"D:\\Игры\\Orbita7\\ · 24 файла · rutracker-6904761",
-  pct:41, size:"11.5 ГБ / 28.8 ГБ", dn:"592 КБ/с", up:"1.6 МБ/с", peak:"7.0 МБ/с",
+  pct:41, size:"11.8 ГБ / 28.8 ГБ", dn:"592 КБ/с", up:"1.6 МБ/с", peak:"7.0 МБ/с",
   seeds:27, peers:31, eta:"осталось 4 ч 12 мин"};
 const BASE_B = {g:"halc2", name:"neon-halcyon-echo · дополнение «Эхо» v1.0",
   path:"D:\\Игры\\NeonHalcyon\\dlc · 6 файлов · rutracker-6913022",
@@ -4153,7 +4153,8 @@ const DL = {
         acts:[{label:"Выбрать диск", icon:"drive", primary:1},{label:"Что удалить", icon:"info"}]}}),
     BASE_B],
   hash: [
-    mix(BASE_A, {state:"arc", barClass:"arc", pct:38, dn:"1.2 МБ/с", eta:"перепроверка 38 %",
+    mix(BASE_A, {state:"arc", barClass:"arc", pct:38, size:"10.9 ГБ / 28.8 ГБ",
+      dn:"1.2 МБ/с", eta:"перепроверка 38 %",
       alert:{kind:"arc", icon:"verified", h:"12 частей не прошли проверку",
         d:"Данные от одного из пиров пришли повреждёнными. Повреждённые части помечены и качаются заново, остальное трогать не нужно.",
         acts:[{label:"Перекачать", icon:"retry", primary:1},{label:"Журнал", icon:"info"}]}}),
@@ -4169,6 +4170,8 @@ const DL = {
   empty: []
 };
 function renderDL(list){
+  $$("#sc-downloads .sec")[1].hidden = !list.length;
+  $$("#sc-downloads .sec-h .count")[0].textContent = list.length;
   $("#torrents").innerHTML = list.length ? list.map(torRow).join("")
     : `<div class="nothing"><svg><use href="#i-dl"/></svg>
          <span class="h">Ничего не качается</span>
@@ -4284,14 +4287,17 @@ function applyState(id){
     case "dl-default":   setHero(HERO.ready); break;
     case "dl-noseeds":
       setHero(HERO.ready); renderDL(DL.noseeds);
-      pills[0].className = "pill off"; pills[0].innerHTML = `<span class="dot"></span>0 Б/с · нет сидов`;
+      pills[0].innerHTML = `<span class="dot busy"></span>1.03 МБ/с`;
+      pills[1].className = "pill"; pills[1].innerHTML = `<span class="dot"></span>Нет раздающих`;
       break;
     case "dl-nospace":
       setHero(HERO.ready); renderDL(DL.nospace);
+      pills[0].innerHTML = `<span class="dot busy"></span>1.03 МБ/с`;
       pills[1].className = "pill dead"; pills[1].innerHTML = `<span class="dot"></span>Диск переполнен`;
       break;
     case "dl-hash":
       setHero(HERO.ready); renderDL(DL.hash);
+      pills[0].innerHTML = `<span class="dot busy"></span>2.23 МБ/с`;
       pills[1].innerHTML = `<span class="dot busy"></span>Перепроверка`;
       break;
     case "dl-offline":
