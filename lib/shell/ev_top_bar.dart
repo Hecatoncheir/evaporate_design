@@ -17,10 +17,14 @@ class EvTopBar extends StatelessWidget {
     required this.section,
     this.onSearch,
     this.trailing = const [],
+    this.tools,
   });
 
   /// Текущий раздел — вторая часть крошки.
   final String section;
+
+  /// То, что стоит сразу за крошкой: переключатель видов библиотеки.
+  final Widget? tools;
 
   final VoidCallback? onSearch;
 
@@ -58,23 +62,31 @@ class EvTopBar extends StatelessWidget {
             // половину места и не отдал неиспользованное — правая группа
             // не доезжала бы до края.
             Expanded(
-              child: AnimatedSwitcher(
-                duration: EvMotion.fast,
-                // старая и новая подписи разной длины: обе прижаты влево,
-                // иначе короткая на миг съезжает к середине длинной
-                layoutBuilder: (current, previous) => Stack(
-                  alignment: Alignment.centerLeft,
-                  children: [...previous, ?current],
-                ),
-                child: Text(
-                  section,
-                  key: ValueKey(section),
-                  overflow: TextOverflow.ellipsis,
-                  style: ev.text.bodySmall.copyWith(
-                    color: c.ink2,
-                    fontSize: 12.5,
+              child: Row(
+                children: [
+                  Flexible(
+                    child: AnimatedSwitcher(
+                      duration: EvMotion.fast,
+                      // старая и новая подписи разной длины: обе прижаты
+                      // влево, иначе короткая на миг съезжает к середине
+                      // длинной
+                      layoutBuilder: (current, previous) => Stack(
+                        alignment: Alignment.centerLeft,
+                        children: [...previous, ?current],
+                      ),
+                      child: Text(
+                        section,
+                        key: ValueKey(section),
+                        overflow: TextOverflow.ellipsis,
+                        style: ev.text.bodySmall.copyWith(
+                          color: c.ink2,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  if (tools != null) ...[const SizedBox(width: 14), tools!],
+                ],
               ),
             ),
             const SizedBox(width: EvSpace.l),

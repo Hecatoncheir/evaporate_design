@@ -107,10 +107,13 @@ class EvHeadPanels extends StatelessWidget {
 /// Главное число панели: крупно, лёгким начертанием, с единицей рядом
 /// в моноширинном. Единица мельче в три раза — она не число.
 class EvBigNumber extends StatelessWidget {
-  const EvBigNumber(this.value, {super.key, required this.unit});
+  const EvBigNumber(this.value, {super.key, required this.unit, this.size});
 
   final String value;
   final String unit;
+
+  /// Кегль; `null` — от ширины окна, как в панелях.
+  final double? size;
 
   /// `clamp(30px, 4.4vw, 50px)` из прототипа.
   static double sizeFor(Size window) => (window.width * .044).clamp(30, 50);
@@ -118,7 +121,7 @@ class EvBigNumber extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ev = context.ev;
-    final size = sizeFor(MediaQuery.sizeOf(context));
+    final size = this.size ?? sizeFor(MediaQuery.sizeOf(context));
     return Text.rich(
       TextSpan(
         children: [

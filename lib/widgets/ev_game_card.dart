@@ -113,7 +113,10 @@ class _EvGameCardState extends State<EvGameCard> {
                           Positioned(
                             top: 9,
                             left: 9,
-                            child: _Badge(widget.badge!, state: widget.state),
+                            child: EvCoverBadge(
+                              widget.badge!,
+                              state: widget.state,
+                            ),
                           ),
                         if (widget.progress != null)
                           Positioned(
@@ -177,8 +180,10 @@ class _EvGameCardState extends State<EvGameCard> {
   }
 }
 
-class _Badge extends StatelessWidget {
-  const _Badge(this.label, {required this.state});
+/// Бейдж на обложке: процент загрузки, «в очереди», «новое». Общий
+/// для полки и «Стены».
+class EvCoverBadge extends StatelessWidget {
+  const EvCoverBadge(this.label, {super.key, required this.state});
 
   final String label;
   final EvGameState state;

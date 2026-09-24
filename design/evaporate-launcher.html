@@ -3139,10 +3139,10 @@ const P = {
   storm :{deep:"#04182c",mid:"#020c18",mid2:"#0d4a7a",hot:"#5ee7ff",hot2:"#d6f8ff"},
 };
 const GAMES=[
-  {id:"ashen",  t:"Пепельный Предел", sub:"Action-RPG · 284 ч",      pal:P.ash,    size:"68.4 ГБ", state:"ready", seed:1207,
+  {id:"ashen",  t:"Пепельный Предел", sub:"Action-RPG · 284 ч",      pal:P.ash,    size:"68.4 ГБ", state:"ready", seed:1207, last:"6 минут назад",
    blurb:"Пятая глава разблокирована. Ваш отряд ждёт у Кузни Сумерек — последнее сохранение синхронизировано 6 минут назад.",
    tags:["Установлена","v2.4.1","68.4 ГБ","Action-RPG","Одиночная"]},
-  {id:"depth",  t:"Глубина 9",        sub:"Хоррор · 64 ч",           pal:P.deep,   size:"41.2 ГБ", state:"ready", seed:9314,
+  {id:"depth",  t:"Глубина 9",        sub:"Хоррор · 64 ч",           pal:P.deep,   size:"41.2 ГБ", state:"ready", seed:9314, last:"вчера в 23:40",
    blurb:"Станция «Мерло» затоплена до шестого уровня. Кислорода на 41 минуту — этого хватит ровно на один правильный маршрут.",
    tags:["Установлена","v1.7","41.2 ГБ","Выживание","Одиночная"]},
   {id:"neon",   t:"Неон Хальцион",    sub:"Киберпанк · в очереди",  pal:P.neon,   size:"24.1 ГБ", state:"queue", seed:4422,
@@ -3151,13 +3151,13 @@ const GAMES=[
   {id:"lunar",  t:"Лунная Колея",     sub:"Исследование · 92 ч",    pal:P.lunar,  size:"18.9 ГБ", state:"ready", seed:7781,
    blurb:"Тихая колонизация без единого выстрела. Стройте маршруты между куполами и слушайте, как реголит скрипит под шасси.",
    tags:["Установлена","v3.0","18.9 ГБ","Симулятор"]},
-  {id:"crimson",t:"Красный Меридиан", sub:"Тактика · 196 ч",         pal:P.crimson,size:"22.6 ГБ", state:"ready", seed:2960,
+  {id:"crimson",t:"Красный Меридиан", sub:"Тактика · 196 ч",         pal:P.crimson,size:"22.6 ГБ", state:"ready", seed:2960, last:"вчера в 21:15",
    blurb:"Пошаговые бои на изломе фронта. Каждый выживший боец переносит шрамы и привычки в следующую кампанию.",
    tags:["Установлена","v2.2","22.6 ГБ","Тактика","Кооп"]},
   {id:"glass",  t:"Стеклянный Сад",   sub:"Головоломка · 41 ч",      pal:P.glass,  size:"7.3 ГБ",  state:"ready", seed:5518,
    blurb:"Сто двадцать комнат, выращенных из света. Ни одной подсказки — только то, что вы успели заметить.",
    tags:["Установлена","v1.4","7.3 ГБ","Головоломка"]},
-  {id:"wolf",   t:"Волчья Тропа",     sub:"Открытый мир · 312 ч",    pal:P.wolf,   size:"92.7 ГБ", state:"ready", seed:3345,
+  {id:"wolf",   t:"Волчья Тропа",     sub:"Открытый мир · 312 ч",    pal:P.wolf,   size:"92.7 ГБ", state:"ready", seed:3345, last:"вчера в 19:05",
    blurb:"Тайга размером с область, без маркеров на карте. Ориентируйтесь по звёздам, дыму и следам на снегу.",
    tags:["Установлена","v4.1","92.7 ГБ","Выживание"]},
   {id:"orbita", t:"Орбита 7",         sub:"Космосим · качается",    pal:P.orbit,  size:"36.0 ГБ", state:"dl", pct:41, dlSeeds:27, dlPeers:31, seed:8802,
@@ -3409,6 +3409,7 @@ const DAYS = ["пн","вт","ср","чт","пт","сб","вс"];
 const gb = n => n.toFixed(1).replace(".", ",") + " ГБ";
 
 /* всё, что знает лаунчер и не знает магазин */
+const OLDER = ["3 дня назад", "неделю назад", "месяц назад"];
 function cardData(g){
   if(g._cd) return g._cd;
   const r = rng32(g.seed + 77);
@@ -3423,7 +3424,10 @@ function cardData(g){
   g._cd = {
     hours, total, installed, sessions, got, ach: 5,
     lastMin: hours ? 60 + Math.round(r() * 60) : 0,
-    lastAgo: hours ? ["41 минуту назад", "вчера в 23:40", "3 дня назад"][Math.floor(r() * 3)] : "—",
+    /* у недавних — их время, остальным — давность по сиду. Раньше она была
+       случайной у всех: «Пепельный Предел», сыгранный 6 минут назад,
+       значился «3 дня назад», а вчерашняя «Волчья Тропа» — «41 минуту назад» */
+    lastAgo: hours ? (() => { const k = Math.floor(r() * 3); return g.last || OLDER[k]; })() : "—",
     parts: [
       {n: "Игра",                sz: total * .79,  on: installed, req: true},
       {n: "Русская озвучка",     sz: total * .12,  on: installed},
@@ -5474,7 +5478,9 @@ STATES.push(
 
 /* ── B · Стена ─────────────────────────────────────────────── */
 let wallSel = "ashen", wallFilter = "all";
-const RECENT = ["ashen", "depth", "crimson", "wolf", "storm"];
+/* недавние — те, у кого есть время последней сессии, как на полке
+   «Продолжить»; раньше список писался рядом и держал «Грозовой фронт» */
+const RECENT = GAMES.filter(g => g.last).map(g => g.id);
 function wallList(){
   if(wallFilter === "ready")  return GAMES.filter(g => g.state === "ready");
   if(wallFilter === "dl")     return GAMES.filter(g => g.state !== "ready");
@@ -5492,7 +5498,7 @@ function renderWall(){
         <span class="cs">${sel.tags.slice(0, 2).map((t, i) => `<span class="chip${i ? "" : " hot"}">${t}</span>`).join("")}</span>
         <span class="tt">${sel.t}</span>
         <span class="acts">
-          <span class="play" style="height:44px;font-size:14px" data-wall-play="${sel.id}"><svg><use href="#i-play"/></svg><span>${sel.state === "ready" ? "Играть" : "Скачать"}</span></span>
+          <span class="play" style="height:44px;font-size:14px" data-wall-play="${sel.id}"><svg><use href="#i-play"/></svg><span>${sel.state === "ready" ? "Играть" : "К загрузкам"}</span></span>
           <span class="ghost" style="height:44px" data-id="${sel.id}"><svg><use href="#i-info"/></svg>Подробнее</span>
         </span>
       </span></button>` : "";
@@ -5518,7 +5524,15 @@ $("#wallGrid").addEventListener("click", e => {
 });
 
 /* ── D · Терминал ──────────────────────────────────────────── */
-const LAST = ["41 мин назад", "вчера 23:40", "3 дня назад", "неделю назад", "месяц назад", "—"];
+/* давность — из карточки игры; чем больше ранг, тем недавнее: недавние —
+   в порядке каталога (он идёт от последней запущенной), дальше — по
+   давности подписи, не запускавшиеся — в конце. Раньше подпись бралась
+   по номеру строки, и «по убыванию» ставило первыми нетронутые игры */
+function recency(g, i){
+  if(g.last) return 100 - i;
+  const k = OLDER.indexOf(cardData(g).lastAgo);
+  return k < 0 ? 0 : OLDER.length - k;
+}
 let termSort = {k: "last", asc: false}, termSel = 0;
 function termRows(){
   const rows = GAMES.map((g, i) => {
@@ -5529,7 +5543,7 @@ function termRows(){
       genre: g.sub.split("·")[0].trim(),
       ver, size: parseFloat(String(g.size).replace(",", ".")) || 0,
       hours: d.hours,
-      lastI: d.hours ? i % 4 : 5,
+      last: d.lastAgo, rank: recency(g, i),
       st: g.state === "ready" ? (d.hours ? "var(--ok)" : "var(--ink-4)")
         : g.state === "dl" ? "var(--hot-2)" : "var(--ink-4)"
     };
@@ -5538,7 +5552,7 @@ function termRows(){
   rows.sort((a, b) => {
     const v = k === "nm" ? a.nm.localeCompare(b.nm, "ru")
             : k === "genre" ? a.genre.localeCompare(b.genre, "ru")
-            : k === "last" ? a.lastI - b.lastI
+            : k === "last" ? a.rank - b.rank
             : a[k] - b[k];
     return (k === "nm" || k === "genre" || k === "last" ? v : v) * s;
   });
@@ -5562,14 +5576,15 @@ function renderTerm(){
       <span>${r.ver}</span>
       <span class="c-size num">${r.size ? r.size.toFixed(1).replace(".", ",") + " ГБ" : "—"}</span>
       <span class="num">${r.hours ? r.hours + " ч" : "—"}</span>
-      <span class="c-last">${LAST[r.lastI]}</span>
+      <span class="c-last">${r.last}</span>
       <span class="go"><svg><use href="#i-play"/></svg></span>
     </button>`).join("");
 }
 $("#termTbl").addEventListener("click", e => {
   const s = e.target.closest("[data-sort]");
   if(s){ const k = s.dataset.sort;
-    termSort = {k, asc: termSort.k === k ? !termSort.asc : false}; renderTerm(); return; }
+    /* новый столбец начинает с «А» у текста и с большего у чисел */
+    termSort = {k, asc: termSort.k === k ? !termSort.asc : (k === "nm" || k === "genre")}; renderTerm(); return; }
   const r = e.target.closest("[data-term]");
   if(r){ termSel = +r.dataset.term; renderTerm(); }
 });
@@ -5613,7 +5628,9 @@ function renderBp(){
   $("#bpChips").innerHTML = g.tags.slice(0, 3).map((t, i) => `<span class="chip${i ? "" : " hot"}">${t}</span>`).join("");
   const d = cardData(g);
   $("#bpSub").textContent = d.hours ? `сыграно ${d.hours} ч · ${g.size}` : `${g.sub} · ${g.size}`;
-  $("#bpPlayLb").textContent = g.state === "ready" ? (d.hours ? "Продолжить" : "Играть") : "Скачать";
+  $("#bpPlayLb").textContent = g.state === "ready" ? (d.hours ? "Продолжить" : "Играть") : "К загрузкам";
+  /* приём — тот же, что в верхней полосе, а не отдельное число */
+  $("#bpNet").innerHTML = `<span class="dot busy"></span>${$("#netRate")?.textContent ?? "—"}`;
   $("#bpPos").textContent = `${bpI + 1} / ${n}`;
 }
 function bpShow(v){

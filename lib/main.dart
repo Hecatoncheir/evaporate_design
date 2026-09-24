@@ -17,6 +17,9 @@ import 'first_run/ev_first_run_widgets.dart';
 import 'first_run/first_run_controller.dart';
 import 'first_run/first_run_data.dart';
 import 'first_run/scenario.dart';
+import 'modes/ev_pult.dart';
+import 'modes/ev_view_switch.dart';
+import 'modes/modes_data.dart';
 import 'overlay/ev_overlay.dart';
 import 'returning/ev_return_widgets.dart';
 import 'returning/return_data.dart';
@@ -34,6 +37,8 @@ import 'screens/saves_page.dart';
 import 'screens/friend_profile_page.dart';
 import 'screens/profile_page.dart';
 import 'screens/settings_page.dart';
+import 'screens/term_page.dart';
+import 'screens/wall_page.dart';
 import 'settings/settings_data.dart';
 import 'shell/ev_palette.dart';
 import 'shell/ev_section.dart';
@@ -71,6 +76,8 @@ class _EvaporateAppState extends State<EvaporateApp> {
   // Тумблеры приватности — настройка, а не состояние раздела: уход
   // на другой экран их не сбрасывает.
   final _shares = ValueNotifier<Set<EvShare>>(EvShare.values.toSet());
+  // Вид библиотеки — выбор окна: уход в другой раздел его не сбрасывает.
+  final _view = ValueNotifier<EvLibraryView>(EvLibraryView.showcase);
   final _settings = EvSettings();
   late final _ownEffects = widget.effects == null ? EvEffects() : null;
   final _shell = EvShellController();
@@ -228,6 +235,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
     _firstRun.dispose();
     _settings.dispose();
     _shares.dispose();
+    _view.dispose();
     _friendsState.dispose();
     _saves.dispose();
     _downloads.dispose();
@@ -271,6 +279,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
                 _saves,
                 _friendsState,
                 _shares,
+                _view,
                 _settings,
                 _firstRun,
                 _digest,
@@ -290,6 +299,8 @@ class _EvaporateAppState extends State<EvaporateApp> {
                 digest: _digest.value,
                 onDigest: (next) => _digest.value = next,
                 onReturn: () => _return.go(0),
+                view: _view.value,
+                onView: (next) => _view.value = next,
                 shares: _shares.value,
                 onShare: (share, on) => _shares.value = on
                     ? {..._shares.value, share}
@@ -319,6 +330,8 @@ class _Home extends StatelessWidget {
     required this.digest,
     required this.onDigest,
     required this.onReturn,
+    required this.view,
+    required this.onView,
     required this.shares,
     required this.onShare,
   });
@@ -362,6 +375,11 @@ class _Home extends StatelessWidget {
   /// Пройти «Возвращение» с начала.
   final VoidCallback onReturn;
 
+  /// Как показана библиотека: витрина, стена или терминал.
+  final EvLibraryView view;
+
+  final ValueChanged<EvLibraryView> onView;
+
   /// Что видят друзья — тумблеры в профиле.
   final Set<EvShare> shares;
 
@@ -374,6 +392,23 @@ class _Home extends StatelessWidget {
         title: game.title,
         stages: sampleLaunchStages,
       );
+
+  /// Главная кнопка у игры вне героя: игра на диске — ритуал, нет —
+  /// загрузки, где она уже качается или ждёт.
+  void _play(BuildContext context, SampleGame game) =>
+      game.state == EvGameState.ready
+      ? _launch(context, game)
+      : shell.go(EvSection.downloads);
+
+  /// «Пульт» — весь экран для геймпада.
+  void _pult(BuildContext context, EvDownloads queue) => showEvPult(
+    context,
+    games: sampleLibrary,
+    rate: formatRate(queue.downKb, digits: 1),
+    initials: sampleUserInitials,
+    onPlay: (g) => _play(context, g),
+    onDetails: (g) => _open(context, g),
+  );
 
   /// Карточка игры. Запуск из неё — тот же ритуал, а полоса действий
   /// в ней читает состояние окна — как `cardState` в прототипе.
@@ -549,6 +584,15 @@ class _Home extends StatelessWidget {
     );
     return EvShell(
       controller: shell,
+      // В первом запуске библиотека — шаг сценария, её вид не меняют.
+      libraryTools: run == null
+          ? EvViewSwitch(
+              view: view,
+              onView: onView,
+              onPult: () => _pult(context, queue),
+            )
+          : null,
+      keys: {PhysicalKeyboardKey.keyP: () => _pult(context, queue)},
       initials: sampleUserInitials,
       userName: sampleUserName,
       friendsOnline: friends.online,
@@ -564,9 +608,7 @@ class _Home extends StatelessWidget {
             onRun: () => _open(context, g),
             // Запускать можно только то, что уже на диске; остальное ведёт
             // туда, где оно качается, — как «Стена» и «Пульт» в прототипе.
-            onLaunch: g.state == EvGameState.ready
-                ? () => _launch(context, g)
-                : () => shell.go(EvSection.downloads),
+            onLaunch: () => _play(context, g),
           ),
         for (final s in EvSection.values)
           EvCommand(
@@ -592,6 +634,15 @@ class _Home extends StatelessWidget {
           ),
       ],
       pageBuilder: (context, section) => switch (section) {
+        EvSection.library when run == null && view == EvLibraryView.wall =>
+          WallPage(
+            games: sampleLibrary,
+            selected: sampleHero,
+            onPlay: (g) => _play(context, g),
+            onOpen: (g) => _open(context, g),
+          ),
+        EvSection.library when run == null && view == EvLibraryView.term =>
+          TermPage(games: sampleLibrary, onPlay: (g) => _play(context, g)),
         EvSection.library => LibraryPage(
           // В первом запуске библиотека, герой и его состояние — шага.
           state: switch (run?.step) {
@@ -676,6 +727,12 @@ class _Home extends StatelessWidget {
           onCatalog: (c) => firstRun.catalog = c,
           onFirstRun: () => firstRun.go(EvFirstRunStep.installed),
           onReturn: onReturn,
+          view: view,
+          onView: (v) {
+            onView(v);
+            shell.go(EvSection.library);
+          },
+          onPult: () => _pult(context, queue),
           onOverlay: () {
             onState(EvHeroState.running);
             _overlay(context, running: true);

@@ -69,13 +69,7 @@ class EvGameFacts {
       sessions: sessions,
       unlocked: hours > 0 ? 3 : 0,
       lastMinutes: hours > 0 ? 60 + (r.next() * 60).round() : 0,
-      lastAgo: hours > 0
-          ? const [
-              '41 минуту назад',
-              'вчера в 23:40',
-              '3 дня назад',
-            ][(r.next() * 3).floor()]
-          : '—',
+      lastAgo: _lastAgo(game, hours > 0 ? (r.next() * 3).floor() : null),
       parts: [
         EvGamePart('Игра', total * .79, onDisk: installed, required: true),
         EvGamePart('Русская озвучка', total * .12, onDisk: installed),
@@ -90,6 +84,18 @@ class EvGameFacts {
   }
 
   static final _cache = <SampleGame, EvGameFacts>{};
+
+  /// Давность без точного времени — у игр, в которые играли раньше
+  /// недавних. Самая свежая идёт первой.
+  static const olderAgo = ['3 дня назад', 'неделю назад', 'месяц назад'];
+
+  /// Когда закончилась последняя сессия. У недавних — их время из
+  /// библиотеки; остальным — одна из [olderAgo] по сиду. В прототипе
+  /// давность была случайной у всех: «Пепельный Предел», сыгранный
+  /// 6 минут назад, в карточке значился «3 дня назад», а «Волчья Тропа»
+  /// со вчерашнего вечера — «41 минуту назад».
+  static String _lastAgo(SampleGame game, int? pick) =>
+      game.lastPlayed ?? (pick == null ? '—' : olderAgo[pick]);
 
   /// Часов в игре всего; 0 — ещё не запускали.
   final int hours;

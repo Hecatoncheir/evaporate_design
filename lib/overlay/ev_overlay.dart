@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../art/key_art.dart';
 import '../data/game_facts.dart';
+import '../design/ellipse.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
 import '../downloads/download_data.dart';
@@ -271,8 +272,8 @@ class _Backdrop extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: RadialGradient(
             center: Alignment(0, -.1),
-            radius: .75,
-            transform: _Ellipse(),
+            radius: 1,
+            transform: EvEllipse(.75, .75, center: Alignment(0, -.1)),
             colors: [
               Color.fromRGBO(6, 6, 10, .74),
               Color.fromRGBO(3, 3, 6, .95),
@@ -282,22 +283,6 @@ class _Backdrop extends StatelessWidget {
       ),
     ],
   );
-}
-
-/// `radial-gradient(75% 75% …)` — эллипс по сторонам окна, а не круг
-/// по меньшей из них.
-class _Ellipse extends GradientTransform {
-  const _Ellipse();
-
-  @override
-  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
-    final side = bounds.shortestSide;
-    final center = bounds.center;
-    return Matrix4.identity()
-      ..translateByDouble(center.dx, center.dy, 0, 1)
-      ..scaleByDouble(bounds.width / side, bounds.height / side, 1, 1)
-      ..translateByDouble(-center.dx, -center.dy, 0, 1);
-  }
 }
 
 /// Кадр игры по `background-size: cover`.

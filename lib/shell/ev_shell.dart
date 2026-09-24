@@ -103,6 +103,8 @@ class EvShell extends StatefulWidget {
     this.status = const [],
     this.friendsOnline,
     this.downloadsActive,
+    this.libraryTools,
+    this.keys = const {},
   });
 
   final EvShellController controller;
@@ -123,6 +125,13 @@ class EvShell extends StatefulWidget {
 
   final int? friendsOnline;
   final int? downloadsActive;
+
+  /// Переключатель видов за крошкой — только на самой библиотеке.
+  final Widget? libraryTools;
+
+  /// Клавиши без модификаторов сверх своих: `P` — «Пульт». По физической
+  /// клавише, чтобы работало и в русской раскладке, где на ней «З».
+  final Map<PhysicalKeyboardKey, VoidCallback> keys;
 
   @override
   State<EvShell> createState() => _EvShellState();
@@ -211,6 +220,11 @@ class _EvShellState extends State<EvShell> {
           ? KeyEventResult.handled
           : KeyEventResult.ignored;
     }
+    final extra = widget.keys[event.physicalKey];
+    if (extra != null) {
+      extra();
+      return KeyEventResult.handled;
+    }
     final index = _digits[key];
     if (index == null) return KeyEventResult.ignored;
     _controller.go(EvSection.values[index]);
@@ -295,6 +309,14 @@ class _EvShellState extends State<EvShell> {
                                 section: _controller.crumb ?? section.label,
                                 onSearch: _openPalette,
                                 trailing: narrow ? const [] : widget.status,
+                                // На узком окне ему, как и плашкам,
+                                // нет места.
+                                tools:
+                                    !narrow &&
+                                        section == EvSection.library &&
+                                        _controller.detail == null
+                                    ? widget.libraryTools
+                                    : null,
                               ),
                             ),
                             if (narrow)

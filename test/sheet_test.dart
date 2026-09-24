@@ -58,7 +58,8 @@ void main() {
       final f = EvGameFacts.of(sampleHero);
       expect(f.hours, 284);
       expect(f.lastMinutes, 90, reason: '1 ч 30 мин');
-      expect(f.lastAgo, '3 дня назад');
+      // Давность — из библиотеки, как у героя, а не по сиду.
+      expect(f.lastAgo, '6 минут назад');
       expect(f.unlocked, 3);
       expect(f.installed, isTrue);
       expect(f.parts.map((p) => formatGb(p.size)), [

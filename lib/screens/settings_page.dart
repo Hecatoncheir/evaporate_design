@@ -10,6 +10,7 @@ import '../downloads/download_data.dart';
 import '../friends/friends_data.dart';
 import '../gallery/gallery_page.dart';
 import '../library/hero_state.dart';
+import '../modes/modes_data.dart';
 import '../saves/saves_data.dart';
 import '../settings/ev_settings_widgets.dart';
 import '../settings/settings_catalog.dart';
@@ -49,6 +50,9 @@ class SettingsPage extends StatefulWidget {
     this.onFirstRun,
     this.onReturn,
     this.onOverlay,
+    this.view,
+    this.onView,
+    this.onPult,
   });
 
   final EvSettings settings;
@@ -102,6 +106,11 @@ class SettingsPage extends StatefulWidget {
 
   /// Запустить игру и открыть поверх неё оверлей.
   final VoidCallback? onOverlay;
+
+  /// Вид библиотеки и его выбор; «Пульт» — отдельным режимом.
+  final EvLibraryView? view;
+  final ValueChanged<EvLibraryView>? onView;
+  final VoidCallback? onPult;
 
   /// Уже этого окна колонка разделов встаёт над ними и перестаёт
   /// быть липкой — `max-width:880px` в прототипе.
@@ -349,6 +358,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final onCatalog = w.onCatalog;
     final onFirstRun = w.onFirstRun;
     final onOverlay = w.onOverlay;
+    final onView = w.onView;
+    final onPult = w.onPult;
     return EvSettingSection(
       id: 'dev',
       title: 'Разработка',
@@ -390,6 +401,36 @@ class _SettingsPageState extends State<SettingsPage> {
               hint: 'кадры · друзья · фоновая загрузка',
               selected: false,
               onTap: onOverlay,
+            ),
+          ),
+        if (onView != null && onPult != null)
+          EvSettingPanel(
+            label: 'Режимы',
+            note:
+                'Стена и Терминал — виды библиотеки, переключаются и в верхней '
+                'полосе. Пульт забирает весь экран',
+            body: (_) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _StateRow(
+                  name: 'B · Стена',
+                  hint: 'плотная сетка, фильтры в шапке',
+                  selected: w.view == EvLibraryView.wall,
+                  onTap: () => onView(EvLibraryView.wall),
+                ),
+                _StateRow(
+                  name: 'D · Терминал',
+                  hint: 'таблица, сортировка, клавиатура',
+                  selected: w.view == EvLibraryView.term,
+                  onTap: () => onView(EvLibraryView.term),
+                ),
+                _StateRow(
+                  name: 'C · Пульт',
+                  hint: 'полный экран, геймпад · клавиша P',
+                  selected: false,
+                  onTap: onPult,
+                ),
+              ],
             ),
           ),
         if (onCatalog != null)

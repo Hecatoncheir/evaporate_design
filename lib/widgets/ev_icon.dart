@@ -108,4 +108,13 @@ abstract final class EvIcons {
 
   /// Записать последние 30 секунд.
   static const rec = 'rec';
+
+  /// Вид «Стена» — сетка обложек.
+  static const wall = 'wall';
+
+  /// Вид «Терминал» — таблица.
+  static const rows = 'rows';
+
+  /// Режим «Пульт» для геймпада.
+  static const pad = 'pad';
 }
