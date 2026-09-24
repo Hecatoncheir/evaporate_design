@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../art/ev_art.dart';
 import '../atmosphere/ev_atmosphere.dart';
 import '../design/theme.dart';
+import '../sound/ev_sound.dart';
+import '../sound/voices.dart';
 import '../design/tokens.dart';
 import '../glass/ev_glass.dart';
 import '../widgets/ev_controls.dart';
@@ -309,7 +311,11 @@ class _EvDigestSlotState extends State<EvDigestSlot> {
   void _evaporate() {
     final box = _panel.currentContext?.findRenderObject();
     if (box is! RenderBox || !box.attached) return;
-    EvAtmosphere.burstFrom(context, box.localToGlobal(Offset.zero) & box.size);
+    final rect = box.localToGlobal(Offset.zero) & box.size;
+    // Звук не громче картинки: нет искр — нет и испарения.
+    if (EvAtmosphere.burstFrom(context, rect)) {
+      EvSoundScope.maybeOf(context)?.play(EvVoice.evaporate);
+    }
   }
 
   @override

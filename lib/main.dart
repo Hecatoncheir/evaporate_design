@@ -39,6 +39,9 @@ import 'screens/profile_page.dart';
 import 'screens/settings_page.dart';
 import 'screens/term_page.dart';
 import 'screens/wall_page.dart';
+import 'sound/ev_sound.dart';
+import 'sound/soloud_out.dart';
+import 'sound/voices.dart';
 import 'settings/settings_data.dart';
 import 'shell/ev_palette.dart';
 import 'shell/ev_section.dart';
@@ -51,7 +54,12 @@ import 'widgets/ev_surfaces.dart';
 void main() => runApp(const EvaporateApp());
 
 class EvaporateApp extends StatefulWidget {
-  const EvaporateApp({super.key, this.effects, this.readCatalog = true});
+  const EvaporateApp({
+    super.key,
+    this.effects,
+    this.sound,
+    this.readCatalog = true,
+  });
 
   /// Показывать чтение каталога первые 300 мс. Тесты, которым скелет
   /// не нужен, его выключают.
@@ -60,6 +68,10 @@ class EvaporateApp extends StatefulWidget {
   /// Эффекты атмосферы. Не задано — приложение заводит свои, всё включено.
   /// Тесты передают [EvEffects.still], чтобы кадры не шли бесконечно.
   final EvEffects? effects;
+
+  /// Звук. Не задан — приложение заводит свой на SoLoud; выключен он
+  /// в любом случае, пока его не включат в настройках.
+  final EvSound? sound;
 
   @override
   State<EvaporateApp> createState() => _EvaporateAppState();
@@ -81,6 +93,32 @@ class _EvaporateAppState extends State<EvaporateApp> {
   final _settings = EvSettings();
   late final _ownEffects = widget.effects == null ? EvEffects() : null;
   final _shell = EvShellController();
+  late final _ownSound = widget.sound == null
+      ? EvSound(out: EvSoLoudOut())
+      : null;
+  EvSound get _sound => widget.sound ?? _ownSound!;
+
+  /// Звук знает, в фокусе ли окно: отдушина дышит только в активном.
+  late final _lifecycle = AppLifecycleListener(
+    onStateChange: (s) => _sound.focused = s == AppLifecycleState.resumed,
+  );
+  late EvSection _section;
+
+  /// Смена раздела звучит: низ уходит вверх.
+  void _onSection() {
+    if (_shell.section == _section) return;
+    _section = _shell.section;
+    _sound.play(EvVoice.swish);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _section = _shell.section;
+    _shell.addListener(_onSection);
+    _lifecycle;
+  }
+
   final _navigator = GlobalKey<NavigatorState>();
   late final _firstRun = EvFirstRunController(
     onStep: _enterStep,
@@ -242,6 +280,8 @@ class _EvaporateAppState extends State<EvaporateApp> {
     _state.dispose();
     _appearance.dispose();
     _ownEffects?.dispose();
+    _lifecycle.dispose();
+    _ownSound?.dispose();
     _shell.dispose();
     super.dispose();
   }
@@ -252,59 +292,62 @@ class _EvaporateAppState extends State<EvaporateApp> {
       appearance: _appearance,
       child: EvEffectsScope(
         effects: _effects,
-        child: ListenableBuilder(
-          listenable: _appearance,
-          builder: (context, _) => MaterialApp(
-            title: 'Evaporate',
-            debugShowCheckedModeBanner: false,
-            // Тема одна — тёмная, по требованию продукта.
-            theme: _appearance.theme,
-            themeAnimationDuration: EvMotion.screen,
-            themeAnimationCurve: EvMotion.easeOut,
-            navigatorKey: _navigator,
-            // Полоса сценария — над всеми маршрутами, и над диалогом тоже:
-            // `z-index` у неё в прототипе выше, чем у диалога.
-            builder: (context, child) => Focus(
-              onKeyEvent: _onKey,
-              child: ListenableBuilder(
-                listenable: Listenable.merge([_firstRun, _return]),
-                builder: (context, _) =>
-                    _FlowLayer(scenario: _scenario, child: child!),
+        child: EvSoundScope(
+          sound: _sound,
+          child: ListenableBuilder(
+            listenable: _appearance,
+            builder: (context, _) => MaterialApp(
+              title: 'Evaporate',
+              debugShowCheckedModeBanner: false,
+              // Тема одна — тёмная, по требованию продукта.
+              theme: _appearance.theme,
+              themeAnimationDuration: EvMotion.screen,
+              themeAnimationCurve: EvMotion.easeOut,
+              navigatorKey: _navigator,
+              // Полоса сценария — над всеми маршрутами, и над диалогом тоже:
+              // `z-index` у неё в прототипе выше, чем у диалога.
+              builder: (context, child) => Focus(
+                onKeyEvent: _onKey,
+                child: ListenableBuilder(
+                  listenable: Listenable.merge([_firstRun, _return]),
+                  builder: (context, _) =>
+                      _FlowLayer(scenario: _scenario, child: child!),
+                ),
               ),
-            ),
-            home: ListenableBuilder(
-              listenable: Listenable.merge([
-                _state,
-                _downloads,
-                _saves,
-                _friendsState,
-                _shares,
-                _view,
-                _settings,
-                _firstRun,
-                _digest,
-              ]),
-              builder: (context, _) => _Home(
-                shell: _shell,
-                state: _state.value,
-                onState: _setHero,
-                downloads: _downloads.value,
-                onDownloads: _setDownloads,
-                saves: _saves.value,
-                onSaves: (next) => _saves.value = next,
-                friendsState: _friendsState.value,
-                onFriends: (next) => _friendsState.value = next,
-                settings: _settings,
-                firstRun: _firstRun,
-                digest: _digest.value,
-                onDigest: (next) => _digest.value = next,
-                onReturn: () => _return.go(0),
-                view: _view.value,
-                onView: (next) => _view.value = next,
-                shares: _shares.value,
-                onShare: (share, on) => _shares.value = on
-                    ? {..._shares.value, share}
-                    : ({..._shares.value}..remove(share)),
+              home: ListenableBuilder(
+                listenable: Listenable.merge([
+                  _state,
+                  _downloads,
+                  _saves,
+                  _friendsState,
+                  _shares,
+                  _view,
+                  _settings,
+                  _firstRun,
+                  _digest,
+                ]),
+                builder: (context, _) => _Home(
+                  shell: _shell,
+                  state: _state.value,
+                  onState: _setHero,
+                  downloads: _downloads.value,
+                  onDownloads: _setDownloads,
+                  saves: _saves.value,
+                  onSaves: (next) => _saves.value = next,
+                  friendsState: _friendsState.value,
+                  onFriends: (next) => _friendsState.value = next,
+                  settings: _settings,
+                  firstRun: _firstRun,
+                  digest: _digest.value,
+                  onDigest: (next) => _digest.value = next,
+                  onReturn: () => _return.go(0),
+                  view: _view.value,
+                  onView: (next) => _view.value = next,
+                  shares: _shares.value,
+                  onShare: (share, on) => _shares.value = on
+                      ? {..._shares.value, share}
+                      : ({..._shares.value}..remove(share)),
+                ),
               ),
             ),
           ),
@@ -400,15 +443,18 @@ class _Home extends StatelessWidget {
       ? _launch(context, game)
       : shell.go(EvSection.downloads);
 
-  /// «Пульт» — весь экран для геймпада.
-  void _pult(BuildContext context, EvDownloads queue) => showEvPult(
-    context,
-    games: sampleLibrary,
-    rate: formatRate(queue.downKb, digits: 1),
-    initials: sampleUserInitials,
-    onPlay: (g) => _play(context, g),
-    onDetails: (g) => _open(context, g),
-  );
+  /// «Пульт» — весь экран для геймпада; входит, как смена раздела.
+  void _pult(BuildContext context, EvDownloads queue) {
+    EvSoundScope.maybeOf(context)?.play(EvVoice.swish);
+    showEvPult(
+      context,
+      games: sampleLibrary,
+      rate: formatRate(queue.downKb, digits: 1),
+      initials: sampleUserInitials,
+      onPlay: (g) => _play(context, g),
+      onDetails: (g) => _open(context, g),
+    );
+  }
 
   /// Карточка игры. Запуск из неё — тот же ритуал, а полоса действий
   /// в ней читает состояние окна — как `cardState` в прототипе.

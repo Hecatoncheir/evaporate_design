@@ -7,6 +7,8 @@ import '../art/key_art.dart';
 import '../data/sample_data.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../sound/ev_sound.dart';
+import '../sound/voices.dart';
 import '../widgets/ev_controls.dart';
 import '../widgets/ev_focusable.dart';
 import '../widgets/ev_game_card.dart';
@@ -185,7 +187,10 @@ class _EvWallTileState extends State<EvWallTile> {
       label: g.title,
       excludeSemantics: true,
       child: MouseRegion(
-        onEnter: (_) => setState(() => _hover = true),
+        onEnter: (_) {
+          EvSoundScope.maybeOf(context)?.play(EvVoice.tick);
+          setState(() => _hover = true);
+        },
         onExit: (_) => setState(() => _hover = false),
         child: EvFocusable(
           onActivate: widget.onTap,

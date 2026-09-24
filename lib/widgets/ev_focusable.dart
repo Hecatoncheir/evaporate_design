@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 
 import '../design/theme.dart';
+import '../sound/ev_sound.dart';
+import '../sound/voices.dart';
 
 /// Делает элемент доступным с клавиатуры: Tab и стрелки доводят до него
 /// фокус, Enter и пробел срабатывают как клик.
@@ -39,11 +41,19 @@ class _EvFocusableState extends State<EvFocusable> {
   late final Map<Type, Action<Intent>> _actions = {
     ActivateIntent: CallbackAction<ActivateIntent>(
       onInvoke: (_) {
-        widget.onActivate?.call();
+        _activate();
         return null;
       },
     ),
   };
+
+  /// Нажатие звучит здесь — у всего, что нажимается, один голос.
+  void _activate() {
+    final activate = widget.onActivate;
+    if (activate == null) return;
+    EvSoundScope.maybeOf(context)?.play(EvVoice.tap);
+    activate();
+  }
 
   void _handleHighlight(bool value) {
     setState(() => _ring = value);
@@ -60,7 +70,7 @@ class _EvFocusableState extends State<EvFocusable> {
       onShowFocusHighlight: _handleHighlight,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: widget.onActivate,
+        onTap: widget.onActivate == null ? null : _activate,
         child: Stack(
           clipBehavior: Clip.none,
           children: [

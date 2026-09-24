@@ -3,6 +3,8 @@ import 'package:flutter/widgets.dart';
 import '../art/ev_art.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../sound/ev_sound.dart';
+import '../sound/voices.dart';
 import '../widgets/ev_focusable.dart';
 import '../widgets/ev_game_card.dart';
 import '../widgets/ev_icon.dart';
@@ -296,7 +298,10 @@ class _EvTermLineState extends State<EvTermLine> {
       ),
     );
     return MouseRegion(
-      onEnter: (_) => setState(() => _hover = true),
+      onEnter: (_) {
+        EvSoundScope.maybeOf(context)?.play(EvVoice.tick);
+        setState(() => _hover = true);
+      },
       onExit: (_) => setState(() => _hover = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,

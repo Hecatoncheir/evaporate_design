@@ -13,6 +13,7 @@ import '../library/hero_state.dart';
 import '../modes/modes_data.dart';
 import '../saves/saves_data.dart';
 import '../settings/ev_settings_widgets.dart';
+import '../sound/ev_sound.dart';
 import '../settings/settings_catalog.dart';
 import '../settings/settings_data.dart';
 import '../settings/settings_search.dart';
@@ -193,17 +194,23 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  /// Настройки вне окна — в превью и тестах — показывают звук, который
+  /// никуда не звучит.
+  late final _silent = EvSound(out: const EvSilentOut());
+
   @override
   Widget build(BuildContext context) {
     final effects = EvEffectsScope.maybeOf(context);
+    final sound = EvSoundScope.maybeOf(context) ?? _silent;
     final appearance = EvAppearanceScope.of(context);
     return ListenableBuilder(
-      listenable: Listenable.merge([widget.settings, ?effects]),
+      listenable: Listenable.merge([widget.settings, ?effects, sound]),
       builder: (context, _) {
         final sections = [
           ...evSettingsCatalog((
             appearance: appearance,
             effects: effects,
+            sound: sound,
             settings: widget.settings,
             drives: widget.drives,
             ratio: widget.ratio,
@@ -559,12 +566,16 @@ class _Section extends StatelessWidget {
             ],
             if (rows.isNotEmpty) const SizedBox(height: 6),
             for (final (i, r) in rows.indexed)
-              EvOption(
-                title: r.title,
-                description: r.detail,
-                highlight: match.highlight(r.title),
-                last: i == rows.length - 1,
-                control: r.control(context),
+              AnimatedOpacity(
+                duration: EvMotion.fast,
+                opacity: r.dim ? .4 : 1,
+                child: EvOption(
+                  title: r.title,
+                  description: r.detail,
+                  highlight: match.highlight(r.title),
+                  last: i == rows.length - 1,
+                  control: r.control(context),
+                ),
               ),
           ],
         ),

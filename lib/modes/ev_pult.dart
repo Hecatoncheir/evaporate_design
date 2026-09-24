@@ -11,6 +11,8 @@ import '../data/sample_data.dart';
 import '../design/ellipse.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../sound/ev_sound.dart';
+import '../sound/voices.dart';
 import '../widgets/ev_controls.dart';
 import '../widgets/ev_focusable.dart';
 import '../widgets/ev_game_card.dart';
@@ -133,7 +135,10 @@ class _EvPultState extends State<EvPult> {
     return widget.games[((_index + offset) % n + n) % n];
   }
 
-  void _step(int by) => setState(() => _index += by);
+  void _step(int by) {
+    EvSoundScope.maybeOf(context)?.play(EvVoice.tick);
+    setState(() => _index += by);
+  }
 
   void _play() {
     final g = _at(0);

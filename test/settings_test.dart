@@ -19,6 +19,7 @@ import 'package:evaporate_design/screens/profile_page.dart';
 import 'package:evaporate_design/screens/settings_page.dart';
 import 'package:evaporate_design/settings/ev_settings_widgets.dart';
 import 'package:evaporate_design/settings/settings_catalog.dart';
+import 'package:evaporate_design/sound/ev_sound.dart';
 import 'package:evaporate_design/settings/settings_data.dart';
 import 'package:evaporate_design/settings/settings_search.dart';
 import 'package:evaporate_design/shell/ev_hints_bar.dart';
@@ -45,6 +46,7 @@ List<EvSettingSection> _catalog({EvEffects? effects}) {
   return evSettingsCatalog((
     appearance: appearance,
     effects: effects,
+    sound: EvSound(out: const EvSilentOut()),
     settings: settings,
     drives: sampleDrives,
     ratio: '2,41',

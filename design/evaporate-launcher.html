@@ -5071,7 +5071,8 @@ const Snd = (() => {
       tone(t, .07, {f0:520, f1:300, g:.09});
       noise(t, .016, {type:"highpass", f0:3200, g:.05});
     },
-    swish(){ noise(now(), .19, {f0:420, f1:2300, q:1.2, g:.045, curve:"lin"}); },
+    /* 120 мс, а не 190: интерфейс не длиннее своего класса */
+    swish(){ noise(now(), .12, {f0:420, f1:2300, q:1.2, g:.045, curve:"lin"}); },
     ok(){
       const t = now();
       tone(t, .1, {type:"triangle", f0:523, g:.07});
@@ -5088,11 +5089,12 @@ const Snd = (() => {
       noise(t, .05, {type:"highpass", f0:1400, g:.05});
     },
     /* испарение: шум уезжает вверх и рассыпается искрами */
+    /* 400 мс вместе с искрами: было 420 и искры до 450 — длиннее событий */
     evaporate(){
       const t = now();
-      noise(t, .42, {f0:280, f1:5200, q:3, g:.06, curve:"lin"});
+      noise(t, .4, {f0:280, f1:5200, q:3, g:.06, curve:"lin"});
       for(let i = 0; i < 6; i++)
-        tone(t + .05 + Math.random() * .3, .1, {f0: 1400 + Math.random() * 2600, g:.022});
+        tone(t + .05 + Math.random() * .25, .1, {f0: 1400 + Math.random() * 2600, g:.022});
     },
     /* заряд: ручка, за которую тянут 620 мс */
     chargeStart(ms = 620){
@@ -5136,12 +5138,14 @@ const Snd = (() => {
       noise(t, dur * .95, {f0:180, f1:5400, q:1.1, g:.085, curve:"lin"});
       for(let i = 1; i < 6; i++)
         tone(t + dur * (i / 6), .05, {f0:660, f1:440, g:.03});
-      const k = t + dur * .92;                       /* удар */
+      /* удар — ровно на вспышке (была на 92 %, за 208 мс до неё);
+         хвост гаснет за 900 мс — вместе с ударной волной */
+      const k = t + dur;
       noise(k, .9, {type:"lowpass", f0:9000, f1:130, q:.8, g:.2});
       tone(k, .7, {type:"sine", f0:92, f1:38, g:.17});
       tone(k + .02, .3, {type:"triangle", f0:1320, f1:330, g:.05});
       for(let i = 0; i < 8; i++)                     /* хвост */
-        tone(k + .12 + Math.random() * .5, .5, {f0: 900 + Math.random() * 3200, g:.016});
+        tone(k + .12 + Math.random() * .28, .5, {f0: 900 + Math.random() * 3200, g:.016});
     }
   };
 

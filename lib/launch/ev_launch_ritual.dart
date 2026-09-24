@@ -8,6 +8,8 @@ import '../atmosphere/ember_field.dart';
 import '../atmosphere/ember_paint.dart';
 import '../design/effects.dart';
 import '../design/theme.dart';
+import '../sound/ev_sound.dart';
+import '../sound/voices.dart';
 import 'ritual_core.dart';
 import 'ritual_timeline.dart';
 
@@ -33,6 +35,9 @@ Future<void> showEvLaunchRitual(
   final effects = EvEffectsScope.maybeOf(context);
   final still = MediaQuery.disableAnimationsOf(context);
   final full = (effects?.ritual ?? true) && !still;
+  // Ритуал звучит, только когда он виден; короткое затемнение отвечает
+  // «Готово».
+  EvSoundScope.maybeOf(context)?.play(full ? EvVoice.ritual : EvVoice.ok);
   return Navigator.of(context).push(
     _EvRitualRoute(
       title: title,

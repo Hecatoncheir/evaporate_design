@@ -4,6 +4,8 @@ import '../art/ev_art.dart';
 import '../art/key_art.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../sound/ev_sound.dart';
+import '../sound/voices.dart';
 import '../glass/ev_glass.dart';
 import 'ev_focusable.dart';
 import 'ev_surfaces.dart';
@@ -58,7 +60,10 @@ class _EvGameCardState extends State<EvGameCard> {
     // Наведение ловится снаружи сдвига: иначе поднятая карточка уходила бы
     // из-под курсора у нижней кромки и начинала мигать.
     return MouseRegion(
-      onEnter: (_) => setState(() => _hover = true),
+      onEnter: (_) {
+        EvSoundScope.maybeOf(context)?.play(EvVoice.tick);
+        setState(() => _hover = true);
+      },
       onExit: (_) => setState(() => _hover = false),
       child: AnimatedContainer(
         duration: EvMotion.hover,

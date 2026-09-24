@@ -4,18 +4,23 @@ import '../design/appearance.dart';
 import '../design/effects.dart';
 import '../design/theme.dart';
 import '../glass/glass_lens.dart';
+import '../sound/ev_sound.dart';
 import '../widgets/ev_controls.dart';
 import '../widgets/ev_icon.dart';
 import '../widgets/ev_surfaces.dart';
 import 'ev_settings_widgets.dart';
 import 'settings_data.dart';
 import 'settings_search.dart';
+import 'sound_settings.dart';
 
 /// Из чего собираются разделы: модели, которые правят настройки, и то,
 /// что выводится из других разделов.
 typedef EvSettingsSources = ({
   EvAppearance appearance,
   EvEffects? effects,
+
+  /// Звуковой слой окна.
+  EvSound sound,
   EvSettings settings,
   List<EvDrive> drives,
 
@@ -129,26 +134,7 @@ List<EvSettingSection> evSettingsCatalog(EvSettingsSources src) {
       ],
     ),
     if (fx != null) _effects(fx),
-    EvSettingSection(
-      id: 'snd',
-      title: 'Звук',
-      icon: EvIcons.audio,
-      panels: [
-        EvSettingPanel(
-          label: 'Слой и классы',
-          // Звук ещё не перенесён: его тумблеры встанут сюда вместе
-          // с синтезом голосов, а не будут переделываться дважды.
-          body: (context) => const EvNothing(
-            icon: EvIcons.audio,
-            title: 'Звук появится вместе с голосами',
-            detail:
-                'Девять голосов синтезируются на месте, ни одного файла. '
-                'Выключен по умолчанию: лаунчер не должен шуметь на первом '
-                'запуске',
-          ),
-        ),
-      ],
-    ),
+    evSoundSection(src.sound),
     EvSettingSection(
       id: 'lib',
       title: 'Библиотека',

@@ -9,6 +9,7 @@ class EvSettingRow {
     required this.control,
     this.words = const [],
     this.leading,
+    this.dim = false,
   });
 
   final String title;
@@ -19,6 +20,9 @@ class EvSettingRow {
   final List<String> words;
 
   final WidgetBuilder? leading;
+
+  /// Строка ждёт другой настройки — звука, пока слой выключен.
+  final bool dim;
 }
 
 /// Панель раздела: подпись, пояснение и строки. [body] — то, что не

@@ -42,9 +42,12 @@ class EvAtmosphere extends StatefulWidget {
       context.getInheritedWidgetOfExactType<_PointerScope>()?.pointer;
 
   /// Испарить прямоугольник окна — см. [EvAtmosphereState.burstFrom].
-  static void burstFrom(BuildContext context, Rect globalRect) => context
-      .findAncestorStateOfType<EvAtmosphereState>()
-      ?.burstFrom(globalRect);
+  /// `false` — искр нет, и панель просто гаснет.
+  static bool burstFrom(BuildContext context, Rect globalRect) =>
+      context.findAncestorStateOfType<EvAtmosphereState>()?.burstFrom(
+        globalRect,
+      ) ??
+      false;
 
   @override
   State<EvAtmosphere> createState() => EvAtmosphereState();
@@ -72,13 +75,14 @@ class EvAtmosphereState extends State<EvAtmosphere>
 
   /// Испарить то, что лежит в [globalRect]: искры срываются оттуда.
   /// Без искр или при «уменьшить движение» — ничего, как в прототипе.
-  void burstFrom(Rect globalRect, {int count = 90}) {
-    if (!(_effects?.sparks ?? false) || _reducedMotion) return;
+  bool burstFrom(Rect globalRect, {int count = 90}) {
+    if (!(_effects?.sparks ?? false) || _reducedMotion) return false;
     final box = context.findRenderObject();
-    if (box is! RenderBox) return;
+    if (box is! RenderBox) return false;
     final topLeft = box.globalToLocal(globalRect.topLeft);
     _scene.embers.burstFrom(topLeft & globalRect.size, count: count);
     _syncRunning();
+    return true;
   }
 
   /// Секунды времени плюма — для тестов.

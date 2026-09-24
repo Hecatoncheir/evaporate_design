@@ -5,6 +5,8 @@ import 'package:flutter/widgets.dart';
 
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../sound/ev_sound.dart';
+import '../sound/voices.dart';
 import 'ev_icon.dart';
 
 /// Кнопка запуска — единственный насыщенный объект на экране.
@@ -98,6 +100,9 @@ class _EvPlayButtonState extends State<EvPlayButton>
   bool _hover = false;
   bool _down = false;
 
+  /// Голос удержания, пока его держат.
+  EvHoldVoice? _voice;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -116,6 +121,8 @@ class _EvPlayButtonState extends State<EvPlayButton>
 
   void _onHold(AnimationStatus s) {
     if (s == AnimationStatus.completed) {
+      _voice?.strike();
+      _voice = null;
       _hold.value = 0;
       setState(() => _down = false);
       widget.onLaunch?.call();
@@ -124,6 +131,7 @@ class _EvPlayButtonState extends State<EvPlayButton>
 
   @override
   void dispose() {
+    _voice?.release();
     _hold.dispose();
     _breathe.dispose();
     _sweep.dispose();
@@ -147,17 +155,22 @@ class _EvPlayButtonState extends State<EvPlayButton>
   void _press() {
     final launch = widget.onLaunch;
     if (launch == null) return;
+    final sound = EvSoundScope.maybeOf(context);
     if (!widget.requireHold) {
+      sound?.play(EvVoice.tap);
       launch();
       return;
     }
     setState(() => _down = true);
+    _voice = sound?.hold();
     _hold.forward();
   }
 
   void _release() {
     if (!_down) return;
     setState(() => _down = false);
+    _voice?.release();
+    _voice = null;
     _hold.reverse();
   }
 

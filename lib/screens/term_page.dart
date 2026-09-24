@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import '../data/sample_data.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../sound/ev_sound.dart';
+import '../sound/voices.dart';
 import '../modes/ev_term.dart';
 import '../modes/modes_data.dart';
 import '../util/plural.dart';
@@ -51,6 +53,7 @@ class _TermPageState extends State<TermPage> {
 
   void _move(List<EvTermRow> rows, int by) {
     final next = (_at(rows) + by).clamp(0, rows.length - 1);
+    EvSoundScope.maybeOf(context)?.play(EvVoice.tick);
     setState(() => _selected = rows[next].game);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final row = _selectedKey.currentContext;
