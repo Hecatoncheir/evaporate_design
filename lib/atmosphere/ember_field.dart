@@ -123,6 +123,29 @@ class EvEmberField {
     }
   }
 
+  /// Панель испаряется: [count] искр срываются из прямоугольника [rect]
+  /// вверх и в стороны и живут 0,7…1,4 с — ритуал в миниатюре. Так
+  /// уходит разобранный дайджест «Пока вас не было».
+  void burstFrom(Rect rect, {int count = 90}) {
+    if (embers.isEmpty) return;
+    final r = _random;
+    for (var i = 0; i < count; i++) {
+      final e = embers[i % embers.length];
+      final a = r.nextDouble() * math.pi * 2, speed = r.nextDouble();
+      embers[i % embers.length] = EvEmber(
+        x: rect.left + r.nextDouble() * rect.width,
+        y: rect.top + r.nextDouble() * rect.height,
+        vx: math.cos(a) * (.5 + speed * 2.4) * .6,
+        vy: -(.8 + r.nextDouble() * 2.6),
+        radius: .7 + r.nextDouble() * 2.2,
+        life: (42 + r.nextDouble() * 42) / 60,
+        phase: e.phase,
+        sway: e.sway,
+        cool: r.nextDouble() < .3,
+      );
+    }
+  }
+
   /// Шаг на [dt] секунд. Длинные паузы режутся до 64 мс, как в прототипе:
   /// после сворачивания окна угли не должны разом прыгнуть вверх.
   void step(double dt) {

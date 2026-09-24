@@ -15,6 +15,9 @@ import 'first_run/ev_add_torrent.dart';
 import 'first_run/ev_first_run_widgets.dart';
 import 'first_run/first_run_controller.dart';
 import 'first_run/first_run_data.dart';
+import 'first_run/scenario.dart';
+import 'returning/ev_return_widgets.dart';
+import 'returning/return_data.dart';
 import 'downloads/download_data.dart';
 import 'friends/friends_data.dart';
 import 'launch/ev_launch_ritual.dart';
@@ -77,8 +80,43 @@ class _EvaporateAppState extends State<EvaporateApp> {
   );
   Route<double>? _addRoute;
 
+  /// «Пока вас не было»: только во втором запуске — открыт или свёрнут
+  /// в плашку. Состояние окна, как и сам второй запуск.
+  final _digest = ValueNotifier<EvDigestState>(EvDigestState.open);
+  late final _return = EvReturnController(
+    onStep: _enterReturn,
+    onExit: () => _setHero(EvHeroState.ready),
+  );
+
+  /// Идущий сценарий — его листают полоса и стрелки.
+  EvScenario? get _scenario => _firstRun.run != null
+      ? _firstRun
+      : _return.index != null
+      ? _return
+      : null;
+
+  /// Шаги «Возвращения»: новости → загрузки из дайджеста → дайджест
+  /// свернулся → продолжили с той же секунды.
+  void _enterReturn(int step) {
+    if (_firstRun.run != null) _firstRun.exit();
+    _setHero(EvHeroState.returned);
+    _digest.value = step == 0 ? EvDigestState.open : EvDigestState.folded;
+    _shell.go(step == 1 ? EvSection.downloads : EvSection.library);
+    if (step != 3) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _navigator.currentContext;
+      if (context == null) return;
+      showEvLaunchRitual(
+        context,
+        title: sampleHero.title,
+        stages: sampleLaunchStages,
+      );
+    });
+  }
+
   /// Вход на шаг первого запуска: куда смотреть и что открыть.
   void _enterStep(EvFirstRunStep step) {
+    if (_return.index != null) _return.exit();
     _shell.go(step.downloads ? EvSection.downloads : EvSection.library);
     final open = _addRoute;
     if (step != EvFirstRunStep.magnet && open != null && open.isActive) {
@@ -134,12 +172,13 @@ class _EvaporateAppState extends State<EvaporateApp> {
     if (event is KeyUpEvent) return KeyEventResult.ignored;
     final key = event.logicalKey;
     final run = _firstRun.run;
-    if (run != null && key == LogicalKeyboardKey.arrowRight) {
-      _firstRun.next();
+    final scenario = _scenario;
+    if (scenario != null && key == LogicalKeyboardKey.arrowRight) {
+      scenario.next();
       return KeyEventResult.handled;
     }
-    if (run != null && key == LogicalKeyboardKey.arrowLeft) {
-      _firstRun.previous();
+    if (scenario != null && key == LogicalKeyboardKey.arrowLeft) {
+      scenario.previous();
       return KeyEventResult.handled;
     }
     final paste =
@@ -159,6 +198,10 @@ class _EvaporateAppState extends State<EvaporateApp> {
   /// свойство окна, и его видят оба. Поэтому офлайн ходит парой: включить
   /// его с одной стороны — значит включить с обеих.
   void _setHero(EvHeroState next) {
+    // Второй запуск открывается новостями.
+    if (next == EvHeroState.returned && _state.value != next) {
+      _digest.value = EvDigestState.open;
+    }
     _state.value = next;
     if (next == EvHeroState.offline) {
       _downloads.value = EvDownloadsState.offline;
@@ -178,6 +221,8 @@ class _EvaporateAppState extends State<EvaporateApp> {
 
   @override
   void dispose() {
+    _return.dispose();
+    _digest.dispose();
     _firstRun.dispose();
     _settings.dispose();
     _shares.dispose();
@@ -212,9 +257,9 @@ class _EvaporateAppState extends State<EvaporateApp> {
             builder: (context, child) => Focus(
               onKeyEvent: _onKey,
               child: ListenableBuilder(
-                listenable: _firstRun,
+                listenable: Listenable.merge([_firstRun, _return]),
                 builder: (context, _) =>
-                    _FlowLayer(controller: _firstRun, child: child!),
+                    _FlowLayer(scenario: _scenario, child: child!),
               ),
             ),
             home: ListenableBuilder(
@@ -226,6 +271,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
                 _shares,
                 _settings,
                 _firstRun,
+                _digest,
               ]),
               builder: (context, _) => _Home(
                 shell: _shell,
@@ -239,6 +285,9 @@ class _EvaporateAppState extends State<EvaporateApp> {
                 onFriends: (next) => _friendsState.value = next,
                 settings: _settings,
                 firstRun: _firstRun,
+                digest: _digest.value,
+                onDigest: (next) => _digest.value = next,
+                onReturn: () => _return.go(0),
                 shares: _shares.value,
                 onShare: (share, on) => _shares.value = on
                     ? {..._shares.value, share}
@@ -265,6 +314,9 @@ class _Home extends StatelessWidget {
     required this.onFriends,
     required this.settings,
     required this.firstRun,
+    required this.digest,
+    required this.onDigest,
+    required this.onReturn,
     required this.shares,
     required this.onShare,
   });
@@ -300,6 +352,14 @@ class _Home extends StatelessWidget {
   /// Первый запуск и каталог — состояние окна.
   final EvFirstRunController firstRun;
 
+  /// «Пока вас не было» — открыт, свёрнут в плашку или его нет.
+  final EvDigestState digest;
+
+  final ValueChanged<EvDigestState> onDigest;
+
+  /// Пройти «Возвращение» с начала.
+  final VoidCallback onReturn;
+
   /// Что видят друзья — тумблеры в профиле.
   final Set<EvShare> shares;
 
@@ -324,6 +384,24 @@ class _Home extends StatelessWidget {
     onQuit: () => onState(EvHeroState.ready),
   );
 
+  /// Единственное действие события дайджеста. Уводит на другой экран —
+  /// дайджест сворачивается; открывает карточку — остаётся.
+  void _digestAction(BuildContext context, EvDigestEvent e) {
+    switch (e.target) {
+      case EvDigestTarget.downloads:
+        onDigest(EvDigestState.folded);
+        shell.go(EvSection.downloads);
+      case EvDigestTarget.friend:
+        onDigest(EvDigestState.folded);
+        final anton = samplePeople.first;
+        shell.open(EvSection.friends, anton, crumb: anton.name);
+      case EvDigestTarget.heroCard || EvDigestTarget.gameCard:
+        _open(context, e.game!);
+      case null:
+        break;
+    }
+  }
+
   /// Очередь первого запуска: одна раздача первой игры в фазе шага,
   /// до неё и после — пусто.
   EvDownloads _firstQueue(EvFirstRun run) {
@@ -341,6 +419,20 @@ class _Home extends StatelessWidget {
   /// приём, и он складывается из раздач, а не пишется отдельным числом.
   /// В первом запуске правая — что с движком на этом шаге.
   List<EvPill> _pills(EvDownloads queue) {
+    // Свёрнутый дайджест живёт плашкой: по ней он возвращается.
+    if (state == EvHeroState.returned && digest == EvDigestState.folded) {
+      return [
+        EvPill(
+          formatRate(queue.downKb, digits: 1),
+          status: queue.downKb == 0 ? EvStatus.idle : EvStatus.busy,
+        ),
+        EvPill(
+          'Пока вас не было · ${sampleDigestEvents().length}',
+          status: EvStatus.news,
+          onTap: () => onDigest(EvDigestState.open),
+        ),
+      ];
+    }
     final engine =
         firstRun.run?.engine ??
         (firstRun.catalog == EvCatalog.reading
@@ -484,6 +576,15 @@ class _Home extends StatelessWidget {
               ? run.hero
               : null,
           onAdd: () => firstRun.go(EvFirstRunStep.magnet),
+          digest: state == EvHeroState.returned && run == null
+              ? EvDigestSlot(
+                  open: digest == EvDigestState.open,
+                  events: sampleDigestEvents(),
+                  onDone: () => onDigest(EvDigestState.folded),
+                  onAction: (e) => _digestAction(context, e),
+                )
+              : null,
+          onOtherSave: () => shell.go(EvSection.saves),
           onInstall: () => onState(EvHeroState.installing),
           onQuit: () => onState(EvHeroState.ready),
           games: run?.library ?? sampleLibrary,
@@ -540,6 +641,7 @@ class _Home extends StatelessWidget {
           catalog: firstRun.catalog,
           onCatalog: (c) => firstRun.catalog = c,
           onFirstRun: () => firstRun.go(EvFirstRunStep.installed),
+          onReturn: onReturn,
           onFriendPage: (p) => shell.open(EvSection.friends, p, crumb: p.name),
         ),
         EvSection.profile => ProfilePage(
@@ -554,15 +656,16 @@ class _Home extends StatelessWidget {
 
 /// Слой над маршрутами: окно и, пока идёт сценарий, его полоса внизу.
 class _FlowLayer extends StatelessWidget {
-  const _FlowLayer({required this.controller, required this.child});
+  const _FlowLayer({required this.scenario, required this.child});
 
-  final EvFirstRunController controller;
+  final EvScenario? scenario;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final run = controller.run;
-    if (run == null) return child;
+    final run = scenario;
+    final index = run?.index;
+    if (run == null || index == null) return child;
     final width = MediaQuery.sizeOf(context).width;
     return Stack(
       children: [
@@ -579,13 +682,13 @@ class _FlowLayer extends StatelessWidget {
               child: Material(
                 type: MaterialType.transparency,
                 child: EvFlowBar(
-                  index: run.step.index,
-                  count: EvFirstRunStep.values.length,
-                  title: run.step.title,
+                  index: index,
+                  count: run.count,
+                  title: run.title,
                   detail: run.detail,
-                  onPrevious: controller.previous,
-                  onNext: controller.next,
-                  onExit: controller.exit,
+                  onPrevious: run.previous,
+                  onNext: run.next,
+                  onExit: run.exit,
                 ),
               ),
             ),

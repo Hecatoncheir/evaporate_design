@@ -1,3 +1,4 @@
+import '../returning/return_data.dart';
 import '../widgets/ev_icon.dart';
 
 /// Состояние игры в герое. Оно меняет не только кнопку: надглавие,
@@ -24,6 +25,10 @@ enum EvHeroState {
 
   /// Нет сети. Локальное работает, сетевое гаснет.
   offline,
+
+  /// Второй запуск: вы вернулись. Герой помнит место, где закрыли игру,
+  /// а рядом — что изменилось, пока вас не было.
+  returned,
 }
 
 /// Цвет строки под кнопкой кодирует причину, а не громкость.
@@ -73,6 +78,7 @@ class EvHeroContent {
     this.secondIcon,
     this.install,
     this.runningFor,
+    this.savePoint,
   });
 
   final String eyebrow;
@@ -101,4 +107,7 @@ class EvHeroContent {
 
   /// Сколько идёт игра: «01:04:12».
   final String? runningFor;
+
+  /// Точка сохранения под кнопкой — во втором запуске.
+  final EvSaveSpot? savePoint;
 }

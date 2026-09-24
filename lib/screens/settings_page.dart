@@ -47,6 +47,7 @@ class SettingsPage extends StatefulWidget {
     this.catalog = EvCatalog.normal,
     this.onCatalog,
     this.onFirstRun,
+    this.onReturn,
   });
 
   final EvSettings settings;
@@ -95,6 +96,9 @@ class SettingsPage extends StatefulWidget {
   /// Пройти первый запуск с начала.
   final VoidCallback? onFirstRun;
 
+  /// Пройти «Возвращение» с начала.
+  final VoidCallback? onReturn;
+
   /// Уже этого окна колонка разделов встаёт над ними и перестаёт
   /// быть липкой — `max-width:880px` в прототипе.
   static const narrow = 880.0;
@@ -114,6 +118,7 @@ class SettingsPage extends StatefulWidget {
     (EvHeroState.installing, 'Идёт установка', 'распаковка 41 %'),
     (EvHeroState.running, 'Игра запущена', 'кнопка стала статусом'),
     (EvHeroState.offline, 'Нет сети', 'локальное живёт, сетевое нет'),
+    (EvHeroState.returned, 'Второй запуск', 'дайджест и точка сохранения'),
   ];
 
   @override
@@ -350,11 +355,23 @@ class _SettingsPageState extends State<SettingsPage> {
             note:
                 'Восемь шагов от пустой библиотеки до запущенной игры. '
                 'Листаются стрелками ← → и кнопками внизу окна',
-            body: (_) => _StateRow(
-              name: 'Первый запуск',
-              hint: '8 шагов · пусто → игра',
-              selected: false,
-              onTap: onFirstRun,
+            body: (_) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _StateRow(
+                  name: 'Первый запуск',
+                  hint: '8 шагов · пусто → игра',
+                  selected: false,
+                  onTap: onFirstRun,
+                ),
+                if (w.onReturn != null)
+                  _StateRow(
+                    name: 'Возвращение',
+                    hint: '4 шага · новости → продолжение',
+                    selected: false,
+                    onTap: w.onReturn!,
+                  ),
+              ],
             ),
           ),
         if (onCatalog != null)

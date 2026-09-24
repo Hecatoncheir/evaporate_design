@@ -774,6 +774,7 @@ class _SheetBar extends StatelessWidget {
         return _wrap(context, c, actions, null);
       case EvHeroState.ready:
       case EvHeroState.offline:
+      case EvHeroState.returned:
       case null:
         break;
     }

@@ -2255,7 +2255,7 @@ h1.title b{font-weight:800;display:block}
                 <div class="when">Сегодня, 02:14<u>6 мин назад</u></div>
                 <div class="facts">
                   <div class="fact"><div class="k">Прогресс</div><div class="v">Уровень 6 · 62 %</div></div>
-                  <div class="fact"><div class="k">В игре</div><div class="v">6 ч 12 мин</div></div>
+                  <div class="fact"><div class="k">В игре</div><div class="v">64 ч 12 мин</div></div>
                   <div class="fact"><div class="k">Кислород</div><div class="v">41 %</div></div>
                   <div class="fact"><div class="k">Размер</div><div class="v">148 МБ</div></div>
                 </div>
@@ -2267,7 +2267,7 @@ h1.title b{font-weight:800;display:block}
                 <div class="when">Вчера, 23:41<u>2 ч 33 мин назад</u></div>
                 <div class="facts">
                   <div class="fact"><div class="k">Прогресс</div><div class="v">Уровень 5 · 88 %</div></div>
-                  <div class="fact"><div class="k">В игре</div><div class="v">5 ч 47 мин</div></div>
+                  <div class="fact"><div class="k">В игре</div><div class="v">63 ч 47 мин</div></div>
                   <div class="fact"><div class="k">Кислород</div><div class="v">73 %</div></div>
                   <div class="fact"><div class="k">Размер</div><div class="v">141 МБ</div></div>
                 </div>
@@ -4689,12 +4689,16 @@ function burst(rect, n){
 }
 
 /* ── дайджест ──────────────────────────────────────────────── */
+/* события говорят то же, что окно. Раньше первым шло «Орбита 7 докачана ·
+   Установить», хотя в загрузках она на 41 %, а «Установить» ставило другую
+   игру — героя; последним — «Грозовой фронт остановился · нет раздающих»,
+   хотя он давно установлен и сам раздаёт */
 const NEWS = [
-  {k:"ok",   ic:"dl",       h:"«Орбита 7» докачана",              d:"28.8 ГБ · проверка пройдена", a:"Установить", go:"lib-install"},
-  {k:"hot",  ic:"boost",    h:"Обновление 2.4.2 установлено",     d:"ночью · 1.8 ГБ · вылет на Кузне починен", a:"Что нового"},
-  {k:"arc",  ic:"trophy",   h:"Антон К. прошёл Кузню Сумерек",    d:"3 часа назад · вы на той же главе", a:"Посмотреть"},
+  {k:"ok",   ic:"dl",       h:"«Орбита 7» качалась всю ночь",     d:"11,8 ГБ из 28,8 ГБ · осталось 7 ч 59 мин", a:"К загрузкам", go:"dl-default"},
+  {k:"hot",  ic:"boost",    h:"Обновление 2.4.2 установлено",     d:"ночью · 1.8 ГБ · вылет на Кузне починен", a:"Что нового", card:"ashen"},
+  {k:"arc",  ic:"trophy",   h:"Антон К. прошёл Кузню Сумерек",    d:"3 часа назад · вы на той же главе", a:"Посмотреть", friend:0},
   {k:"ok",   ic:"cloud",    h:"2 сохранения выгружены",           d:"конфликтов нет"},
-  {k:"warn", ic:"seed",     h:"«Грозовой фронт» остановился",     d:"нет раздающих 6 часов", a:"Показать", go:"dl-noseeds"}
+  {k:"warn", ic:"seed",     h:"«Грозовой фронт» раздаётся впустую", d:`никто не качает 6 часов · рейтинг ${cardData(byId("storm")).ratio.toFixed(2).replace(".", ",")}`, a:"Показать", card:"storm"}
 ];
 function digestHTML(){
   return `<div class="digest">
@@ -4752,7 +4756,11 @@ document.addEventListener("click", e => {
   if(!b) return;
   if(b.dataset.news === "close"){ dismissDigest(); return; }
   const item = NEWS[+b.dataset.news];
-  if(item && item.go){ dismissDigest(); applyState(item.go); }
+  if(!item) return;
+  /* уводит на другой экран — дайджест сворачивается; карточка — нет */
+  if(item.go){ dismissDigest(); applyState(item.go); }
+  if(item.friend !== undefined){ dismissDigest(); openFriend(item.friend); }
+  if(item.card) openSheet(byId(item.card));
 });
 
 /* ── герой возвращения ─────────────────────────────────────── */
@@ -4795,8 +4803,8 @@ const RETURN_FLOW = [
     closeAdd(); setLibrary(null); newsSeen = false; pills[1].onclick = null;
     applyState("lib-return");
   }},
-  {h:"Поставили докачанную игру", d:"одно действие прямо из дайджеста", run(){
-    closeAdd(); setLibrary(null); applyState("lib-install");
+  {h:"Заглянули в загрузки из дайджеста", d:"одно действие прямо из новости", run(){
+    closeAdd(); setLibrary(null); applyState("dl-default");
     dismissDigest();
   }},
   {h:"Дайджест разобран", d:"свернулся в плашку топбара · можно вернуть", run(){

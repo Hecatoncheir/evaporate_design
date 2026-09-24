@@ -249,6 +249,9 @@ enum EvStatus {
 
   /// Просто пауза.
   idle,
+
+  /// Новости, которые ждут: свёрнутый дайджест «Пока вас не было».
+  news,
 }
 
 class EvPill extends StatelessWidget {
@@ -264,13 +267,17 @@ class EvPill extends StatelessWidget {
     EvStatus.warn => EvColors.warn,
     EvStatus.bad => EvColors.bad,
     EvStatus.idle => c.ink4,
+    EvStatus.news => c.hot2,
   };
 
   @override
   Widget build(BuildContext context) {
     final ev = context.ev;
     final dot = _dot(ev.colors);
-    final tinted = status == EvStatus.warn || status == EvStatus.bad;
+    final tinted =
+        status == EvStatus.warn ||
+        status == EvStatus.bad ||
+        status == EvStatus.news;
     // Таблетки живут в полосе каркаса — под ними уже стекло, второй раз
     // читать фон незачем.
     final pill = EvGlass(

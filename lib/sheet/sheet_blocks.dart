@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
-import '../art/ev_art.dart';
 import '../data/game_facts.dart';
 import '../data/sample_data.dart';
 import '../design/theme.dart';
@@ -10,6 +9,8 @@ import '../design/tokens.dart';
 import '../friends/ev_avatar.dart';
 import '../util/units.dart';
 import '../widgets/ev_achievement.dart';
+import '../returning/ev_return_widgets.dart';
+import '../returning/return_data.dart';
 import 'ev_part_row.dart';
 import '../widgets/ev_icon.dart';
 import '../widgets/ev_surfaces.dart';
@@ -689,47 +690,13 @@ class _SavePoint extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(9, 9, 12, 9),
-          decoration: BoxDecoration(
-            borderRadius: ev.radii.b3,
-            border: Border.all(color: c.line),
-            color: const Color.fromRGBO(10, 11, 17, .66),
-          ),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 42,
-                height: 32,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(math.min(7, ev.radii.r3)),
-                  child: EvCover(palette: game.palette, seed: game.seed),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '02:14 · Глава 5',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: ev.text.body.copyWith(
-                        fontSize: 12.5,
-                        color: c.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '${facts.lastAgo} · 148 МБ',
-                      style: ev.text.data.copyWith(fontSize: 10, color: c.ink4),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+        // Та же точка, что под кнопкой героя во втором запуске.
+        EvSavePointCard(
+          spot: EvSaveSpot(
+            game: game,
+            where: '02:14 · Глава 5',
+            ago: facts.lastAgo,
+            size: '148 МБ',
           ),
         ),
         const SizedBox(height: 10),

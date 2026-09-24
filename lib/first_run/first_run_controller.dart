@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import 'first_run_data.dart';
+import 'scenario.dart';
 
 /// Первый запуск и каталог — состояние окна. Шаг сценария подменяет
 /// библиотеку, очередь, героя и плашки; всё это читается из [run].
@@ -10,7 +11,7 @@ import 'first_run_data.dart';
 /// Что должно случиться при входе на шаг — открыть диалог, перейти
 /// в загрузки, запустить ритуал — делает [onStep]: у контроллера нет
 /// ни навигатора, ни каркаса.
-class EvFirstRunController extends ChangeNotifier {
+class EvFirstRunController extends ChangeNotifier implements EvScenario {
   EvFirstRunController({required this.onStep, this.onExit, bool read = true})
     : _catalog = read ? EvCatalog.reading : EvCatalog.normal {
     // Каталог читается первые 300 мс — всё это время виден скелет.
@@ -31,6 +32,18 @@ class EvFirstRunController extends ChangeNotifier {
   /// Шаг сценария; `null` — сценария нет.
   EvFirstRun? get run => _run;
 
+  @override
+  int? get index => _run?.step.index;
+
+  @override
+  int get count => EvFirstRunStep.values.length;
+
+  @override
+  String get title => _run?.step.title ?? '';
+
+  @override
+  String get detail => _run?.detail ?? '';
+
   set catalog(EvCatalog value) {
     _reading?.cancel();
     if (value == _catalog) return;
@@ -50,8 +63,10 @@ class EvFirstRunController extends ChangeNotifier {
   }
 
   /// Дальше; с последнего шага — заново.
+  @override
   void next() => go(_run?.step.next ?? EvFirstRunStep.installed);
 
+  @override
   void previous() {
     final back = _run?.step.previous;
     if (back != null) go(back);
@@ -65,6 +80,7 @@ class EvFirstRunController extends ChangeNotifier {
   }
 
   /// Выйти из сценария: библиотека снова полная.
+  @override
   void exit() {
     if (_run == null) return;
     _run = null;

@@ -1,5 +1,6 @@
 import '../art/key_art.dart';
 import '../library/hero_state.dart';
+import '../returning/return_data.dart';
 import '../launch/ev_launch_ritual.dart';
 import '../widgets/ev_icon.dart';
 import '../util/units.dart';
@@ -301,7 +302,7 @@ final sampleDownloadsActive = sampleDownloading.length;
 
 /// Шесть состояний героя — то же содержимое, что у `HERO` в прототипе.
 /// Всё про «Пепельный Предел»: это игра в герое.
-const sampleHeroStates = <EvHeroState, EvHeroContent>{
+final sampleHeroStates = <EvHeroState, EvHeroContent>{
   EvHeroState.ready: EvHeroContent(
     eyebrow: 'Продолжить · сыграно 284 ч 10 мин',
     blurb:
@@ -398,6 +399,21 @@ const sampleHeroStates = <EvHeroState, EvHeroContent>{
       icon: EvIcons.alert,
       tone: EvNoteTone.warn,
     ),
+  ),
+  // Второй запуск: не «что это за игра», а «где вы остановились». Ночью
+  // встало обновление — отсюда 2.4.2 и пометка «обновлена».
+  EvHeroState.returned: EvHeroContent(
+    eyebrow: 'Вы остановились ${sampleReturnSpot.ago}',
+    blurb:
+        'Перед вторым горном. Сохранение цело и выгружено — продолжите '
+        'с той же секунды, на которой закрыли игру.',
+    chips: const [
+      ('Установлена', true),
+      ('v2.4.2 · обновлена', false),
+      ('Глава 5', false),
+      ('68.4 ГБ', false),
+    ],
+    savePoint: sampleReturnSpot,
   ),
 };
 

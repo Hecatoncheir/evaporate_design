@@ -4,6 +4,7 @@ import '../data/sample_data.dart';
 import '../first_run/ev_first_run_widgets.dart';
 import '../first_run/first_run_data.dart';
 import '../library/ev_hero.dart';
+import '../returning/ev_return_widgets.dart';
 import '../library/hero_state.dart';
 import '../library/ev_session_row.dart';
 import '../friends/friends_data.dart';
@@ -33,6 +34,8 @@ class LibraryPage extends StatelessWidget {
     this.catalog = EvCatalog.normal,
     this.heroContent,
     this.onAdd,
+    this.digest,
+    this.onOtherSave,
     this.onLaunch,
     this.onOpen,
     this.onInstall,
@@ -65,6 +68,13 @@ class LibraryPage extends StatelessWidget {
 
   /// Добавить игру: оба пути из пустой библиотеки и зона перетаскивания.
   final VoidCallback? onAdd;
+
+  /// «Пока вас не было» — во втором запуске. На широком окне стоит первым
+  /// в правой колонке, на остальных висит справа под верхней полосой.
+  final Widget? digest;
+
+  /// «Другое» у точки сохранения в герое.
+  final VoidCallback? onOtherSave;
 
   /// Удержание «Играть» в герое дошло до конца.
   final ValueChanged<SampleGame>? onLaunch;
@@ -129,6 +139,7 @@ class LibraryPage extends StatelessWidget {
           onDetails: onOpen == null ? null : () => onOpen!(hero),
           onInstall: onInstall,
           onQuit: onQuit,
+          onOtherSave: onOtherSave,
         ),
         if (layout.showSessions && sessions.isNotEmpty)
           section(
@@ -167,7 +178,7 @@ class LibraryPage extends StatelessWidget {
     // Экран лежит под полосами каркаса, поэтому сверху и снизу отступает
     // на них: содержимое уходит под стекло только при прокрутке.
     final chrome = MediaQuery.paddingOf(context);
-    return ListView(
+    final list = ListView(
       primary: true,
       padding: EdgeInsets.fromLTRB(
         layout.gutter,
@@ -189,6 +200,7 @@ class LibraryPage extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.only(top: layout.gutter),
                   child: _SideColumn(
+                    digest: digest,
                     friends: friends,
                     friendsOnline: friendsOnline,
                     downloading: [
@@ -201,6 +213,20 @@ class LibraryPage extends StatelessWidget {
               ),
             ],
           ),
+      ],
+    );
+    final float = digest;
+    if (float == null || layout.sideWidth > 0) return list;
+    // Узкое окно: дайджест висит справа под верхней полосой, поверх полок.
+    return Stack(
+      children: [
+        list,
+        Positioned(
+          right: layout.gutter,
+          top: chrome.top + 12,
+          width: EvDigest.width,
+          child: float,
+        ),
       ],
     );
   }
@@ -270,12 +296,14 @@ class _Shelf extends StatelessWidget {
 /// панелями, — друзья и загрузки.
 class _SideColumn extends StatelessWidget {
   const _SideColumn({
+    this.digest,
     required this.friends,
     required this.friendsOnline,
     required this.downloading,
     required this.slots,
   });
 
+  final Widget? digest;
   final List<EvPerson> friends;
   final int friendsOnline;
   final List<SampleGame> downloading;
@@ -285,6 +313,7 @@ class _SideColumn extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
+      if (digest != null) ...[digest!, const SizedBox(height: 14)],
       EvFriendsCard(friends: friends, online: friendsOnline),
       if (downloading.isNotEmpty) ...[
         const SizedBox(height: 14),

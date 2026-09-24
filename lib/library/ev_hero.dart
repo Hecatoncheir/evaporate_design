@@ -14,6 +14,7 @@ import '../widgets/ev_icon.dart';
 import '../widgets/ev_play_button.dart';
 import '../widgets/ev_surfaces.dart';
 import 'hero_cta.dart';
+import '../returning/ev_return_widgets.dart';
 import 'hero_state.dart';
 import 'library_layout.dart';
 
@@ -45,6 +46,7 @@ class EvHero extends StatefulWidget {
     this.onInstall,
     this.onQuit,
     this.onOverlay,
+    this.onOtherSave,
   });
 
   final EvLibraryLayout layout;
@@ -74,6 +76,9 @@ class EvHero extends StatefulWidget {
 
   /// «Оверлей» поверх игры. `null` — оверлея ещё нет.
   final VoidCallback? onOverlay;
+
+  /// «Другое» у точки сохранения — выбрать другую.
+  final VoidCallback? onOtherSave;
 
   @override
   State<EvHero> createState() => _EvHeroState();
@@ -259,7 +264,8 @@ class _EvHeroState extends State<EvHero> {
     // На низком окне высокая полоса действий и строка под ней забирают
     // место у описания — в прототипе оно там же и прячется.
     final tall = content.install != null || content.action != null;
-    final showBlurb = !(m.low && (tall || content.note != null));
+    final below = content.note != null || content.savePoint != null;
+    final showBlurb = !(m.low && (tall || below));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,6 +324,15 @@ class _EvHeroState extends State<EvHero> {
               if (content.note != null) ...[
                 SizedBox(height: m.bodyGap),
                 EvCtaNote(content.note!),
+              ],
+              // Точка сохранения живёт под кнопкой: второй запуск
+              // начинается не с игры, а с места, где её закрыли.
+              if (content.savePoint != null) ...[
+                SizedBox(height: m.bodyGap),
+                EvSavePointCard(
+                  spot: content.savePoint!,
+                  onOther: widget.onOtherSave,
+                ),
               ],
             ],
           ),
