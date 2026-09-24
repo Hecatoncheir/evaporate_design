@@ -14,6 +14,7 @@ import 'package:evaporate_design/design/tokens.dart';
 import 'package:evaporate_design/launch/ev_launch_ritual.dart';
 import 'package:evaporate_design/launch/ritual_core.dart';
 import 'package:evaporate_design/launch/ritual_timeline.dart';
+import 'package:evaporate_design/library/hero_cta.dart';
 import 'package:evaporate_design/main.dart';
 import 'package:evaporate_design/shell/ev_palette.dart';
 import 'package:evaporate_design/shell/ev_section.dart';
@@ -235,8 +236,14 @@ void main() {
         reason: 'клавиши вернулись',
       );
 
-      // второй запуск начинается с первой стадии, а не с журнала прошлого
+      // Ритуал ушёл — игра идёт: герой стал статусом с таймером.
       await tester.sendKeyEvent(LogicalKeyboardKey.digit1);
+      await _settle(tester);
+      expect(find.byType(EvRunningPill), findsOneWidget);
+      expect(find.byType(EvPlayButton), findsNothing);
+
+      // второй запуск начинается с первой стадии, а не с журнала прошлого
+      await tester.tap(find.text('Завершить'));
       await _settle(tester);
       await _holdPlay(tester);
       expect(_inRitual('ПОДГОТОВКА СРЕДЫ'), findsOneWidget);

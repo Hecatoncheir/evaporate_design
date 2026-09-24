@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/sample_data.dart';
 import '../data/sample_friends.dart';
 import '../design/appearance.dart';
 import '../design/effects.dart';
@@ -121,14 +122,18 @@ class SettingsPage extends StatefulWidget {
   static const navWidth = 212.0;
 
   /// Те же состояния и подписи, что в панели прототипа.
-  static const _states = [
+  static final _states = [
     (EvHeroState.ready, 'Обычное состояние', 'установлена, можно играть'),
     (
       EvHeroState.notInstalled,
       'Не установлена',
       'есть в аккаунте, нет на диске',
     ),
-    (EvHeroState.update, 'Есть обновление', 'патч 2.4.2 · 1.8 ГБ'),
+    (
+      EvHeroState.update,
+      'Есть обновление',
+      'патч ${sampleUpdate.bareVersion} · 1.8 ГБ',
+    ),
     (EvHeroState.installing, 'Идёт установка', 'распаковка 41 %'),
     (EvHeroState.running, 'Игра запущена', 'кнопка стала статусом'),
     (EvHeroState.offline, 'Нет сети', 'локальное живёт, сетевое нет'),

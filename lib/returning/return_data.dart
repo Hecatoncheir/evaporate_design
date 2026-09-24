@@ -108,7 +108,7 @@ List<EvDigestEvent> sampleDigestEvents() {
     EvDigestEvent(
       tone: EvDigestTone.hot,
       icon: EvIcons.boost,
-      title: 'Обновление 2.4.2 установлено',
+      title: 'Обновление ${sampleUpdate.bareVersion} установлено',
       detail: 'ночью · 1.8 ГБ · вылет на Кузне починен',
       action: 'Что нового',
       target: EvDigestTarget.heroCard,

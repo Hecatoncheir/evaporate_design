@@ -13,6 +13,8 @@ import 'package:evaporate_design/art/key_art.dart';
 import 'package:evaporate_design/atmosphere/ev_atmosphere.dart';
 import 'package:evaporate_design/atmosphere/ev_pointer.dart';
 import 'package:evaporate_design/data/sample_data.dart';
+import 'package:evaporate_design/data/sample_downloads.dart';
+import 'package:evaporate_design/downloads/download_data.dart';
 import 'package:evaporate_design/data/sample_friends.dart';
 import 'package:evaporate_design/design/effects.dart';
 import 'package:evaporate_design/design/theme.dart';
@@ -446,7 +448,7 @@ void main() {
                 sessions: sampleSessions,
                 friends: sampleFriends,
                 friendsOnline: sampleFriendsOnline,
-                downloadSlots: sampleDownloadSlots,
+                downloads: sampleDownloadsFor(EvDownloadsState.active),
                 onLaunch: onLaunch,
               ),
             ),

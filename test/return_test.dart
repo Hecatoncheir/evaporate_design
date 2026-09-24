@@ -104,6 +104,23 @@ void main() {
       expect(sampleReturnSpot.where, contains('Кузня Сумерек'));
     });
 
+    test('версия патча — одна строка: предлагают её, ставят её же', () {
+      final v = sampleUpdate.bareVersion;
+      expect(v, isNot(sampleHero.bareVersion));
+      expect(
+        sampleHeroStates[EvHeroState.update]!.chips.first.$1,
+        'Обновление $v',
+      );
+      expect(
+        sampleHeroStates[EvHeroState.returned]!.chips.map((c) => c.$1),
+        contains('${sampleUpdate.version} · обновлена'),
+      );
+      expect(events[1].title, contains(v));
+      // Библиотека во втором запуске знает про обновление; в остальных — нет.
+      expect(sampleLibraryFor(EvHeroState.returned).first.version, 'v$v');
+      expect(sampleLibraryFor(EvHeroState.ready), same(sampleLibrary));
+    });
+
     test('седьмое состояние героя: место, а не игра', () {
       final c = sampleHeroStates[EvHeroState.returned]!;
       expect(c.eyebrow, 'Вы остановились ${sampleReturnSpot.ago}');
@@ -245,6 +262,18 @@ void main() {
       await _settle(tester);
       expect(find.byType(EvDigest), findsNothing);
       expect(_news, findsNothing);
+    });
+
+    testWidgets('во втором запуске «Терминал» видит обновлённую версию', (
+      tester,
+    ) async {
+      _window(tester, 1440, 900);
+      await _app(tester);
+      await _returned(tester);
+      await tester.tap(find.bySemanticsLabel('Терминал'));
+      await _settle(tester);
+      expect(find.text(sampleUpdate.bareVersion), findsOneWidget);
+      expect(find.text(sampleHero.bareVersion), findsNothing);
     });
 
     testWidgets('широкое окно: дайджест первым в правой колонке', (

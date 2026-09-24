@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:evaporate_design/data/game_facts.dart';
 import 'package:evaporate_design/data/sample_data.dart';
+import 'package:evaporate_design/data/sample_downloads.dart';
+import 'package:evaporate_design/downloads/download_data.dart';
 import 'package:evaporate_design/design/effects.dart';
 import 'package:evaporate_design/design/theme.dart';
 import 'package:evaporate_design/downloads/ev_torrent_row.dart';
@@ -155,7 +157,7 @@ void main() {
           sessions: const [],
           friends: const [],
           friendsOnline: 0,
-          downloadSlots: 3,
+          downloads: sampleDownloadsFor(EvDownloadsState.empty),
           onAdd: () => added++,
         ),
       );
@@ -180,7 +182,7 @@ void main() {
           sessions: sampleSessions,
           friends: const [],
           friendsOnline: 0,
-          downloadSlots: 3,
+          downloads: sampleDownloadsFor(EvDownloadsState.empty),
           catalog: EvCatalog.reading,
         ),
       );

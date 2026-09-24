@@ -141,29 +141,31 @@ final samplePeople = <EvPerson>[
 
 /// Кто раздаёт вам. Скорости сходятся с разделом «Загрузки»: 592 КБ/с
 /// на «Орбиту», 1.03 МБ/с на «Эхо» — из них 1.34 МБ/с дают друзья.
-List<EvSeeder> _seeders() {
-  final queue = sampleDownloadsFor(EvDownloadsState.active);
-  int rateOf(String title) =>
-      queue.torrents.firstWhere((t) => t.game.title == title).downKb!;
+///
+/// Очередь окна может быть другой: раздача встала в очередь — по ней
+/// никто не раздаёт; приём ужат, пока идёт игра, — каждый друг отдаёт
+/// ту же долю от того, что осталось.
+List<EvSeeder> _seeders(EvDownloads? queue) {
+  final full = sampleDownloadsFor(EvDownloadsState.active);
+  final now = queue ?? full;
+  EvSeeder? seeder(EvPerson person, String title, int rateKb) {
+    final t = now.torrents
+        .where((t) => t.active && t.downKb != null && t.game.title == title)
+        .firstOrNull;
+    if (t == null) return null;
+    final base = full.torrents.firstWhere((t) => t.game.title == title);
+    return EvSeeder(
+      person: person,
+      game: t.game,
+      rateKb: (rateKb * t.downKb! / base.downKb!).round(),
+      ofKb: t.downKb!,
+    );
+  }
+
   return [
-    EvSeeder(
-      person: samplePeople[0],
-      game: _game('Орбита 7'),
-      rateKb: 402,
-      ofKb: rateOf('Орбита 7'),
-    ),
-    EvSeeder(
-      person: samplePeople[5],
-      game: _game('Хальцион: Эхо'),
-      rateKb: 870,
-      ofKb: rateOf('Хальцион: Эхо'),
-    ),
-    EvSeeder(
-      person: samplePeople[4],
-      game: _game('Орбита 7'),
-      rateKb: 68,
-      ofKb: rateOf('Орбита 7'),
-    ),
+    ?seeder(samplePeople[0], 'Орбита 7', 402),
+    ?seeder(samplePeople[5], 'Хальцион: Эхо', 870),
+    ?seeder(samplePeople[4], 'Орбита 7', 68),
   ];
 }
 
@@ -244,15 +246,10 @@ final sampleFriendsOnline = samplePeople
 EvFriends sampleFriendsFor(
   EvFriendsState state, {
   bool offline = false,
-  Set<SampleGame>? running,
+  EvDownloads? queue,
 }) => EvFriends(
   people: samplePeople,
-  seeders: offline
-      ? const []
-      : [
-          for (final s in _seeders())
-            if (running == null || running.contains(s.game)) s,
-        ],
+  seeders: offline ? const [] : _seeders(queue),
   feed: _feed,
   library: _library,
   invite: state == EvFriendsState.invite ? _invite : null,

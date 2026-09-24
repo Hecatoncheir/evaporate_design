@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
@@ -55,7 +54,9 @@ class EvSoLoudOut implements EvAudioOut {
       compressor.ratio.value = 4;
       compressor.attackTime.value = 4;
       compressor.releaseTime.value = 180;
-      final rendered = await Isolate.run(_renderAll);
+      // compute, а не Isolate.run: в вебе изолятов нет, там он просто
+      // посчитает на месте.
+      final rendered = await compute((_) => _renderAll(), null);
       for (final MapEntry(key: v, value: wav) in rendered.voices.entries) {
         _sources[v] = await _soloud.loadMem('ev-${v.name}.wav', wav);
       }

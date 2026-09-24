@@ -68,6 +68,29 @@ class SampleGame {
   /// Появилась в библиотеке недавно.
   final bool isNew;
 
+  /// Та же игра с другой версией на диске — после обновления.
+  SampleGame withVersion(String version) => SampleGame(
+    title,
+    genre,
+    palette,
+    seed,
+    version: version,
+    size: size,
+    blurb: blurb,
+    tags: tags,
+    state: state,
+    played: played,
+    lastPlayed: lastPlayed,
+    progress: progress,
+    rateKb: rateKb,
+    checking: checking,
+    isNew: isNew,
+  );
+
+  /// Версия без «v»: «2.4.1».
+  String get bareVersion =>
+      version.startsWith('v') ? version.substring(1) : version;
+
   /// Та же игра только что с диска: без часов, с пометкой «новое».
   /// Так она выглядит в первом запуске, пока в неё не играли.
   SampleGame fresh() => SampleGame(
@@ -282,6 +305,21 @@ const sampleLibrary = [
 /// последней запущенной.
 final sampleHero = sampleLibrary.first;
 
+/// Патч героя: в «Есть обновление» его предлагают, во втором запуске он
+/// уже встал ночью. Одна строка на всё окно.
+final sampleUpdate = sampleHero.withVersion('v2.4.2');
+
+/// Библиотека в состоянии окна. Во втором запуске у героя уже новая
+/// версия — её видят и «Стена», и «Терминал», и «Пульт»; раньше там
+/// оставалась 2.4.1, хотя герой и дайджест говорили про 2.4.2.
+List<SampleGame> sampleLibraryFor(EvHeroState state) =>
+    state == EvHeroState.returned
+    ? [
+        for (final g in sampleLibrary)
+          identical(g, sampleHero) ? sampleUpdate : g,
+      ]
+    : sampleLibrary;
+
 /// Недавние сессии для «Продолжить» — кроме той, что в герое.
 final sampleSessions = [
   for (final g in sampleLibrary)
@@ -341,12 +379,13 @@ final sampleHeroStates = <EvHeroState, EvHeroContent>{
   EvHeroState.update: EvHeroContent(
     eyebrow: 'Установлена · доступно обновление',
     blurb:
-        'Патч 2.4.2 чинит вылет на Кузне Сумерек и добавляет русскую '
-        'озвучку. Сетевая игра со старой версией недоступна.',
+        'Патч ${sampleUpdate.bareVersion} чинит вылет на Кузне Сумерек и '
+        'добавляет русскую озвучку. Сетевая игра со старой версией '
+        'недоступна.',
     chips: [
-      ('Обновление 2.4.2', true),
+      ('Обновление ${sampleUpdate.bareVersion}', true),
       ('1.8 ГБ', false),
-      ('установлена 2.4.1', false),
+      ('установлена ${sampleHero.bareVersion}', false),
       ('Action-RPG', false),
     ],
     action: 'Обновить и играть',
@@ -410,9 +449,9 @@ final sampleHeroStates = <EvHeroState, EvHeroContent>{
     blurb:
         'Перед вторым горном. Сохранение цело и выгружено — продолжите '
         'с той же секунды, на которой закрыли игру.',
-    chips: const [
+    chips: [
       ('Установлена', true),
-      ('v2.4.2 · обновлена', false),
+      ('${sampleUpdate.version} · обновлена', false),
       ('Глава 5', false),
       ('68.4 ГБ', false),
     ],

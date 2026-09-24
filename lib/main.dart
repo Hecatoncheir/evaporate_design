@@ -428,13 +428,17 @@ class _Home extends StatelessWidget {
 
   final void Function(EvShare share, bool on) onShare;
 
-  /// Запуск игры — ритуал поверх всего окна.
-  static void _launch(BuildContext context, SampleGame game) =>
-      showEvLaunchRitual(
-        context,
-        title: game.title,
-        stages: sampleLaunchStages,
-      );
+  /// Запуск игры — ритуал поверх всего окна; когда он уходит, герой
+  /// становится «Игра запущена», как в прототипе. Только у героя: сессия
+  /// в данных одна — его.
+  Future<void> _launch(BuildContext context, SampleGame game) async {
+    await showEvLaunchRitual(
+      context,
+      title: game.title,
+      stages: sampleLaunchStages,
+    );
+    if (game.title == sampleHero.title) onState(EvHeroState.running);
+  }
 
   /// Главная кнопка у игры вне героя: игра на диске — ритуал, нет —
   /// загрузки, где она уже качается или ждёт.
@@ -448,7 +452,7 @@ class _Home extends StatelessWidget {
     EvSoundScope.maybeOf(context)?.play(EvVoice.swish);
     showEvPult(
       context,
-      games: sampleLibrary,
+      games: sampleLibraryFor(state),
       rate: formatRate(queue.downKb, digits: 1),
       initials: sampleUserInitials,
       onPlay: (g) => _play(context, g),
@@ -461,7 +465,8 @@ class _Home extends StatelessWidget {
   void _open(BuildContext context, SampleGame game) => showEvGameSheet(
     context,
     game: game,
-    state: game == sampleHero ? state : null,
+    // Во втором запуске у героя другая версия — это та же игра.
+    state: game.title == sampleHero.title ? state : null,
     onLaunch: () => _launch(context, game),
     onInstall: () => onState(EvHeroState.installing),
     onQuit: () => onState(EvHeroState.ready),
@@ -546,12 +551,7 @@ class _Home extends StatelessWidget {
         ),
       ];
     }
-    final engine =
-        firstRun.run?.engine ??
-        (firstRun.catalog == EvCatalog.reading
-            ? ('Читаем каталог', EvStatus.busy)
-            : null);
-    if (engine != null && state != EvHeroState.offline) {
+    if (_engine case final engine? when state != EvHeroState.offline) {
       return [
         EvPill(
           formatRate(queue.downKb, digits: 1),
@@ -561,6 +561,21 @@ class _Home extends StatelessWidget {
       ];
     }
     return _statePills(queue);
+  }
+
+  /// Что с движком на шаге первого запуска или пока читается каталог;
+  /// `null` — плашку пишет состояние окна.
+  ///
+  /// Отдельным геттером, а не `?.` с `??` в одном выражении: такую запись
+  /// веб-компилятор собирал без проверки на `null`, и окно в браузере
+  /// падало на первом кадре.
+  (String, EvStatus)? get _engine {
+    final step = firstRun.run?.engine;
+    if (step != null) return step;
+    if (firstRun.catalog == EvCatalog.reading) {
+      return ('Читаем каталог', EvStatus.busy);
+    }
+    return null;
   }
 
   List<EvPill> _statePills(EvDownloads queue) => switch (state) {
@@ -623,10 +638,7 @@ class _Home extends StatelessWidget {
     final friends = sampleFriendsFor(
       friendsState,
       offline: offline,
-      running: {
-        for (final t in queue.torrents)
-          if (t.active) t.game,
-      },
+      queue: queue,
     );
     return EvShell(
       controller: shell,
@@ -682,13 +694,16 @@ class _Home extends StatelessWidget {
       pageBuilder: (context, section) => switch (section) {
         EvSection.library when run == null && view == EvLibraryView.wall =>
           WallPage(
-            games: sampleLibrary,
-            selected: sampleHero,
+            games: sampleLibraryFor(state),
+            selected: sampleLibraryFor(state).first,
             onPlay: (g) => _play(context, g),
             onOpen: (g) => _open(context, g),
           ),
         EvSection.library when run == null && view == EvLibraryView.term =>
-          TermPage(games: sampleLibrary, onPlay: (g) => _play(context, g)),
+          TermPage(
+            games: sampleLibraryFor(state),
+            onPlay: (g) => _play(context, g),
+          ),
         EvSection.library => LibraryPage(
           // В первом запуске библиотека, герой и его состояние — шага.
           state: switch (run?.step) {
@@ -725,7 +740,7 @@ class _Home extends StatelessWidget {
           // и раздел, — и так же гаснет без сети.
           friends: friends.people.take(4).toList(),
           friendsOnline: friends.online,
-          downloadSlots: queue.slots,
+          downloads: queue,
           onLaunch: (g) => _launch(context, g),
           onOpen: (g) => _open(context, g),
         ),

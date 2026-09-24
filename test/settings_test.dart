@@ -214,13 +214,7 @@ void main() {
         expect(one.queue.length, full.queue.length + full.active - 1);
         expect(one.queue.first.game, full.torrents[1].game);
 
-        final friends = sampleFriendsFor(
-          EvFriendsState.normal,
-          running: {
-            for (final t in one.torrents)
-              if (t.active) t.game,
-          },
-        );
+        final friends = sampleFriendsFor(EvFriendsState.normal, queue: one);
         expect(
           friends.seeders.every((s) => s.game == one.torrents.first.game),
           isTrue,

@@ -9,6 +9,7 @@ import 'package:evaporate_design/data/sample_profile.dart';
 import 'package:evaporate_design/data/sample_session.dart';
 import 'package:evaporate_design/design/effects.dart';
 import 'package:evaporate_design/downloads/download_data.dart';
+import 'package:evaporate_design/friends/friends_data.dart';
 import 'package:evaporate_design/downloads/rate_graph.dart';
 import 'package:evaporate_design/library/hero_state.dart';
 import 'package:evaporate_design/main.dart';
@@ -237,6 +238,35 @@ void main() {
       await _settle(tester);
       expect(find.byType(DownloadsPage), findsOneWidget);
       expect(find.textContaining('365 КБ/с'), findsWidgets);
+    });
+
+    testWidgets('в игре правая колонка и «Друзья» читают ту же очередь', (
+      tester,
+    ) async {
+      _window(tester, 1900, 1100);
+      await _app(tester);
+      await _running(tester);
+      // Правая колонка: та же доля «Орбиты», что в загрузках и в оверлее.
+      expect(find.text('41 % · 365 КБ/с'), findsOneWidget);
+      // Друзья отдают свою долю от ужатого приёма, а не прежние 1.34 МБ/с.
+      final queue = sampleDownloadsFor(EvDownloadsState.active)
+          .capped(downKb: 1000, upKb: 1000);
+      final friends = sampleFriendsFor(EvFriendsState.normal, queue: queue);
+      expect(friends.fromFriendsKb, lessThanOrEqualTo(queue.downKb));
+      for (final s in friends.seeders) {
+        final t = queue.torrents.firstWhere((t) => t.game == s.game);
+        expect(s.ofKb, t.downKb);
+      }
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit5);
+      await _settle(tester);
+      // Крупное число «от друзей» — в МБ/с, как в разделе.
+      expect(
+        find.textContaining(
+          (friends.fromFriendsKb / 1000).toStringAsFixed(2),
+          findRichText: true,
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('кадры идут по часам, а «меньше движения» их останавливает', (

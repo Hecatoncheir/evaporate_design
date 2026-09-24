@@ -770,7 +770,7 @@ class _SheetBar extends StatelessWidget {
           ),
           ..._icons(context),
           const Spacer(),
-          hint([('установлена ', false), ('2.4.1', true)]),
+          hint([('установлена ', false), (game.bareVersion, true)]),
         ]);
         return _wrap(context, c, actions, null);
       case EvHeroState.notInstalled:

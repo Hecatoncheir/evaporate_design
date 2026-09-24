@@ -12,6 +12,7 @@ import '../widgets/ev_game_card.dart';
 import '../widgets/ev_icon.dart';
 import '../widgets/ev_play_button.dart';
 import '../widgets/ev_surfaces.dart';
+import 'gallery_since.dart';
 
 /// Галерея компонентов. Не экран продукта, а витрина системы: всё, что уже
 /// перенесено из макетов, на одной странице и в работающем виде.
@@ -289,6 +290,8 @@ class _GalleryBodyState extends State<_GalleryBody> {
                 onPressed: () {},
               ),
             ),
+
+            const GallerySince(),
 
             const SizedBox(height: EvSpace.xxl),
             const EvSectionHeader('Настройки', count: 'строки и контролы'),

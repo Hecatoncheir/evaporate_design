@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../data/sample_data.dart';
+import '../downloads/download_data.dart';
 import '../first_run/ev_first_run_widgets.dart';
 import '../first_run/first_run_data.dart';
 import '../library/ev_hero.dart';
@@ -29,7 +30,7 @@ class LibraryPage extends StatelessWidget {
     required this.sessions,
     required this.friends,
     required this.friendsOnline,
-    required this.downloadSlots,
+    required this.downloads,
     this.state = EvHeroState.ready,
     this.catalog = EvCatalog.normal,
     this.heroContent,
@@ -54,8 +55,9 @@ class LibraryPage extends StatelessWidget {
   final List<EvPerson> friends;
   final int friendsOnline;
 
-  /// Сколько раздач качается одновременно.
-  final int downloadSlots;
+  /// Очередь раздач — та же, что у верхней полосы: пока идёт игра, она
+  /// ужата, и правая колонка пишет те же скорости.
+  final EvDownloads downloads;
 
   /// Состояние игры в герое: установлена, качается, идёт, офлайн.
   final EvHeroState state;
@@ -208,11 +210,7 @@ class LibraryPage extends StatelessWidget {
                     digest: digest,
                     friends: friends,
                     friendsOnline: friendsOnline,
-                    downloading: [
-                      for (final g in games)
-                        if (g.state == EvGameState.downloading) g,
-                    ],
-                    slots: downloadSlots,
+                    downloads: downloads,
                   ),
                 ),
               ),
@@ -304,43 +302,45 @@ class _SideColumn extends StatelessWidget {
     this.digest,
     required this.friends,
     required this.friendsOnline,
-    required this.downloading,
-    required this.slots,
+    required this.downloads,
   });
 
   final Widget? digest;
   final List<EvPerson> friends;
   final int friendsOnline;
-  final List<SampleGame> downloading;
-  final int slots;
+  final EvDownloads downloads;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      if (digest != null) ...[digest!, const SizedBox(height: 14)],
-      EvFriendsCard(friends: friends, online: friendsOnline),
-      if (downloading.isNotEmpty) ...[
-        const SizedBox(height: 14),
-        EvDownloadsNowCard(
-          downloads: [
-            for (final g in downloading)
-              EvDownloadLine(
-                title: g.title,
-                detail:
-                    '${percent(g.progress ?? 0)} % · ${formatRate(g.rateKb ?? 0)}',
-                progress: g.progress ?? 0,
-                palette: g.palette,
-                seed: g.seed,
-                checking: g.checking,
-              ),
-          ],
-          rate: formatRate(
-            downloading.fold(0, (sum, g) => sum + (g.rateKb ?? 0)),
+  Widget build(BuildContext context) {
+    // Качается то, что принимает: без сети и на паузе строк нет.
+    final active = [
+      for (final t in downloads.torrents)
+        if (t.active && t.downKb != null) t,
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (digest != null) ...[digest!, const SizedBox(height: 14)],
+        EvFriendsCard(friends: friends, online: friendsOnline),
+        if (active.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          EvDownloadsNowCard(
+            downloads: [
+              for (final t in active)
+                EvDownloadLine(
+                  title: t.game.title,
+                  detail: '${percent(t.progress)} % · ${formatRate(t.downKb!)}',
+                  progress: t.progress,
+                  palette: t.game.palette,
+                  seed: t.game.seed,
+                  checking: t.bar == EvBarTone.cool,
+                ),
+            ],
+            rate: formatRate(downloads.downKb),
+            slots: downloads.slots,
           ),
-          slots: slots,
-        ),
+        ],
       ],
-    ],
-  );
+    );
+  }
 }

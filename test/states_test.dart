@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:evaporate_design/data/sample_data.dart';
+import 'package:evaporate_design/data/sample_downloads.dart';
+import 'package:evaporate_design/downloads/download_data.dart';
 import 'package:evaporate_design/data/sample_friends.dart';
 import 'package:evaporate_design/design/effects.dart';
 import 'package:evaporate_design/design/theme.dart';
@@ -59,7 +61,7 @@ Future<void> _library(
             sessions: sampleSessions,
             friends: sampleFriends,
             friendsOnline: sampleFriendsOnline,
-            downloadSlots: sampleDownloadSlots,
+            downloads: sampleDownloadsFor(EvDownloadsState.active),
             onInstall: onInstall,
             onQuit: onQuit,
           ),
