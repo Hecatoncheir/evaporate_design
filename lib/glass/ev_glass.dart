@@ -42,6 +42,7 @@ class EvGlass extends StatefulWidget {
     this.pressed = false,
     this.grouped = false,
     this.backdrop = true,
+    this.rim,
   });
 
   final Widget child;
@@ -79,6 +80,11 @@ class EvGlass extends StatefulWidget {
   /// Читать фон вообще. Мелочь поверх другого стекла (клавиши, капли
   /// выбора) читает его впустую: под ней уже всё размыто.
   final bool backdrop;
+
+  /// Стороны, на которых светится кромка; `null` — весь периметр.
+  /// Полосы каркаса стыкуются с соседями: кромка у них только на стыке,
+  /// а стороны у края окна её не видят.
+  final Set<AxisDirection>? rim;
 
   @override
   State<EvGlass> createState() => _EvGlassState();
@@ -171,6 +177,7 @@ class _EvGlassState extends State<EvGlass> with SingleTickerProviderStateMixin {
           window: MediaQuery.sizeOf(context),
           hover: _hover,
           press: press,
+          rim: widget.rim,
           child: widget.padding == null
               ? child!
               : Padding(padding: widget.padding!, child: child),

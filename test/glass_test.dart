@@ -13,8 +13,10 @@ import 'package:evaporate_design/glass/glass_surface.dart';
 import 'package:evaporate_design/library/ev_hero.dart';
 import 'package:evaporate_design/main.dart';
 import 'package:evaporate_design/screens/library_page.dart';
+import 'package:evaporate_design/shell/ev_hints_bar.dart';
 import 'package:evaporate_design/shell/ev_rail.dart';
 import 'package:evaporate_design/shell/ev_section.dart';
+import 'package:evaporate_design/shell/ev_top_bar.dart';
 
 Future<void> _settle(WidgetTester tester) async {
   await tester.pump();
@@ -92,6 +94,38 @@ void main() {
   });
 
   group('свет', () {
+    test('кромка светится только на заданных сторонах', () async {
+      // Яркость столбца посередине высоты: левый и правый край полосы.
+      Future<(int, int)> edges(Set<AxisDirection>? sides) async {
+        const size = Size(100, 60);
+        final rect = Offset.zero & size;
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder)
+          ..drawRect(rect, Paint()..color = const Color(0xFF000000));
+        paintGlassRim(
+          canvas,
+          RRect.fromRectAndRadius(rect.deflate(4), Radius.zero),
+          EvGlassLight.of(rect, null, size),
+          EvGlassStyle.frost,
+          const Color(0xFFFFFFFF),
+          sides: sides,
+        );
+        final image = recorder.endRecording().toImageSync(100, 60);
+        final bytes = (await image.toByteData())!;
+        int red(int x) => bytes.getUint8((30 * 100 + x) * 4);
+        final out = (red(4), red(95));
+        image.dispose();
+        return out;
+      }
+
+      final right = await edges({AxisDirection.right});
+      expect(right.$1, 0, reason: 'слева кромки нет');
+      expect(right.$2, greaterThan(0), reason: 'справа есть');
+      final all = await edges(null);
+      expect(all.$1, greaterThan(0), reason: 'без сторон — весь периметр');
+      expect(all.$2, greaterThan(0));
+    });
+
     const window = Size(1280, 720);
     const rect = Rect.fromLTWH(540, 300, 200, 120);
 
@@ -206,22 +240,52 @@ void main() {
       expect(tester.getRect(find.byType(EvHero)).top, greaterThanOrEqualTo(58));
     });
 
-    testWidgets('рейл — плита с отступом от кромок окна', (tester) async {
-      await _window(tester, 1440, 900);
-      await tester.pumpWidget(_app(_still(tester)));
-      await _settle(tester);
+    testWidgets(
+      'рейл и полосы стыкуются, как в прототипе: одна кромка на стык',
+      (tester) async {
+        await _window(tester, 1440, 900);
+        await tester.pumpWidget(_app(_still(tester)));
+        await _settle(tester);
 
-      final rail = tester.getRect(find.byType(EvRail));
-      expect(rail.width, EvSpace.railWidth);
-      final slab = tester.getRect(
-        find
-            .descendant(of: find.byType(EvRail), matching: find.byType(EvGlass))
-            .first,
-      );
-      expect(slab.left, EvRail.inset);
-      expect(slab.width, EvRail.slabWidth);
-      expect(slab.top, EvRail.inset);
-      expect(slab.bottom, 900 - EvRail.inset);
-    });
+        EvGlass glassOf(Type owner) => tester.widget<EvGlass>(
+          find
+              .descendant(
+                of: find.byType(owner),
+                matching: find.byType(EvGlass),
+              )
+              .first,
+        );
+        Rect rectOf(Type owner) => tester.getRect(
+          find
+              .descendant(
+                of: find.byType(owner),
+                matching: find.byType(EvGlass),
+              )
+              .first,
+        );
+
+        // Рейл — стекло во всю высоту у края окна, без отступа.
+        expect(
+          rectOf(EvRail),
+          const Rect.fromLTWH(0, 0, EvSpace.railWidth, 900),
+        );
+        // Полосы начинаются ровно там, где кончается рейл.
+        expect(rectOf(EvTopBar).left, EvSpace.railWidth);
+        expect(rectOf(EvTopBar).top, 0);
+        expect(rectOf(EvHintsBar).left, EvSpace.railWidth);
+        expect(rectOf(EvHintsBar).bottom, 900);
+        // Кромка светится только на стыке с экраном.
+        expect(glassOf(EvRail).rim, {AxisDirection.right});
+        expect(glassOf(EvTopBar).rim, {AxisDirection.down});
+        expect(glassOf(EvHintsBar).rim, {AxisDirection.up});
+
+        // Черта выбранного раздела — у самого края окна.
+        final mark = find.descendant(
+          of: find.byType(EvRailItem).first,
+          matching: find.byType(AnimatedContainer),
+        );
+        expect(tester.getRect(mark.first).left, 0);
+      },
+    );
   });
 }

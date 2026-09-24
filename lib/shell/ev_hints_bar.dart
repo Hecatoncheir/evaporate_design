@@ -38,6 +38,8 @@ class EvHintsBar extends StatelessWidget {
       // обложки: стекло тут плотнее и темнее, иначе строку не прочесть.
       style: EvGlassStyle.frost.copyWith(tintAlpha: 0.74, brightness: 0.5),
       borderRadius: BorderRadius.zero,
+      // Стык с экраном — сверху, как `border-top` в прототипе.
+      rim: const {AxisDirection.up},
       padding: EdgeInsets.symmetric(horizontal: gutter),
       child: SizedBox(
         height: EvSpace.hintsHeight,

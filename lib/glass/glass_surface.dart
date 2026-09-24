@@ -90,8 +90,12 @@ class EvGlassSurface extends SingleChildRenderObjectWidget {
     required this.window,
     required this.hover,
     required this.press,
+    this.rim,
     super.child,
   });
+
+  /// Стороны, на которых светится кромка; `null` — весь периметр.
+  final Set<AxisDirection>? rim;
 
   final EvGlassStyle style;
 
@@ -125,6 +129,7 @@ class EvGlassSurface extends SingleChildRenderObjectWidget {
     window: window,
     hover: hover,
     press: press,
+    rim: rim,
   );
 
   @override
@@ -140,7 +145,8 @@ class EvGlassSurface extends SingleChildRenderObjectWidget {
       ..pointer = pointer
       ..window = window
       ..hover = hover
-      ..press = press;
+      ..press = press
+      ..rim = rim;
   }
 }
 
@@ -154,7 +160,15 @@ class RenderGlassSurface extends RenderProxyBox {
     required this._window,
     required this._hover,
     required this._press,
+    required this._rim,
   });
+
+  Set<AxisDirection>? _rim;
+  set rim(Set<AxisDirection>? value) {
+    if (setEquals(value, _rim)) return;
+    _rim = value;
+    markNeedsPaint();
+  }
 
   EvGlassStyle _style;
   EvGlassStyle get style => _style;
@@ -257,6 +271,7 @@ class RenderGlassSurface extends RenderProxyBox {
       _style,
       _keyLight,
       press: _press,
+      sides: _rim,
     );
   }
 
@@ -363,9 +378,36 @@ void paintGlassRim(
   EvGlassStyle style,
   Color keyLight, {
   double press = 0,
+  Set<AxisDirection>? sides,
 }) {
-  final samples = _perimeter(rrect);
-  if (samples.length < 3) return;
+  if (sides != null) {
+    // Кромка только на стыках: у каждой стороны своя открытая полоса.
+    for (final side in sides) {
+      _paintRim(
+        canvas,
+        _side(rrect.outerRect, side),
+        light,
+        style,
+        keyLight,
+        press: press,
+        closed: false,
+      );
+    }
+    return;
+  }
+  _paintRim(canvas, _perimeter(rrect), light, style, keyLight, press: press);
+}
+
+void _paintRim(
+  Canvas canvas,
+  List<(Offset, Offset)> samples,
+  EvGlassLight light,
+  EvGlassStyle style,
+  Color keyLight, {
+  required double press,
+  bool closed = true,
+}) {
+  if (samples.length < 2) return;
 
   const outward = 0.6, peak = 0.3, inward = 1.6;
   final outer = <Offset>[];
@@ -400,8 +442,8 @@ void paintGlassRim(
   // экрана, и холст упадёт на пустом указателе.
   final paint = Paint();
   for (final strip in [
-    _strip(outer, mid, clear, glow),
-    _strip(mid, inner, glow, clear),
+    _strip(outer, mid, clear, glow, closed: closed),
+    _strip(mid, inner, glow, clear, closed: closed),
   ]) {
     canvas.drawVertices(strip, BlendMode.dst, paint);
     strip.dispose();
@@ -413,11 +455,12 @@ ui.Vertices _strip(
   List<Offset> a,
   List<Offset> b,
   List<Color> ca,
-  List<Color> cb,
-) {
+  List<Color> cb, {
+  bool closed = true,
+}) {
   final points = <Offset>[];
   final colors = <Color>[];
-  for (var i = 0; i <= a.length; i++) {
+  for (var i = 0; i < a.length + (closed ? 1 : 0); i++) {
     final j = i % a.length;
     points
       ..add(a[j])
@@ -427,6 +470,21 @@ ui.Vertices _strip(
       ..add(cb[j]);
   }
   return ui.Vertices(ui.VertexMode.triangleStrip, points, colors: colors);
+}
+
+/// Точки одной стороны прямоугольника с внешней нормалью.
+List<(Offset, Offset)> _side(Rect r, AxisDirection side) {
+  final (from, to, n) = switch (side) {
+    AxisDirection.up => (r.topLeft, r.topRight, const Offset(0, -1)),
+    AxisDirection.right => (r.topRight, r.bottomRight, const Offset(1, 0)),
+    AxisDirection.down => (r.bottomLeft, r.bottomRight, const Offset(0, 1)),
+    AxisDirection.left => (r.topLeft, r.bottomLeft, const Offset(-1, 0)),
+  };
+  // Как у периметра: длинную кромку дробим, чтобы свет гас вдоль неё.
+  final steps = math.max(1, ((to - from).distance / 48).ceil());
+  return [
+    for (var i = 0; i <= steps; i++) (Offset.lerp(from, to, i / steps)!, n),
+  ];
 }
 
 /// Точки периметра скруглённого прямоугольника с внешними нормалями,

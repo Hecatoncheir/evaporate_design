@@ -35,6 +35,8 @@ class EvTopBar extends StatelessWidget {
     return EvGlass(
       grouped: true,
       borderRadius: BorderRadius.zero,
+      // Стык с экраном — снизу; слева полоса упирается в кромку рейла.
+      rim: const {AxisDirection.down},
       padding: EdgeInsets.symmetric(horizontal: gutter),
       child: SizedBox(
         height: EvSpace.topBarHeight,
