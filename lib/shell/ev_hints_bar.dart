@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
 import '../glass/ev_glass.dart';
+import '../settings/settings_data.dart';
 import 'ev_top_bar.dart';
 
 /// Строка клавиатурных подсказок внизу окна — подпись приложения,
@@ -11,20 +12,14 @@ import 'ev_top_bar.dart';
 /// Как и верхняя полоса, сделана из матового стекла: полка уходит под неё
 /// при прокрутке.
 class EvHintsBar extends StatelessWidget {
-  const EvHintsBar({super.key, this.hints = defaultHints, this.ready = true});
+  const EvHintsBar({super.key, this.hints, this.ready = true});
 
-  final List<(String, String)> hints;
+  /// Подсказки. `null` — из таблицы клавиш настроек: строка и таблица
+  /// не должны расходиться.
+  final List<(String, String)>? hints;
 
   /// Состояние движка справа: готов или занят.
   final bool ready;
-
-  static const defaultHints = [
-    ('↑↓←→', 'Навигация'),
-    ('Enter', 'Выбрать'),
-    ('Esc', 'Назад'),
-    ('Ctrl+Tab', 'Разделы'),
-    ('/', 'Поиск'),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +51,7 @@ class EvHintsBar extends StatelessWidget {
                 physics: const NeverScrollableScrollPhysics(),
                 child: Row(
                   children: [
-                    for (final (key, action) in hints) ...[
+                    for (final (key, action) in hints ?? evHints) ...[
                       EvKey(key),
                       const SizedBox(width: 7),
                       Text(action, style: label),

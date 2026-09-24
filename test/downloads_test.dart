@@ -59,7 +59,7 @@ Future<void> _page(WidgetTester tester, EvDownloadsState state) async {
 Future<void> _pick(WidgetTester tester, String name) async {
   await tester.sendKeyEvent(LogicalKeyboardKey.digit4);
   await _settle(tester);
-  await tester.drag(find.byType(ListView).first, const Offset(0, -1500));
+  await tester.ensureVisible(find.text(name));
   await _settle(tester);
   await tester.tap(find.text(name));
   await _settle(tester);
@@ -264,7 +264,7 @@ void main() {
       // И обратно: герой вернулся в покой — очередь тоже.
       await tester.sendKeyEvent(LogicalKeyboardKey.digit4);
       await _settle(tester);
-      await tester.drag(find.byType(ListView).first, const Offset(0, -1200));
+      await tester.ensureVisible(find.text('Обычное состояние'));
       await _settle(tester);
       await tester.tap(find.text('Обычное состояние'));
       await _settle(tester);

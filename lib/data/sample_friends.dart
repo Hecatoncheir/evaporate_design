@@ -238,12 +238,23 @@ final sampleFriendsOnline = samplePeople
 
 /// Что показывает раздел. `offline` — состояние окна, а не раздела:
 /// без сети друзья не видны и пиров от них нет.
-EvFriends sampleFriendsFor(EvFriendsState state, {bool offline = false}) =>
-    EvFriends(
-      people: samplePeople,
-      seeders: offline ? const [] : _seeders(),
-      feed: _feed,
-      library: _library,
-      invite: state == EvFriendsState.invite ? _invite : null,
-      offline: offline,
-    );
+///
+/// [running] — какие раздачи сейчас идут: друг не раздаёт вам то, что
+/// стоит в очереди. `null` — все, что идут в образце очереди.
+EvFriends sampleFriendsFor(
+  EvFriendsState state, {
+  bool offline = false,
+  Set<SampleGame>? running,
+}) => EvFriends(
+  people: samplePeople,
+  seeders: offline
+      ? const []
+      : [
+          for (final s in _seeders())
+            if (running == null || running.contains(s.game)) s,
+        ],
+  feed: _feed,
+  library: _library,
+  invite: state == EvFriendsState.invite ? _invite : null,
+  offline: offline,
+);

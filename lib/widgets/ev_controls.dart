@@ -503,6 +503,9 @@ class _EvSegmentedState<T> extends State<EvSegmented<T>> {
 }
 
 /// Строка настройки: название, пояснение и один контрол справа.
+///
+/// Найденное поиском подсвечено в подписи янтарём — как `<mark>`
+/// в прототипе.
 class EvOption extends StatelessWidget {
   const EvOption({
     super.key,
@@ -510,6 +513,7 @@ class EvOption extends StatelessWidget {
     required this.description,
     required this.control,
     this.leading,
+    this.highlight,
     this.last = false,
   });
 
@@ -520,7 +524,34 @@ class EvOption extends StatelessWidget {
   /// Знак слева: устройство в списке устройств.
   final Widget? leading;
 
+  /// Где в подписи подсветить найденное — начало и конец.
+  final (int, int)? highlight;
+
   final bool last;
+
+  Widget _title(EvTheme ev) {
+    final style = ev.text.body.copyWith(color: ev.colors.ink);
+    final h = highlight;
+    if (h == null) return Text(title, style: style);
+    final (from, to) = h;
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: title.substring(0, from)),
+          TextSpan(
+            text: title.substring(from, to),
+            style: TextStyle(
+              color: ev.colors.hot2,
+              background: Paint()
+                ..color = ev.colors.hot1.withValues(alpha: .26),
+            ),
+          ),
+          TextSpan(text: title.substring(to)),
+        ],
+      ),
+      style: style,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -539,7 +570,7 @@ class EvOption extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: ev.text.body.copyWith(color: ev.colors.ink)),
+                _title(ev),
                 const SizedBox(height: 3),
                 Text(
                   description,

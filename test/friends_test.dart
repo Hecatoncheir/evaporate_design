@@ -70,12 +70,11 @@ Future<void> _page(
 Future<void> _pick(
   WidgetTester tester,
   String name, {
-  required double scroll,
   required LogicalKeyboardKey back,
 }) async {
   await tester.sendKeyEvent(LogicalKeyboardKey.digit4);
   await _settle(tester);
-  await tester.drag(find.byType(ListView).first, Offset(0, -scroll));
+  await tester.ensureVisible(find.text(name));
   await _settle(tester);
   await tester.tap(find.text(name));
   await _settle(tester);
@@ -283,12 +282,7 @@ void main() {
       await _settle(tester);
       expect(find.byType(EvInviteCard), findsNothing);
 
-      await _pick(
-        tester,
-        'Заявка в друзья',
-        scroll: 3000,
-        back: LogicalKeyboardKey.digit5,
-      );
+      await _pick(tester, 'Заявка в друзья', back: LogicalKeyboardKey.digit5);
       expect(find.byType(EvInviteCard), findsOneWidget);
 
       await tester.tap(find.text('Принять'));
@@ -308,12 +302,7 @@ void main() {
       expect(find.text('Друзья · 6 в сети'), findsOneWidget);
       expect(find.text('ДРУЗЬЯ · 6 В СЕТИ'), findsOneWidget);
 
-      await _pick(
-        tester,
-        'Нет сети',
-        scroll: 1200,
-        back: LogicalKeyboardKey.digit1,
-      );
+      await _pick(tester, 'Нет сети', back: LogicalKeyboardKey.digit1);
       expect(find.text('Друзья · 0 в сети'), findsOneWidget);
       expect(find.text('ДРУЗЬЯ · 0 В СЕТИ'), findsOneWidget);
 

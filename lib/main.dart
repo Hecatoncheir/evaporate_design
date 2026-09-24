@@ -24,6 +24,7 @@ import 'screens/saves_page.dart';
 import 'screens/friend_profile_page.dart';
 import 'screens/profile_page.dart';
 import 'screens/settings_page.dart';
+import 'settings/settings_data.dart';
 import 'shell/ev_palette.dart';
 import 'shell/ev_section.dart';
 import 'shell/ev_shell.dart';
@@ -56,6 +57,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
   // Тумблеры приватности — настройка, а не состояние раздела: уход
   // на другой экран их не сбрасывает.
   final _shares = ValueNotifier<Set<EvShare>>(EvShare.values.toSet());
+  final _settings = EvSettings();
   late final _ownEffects = widget.effects == null ? EvEffects() : null;
   final _shell = EvShellController();
 
@@ -84,6 +86,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
 
   @override
   void dispose() {
+    _settings.dispose();
     _shares.dispose();
     _friendsState.dispose();
     _saves.dispose();
@@ -117,6 +120,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
                 _saves,
                 _friendsState,
                 _shares,
+                _settings,
               ]),
               builder: (context, _) => _Home(
                 shell: _shell,
@@ -128,6 +132,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
                 onSaves: (next) => _saves.value = next,
                 friendsState: _friendsState.value,
                 onFriends: (next) => _friendsState.value = next,
+                settings: _settings,
                 shares: _shares.value,
                 onShare: (share, on) => _shares.value = on
                     ? {..._shares.value, share}
@@ -152,6 +157,7 @@ class _Home extends StatelessWidget {
     required this.onSaves,
     required this.friendsState,
     required this.onFriends,
+    required this.settings,
     required this.shares,
     required this.onShare,
   });
@@ -180,6 +186,9 @@ class _Home extends StatelessWidget {
   final EvFriendsState friendsState;
 
   final ValueChanged<EvFriendsState> onFriends;
+
+  /// Всё, что выбрано в «Настройках».
+  final EvSettings settings;
 
   /// Что видят друзья — тумблеры в профиле.
   final Set<EvShare> shares;
@@ -256,9 +265,18 @@ class _Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appearance = EvAppearanceScope.of(context);
-    final queue = sampleDownloadsFor(downloads);
+    // Предел одновременных загрузок — из настроек: лишние раздачи ждут
+    // в очереди, и друзья по ним не раздают.
+    final queue = sampleDownloadsFor(downloads).withSlots(settings.slots);
     final offline = state == EvHeroState.offline;
-    final friends = sampleFriendsFor(friendsState, offline: offline);
+    final friends = sampleFriendsFor(
+      friendsState,
+      offline: offline,
+      running: {
+        for (final t in queue.torrents)
+          if (t.active) t.game,
+      },
+    );
     return EvShell(
       controller: shell,
       initials: sampleUserInitials,
@@ -315,7 +333,7 @@ class _Home extends StatelessWidget {
           // и раздел, — и так же гаснет без сети.
           friends: friends.people.take(4).toList(),
           friendsOnline: friends.online,
-          downloadSlots: sampleDownloadSlots,
+          downloadSlots: queue.slots,
           onLaunch: (g) => _launch(context, g),
           onOpen: (g) => _open(context, g),
         ),
@@ -347,6 +365,10 @@ class _Home extends StatelessWidget {
           onRetry: () => onSaves(EvSavesState.synced),
         ),
         EvSection.settings => SettingsPage(
+          settings: settings,
+          drives: sampleDrives,
+          ratio: formatRatio(sampleProfile.ratio),
+          cloud: (sampleSavesFor(saves).usedGb, sampleSavesFor(saves).quotaGb),
           state: state,
           onState: onState,
           downloads: downloads,

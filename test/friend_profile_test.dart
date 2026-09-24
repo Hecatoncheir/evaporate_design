@@ -388,6 +388,8 @@ void main() {
         await _app(tester);
         await tester.sendKeyEvent(LogicalKeyboardKey.digit4);
         await _settle(tester);
+        await tester.ensureVisible(find.text('Закрытый профиль'));
+        await _settle(tester);
         await tester.tap(find.text('Закрытый профиль'));
         await _settle(tester);
         expect(find.text('Игорь не показывает, во что играет'), findsOneWidget);

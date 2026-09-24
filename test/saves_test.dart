@@ -57,7 +57,7 @@ Future<void> _page(
 Future<void> _pick(WidgetTester tester, String name) async {
   await tester.sendKeyEvent(LogicalKeyboardKey.digit4);
   await _settle(tester);
-  await tester.drag(find.byType(ListView).first, const Offset(0, -2200));
+  await tester.ensureVisible(find.text(name));
   await _settle(tester);
   await tester.tap(find.text(name));
   await _settle(tester);

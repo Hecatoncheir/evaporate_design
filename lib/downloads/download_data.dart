@@ -224,6 +224,31 @@ class EvDownloads {
 
   int get active => torrents.where((t) => t.active).length;
 
+  /// Очередь при другом пределе одновременных загрузок. Лишние идущие
+  /// раздачи встают в начало очереди — как у движка, — а не остаются
+  /// идти сверх предела: «2 / 1» было бы враньём.
+  EvDownloads withSlots(int limit) {
+    if (limit == slots && active <= limit) return this;
+    var running = 0;
+    final kept = <EvTorrent>[];
+    final waiting = <EvQueued>[];
+    for (final t in torrents) {
+      if (t.active && running >= limit) {
+        waiting.add(EvQueued(t.name, t.game));
+        continue;
+      }
+      if (t.active) running++;
+      kept.add(t);
+    }
+    return EvDownloads(
+      torrents: kept,
+      queue: [...waiting, ...queue],
+      slots: limit,
+      peakKb: peakKb,
+      toDiskShare: toDiskShare,
+    );
+  }
+
   /// Кольцо показывает ту раздачу, которая принимает; если такой нет —
   /// первую в списке.
   EvSwarmParts? get parts => torrents.isEmpty

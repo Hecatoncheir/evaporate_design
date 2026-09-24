@@ -1511,8 +1511,8 @@ h1.title b{font-weight:800;display:block}
 .reset{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4);transition:color .2s}
 .reset:hover{color:var(--hot-2)}
 .setnote{font-size:12.5px;color:var(--ink-4);margin:8px 0 14px;max-width:62ch}
-.opt[hidden]{display:none!important}
-.opt mark{background:rgb(var(--glow-hot)/.26);color:var(--hot-2);border-radius:3px;padding:0 2px}
+.opt[hidden],.krow[hidden]{display:none!important}
+.opt mark,.krow mark{background:rgb(var(--glow-hot)/.26);color:var(--hot-2);border-radius:3px;padding:0 2px}
 .set-empty{
   display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:60px 20px;
   border:1px dashed var(--line-soft);border-radius:var(--r-4);color:var(--ink-3);
@@ -2397,12 +2397,12 @@ h1.title b{font-weight:800;display:block}
                 <div class="p-lab">Где лежат игры</div>
                 <div class="folders" style="margin-top:12px">
                   <div class="folder"><svg><use href="#i-drive"/></svg>
-                    <span class="tx"><span class="p">D:\Игры</span><span class="s">8 игр · 284 ГБ · сюда ставится новое</span>
+                    <span class="tx"><span class="p">D:\Игры</span><span class="s" id="drvD">8 игр · 258 ГБ · сюда ставится новое</span>
                       <span class="fbar"><i style="width:57%"></i></span></span>
                     <span class="free">свободно<br><b>214 ГБ</b></span>
                     <button class="ico" aria-label="Убрать папку"><svg><use href="#i-x"/></svg></button></div>
                   <div class="folder"><svg><use href="#i-drive"/></svg>
-                    <span class="tx"><span class="p">E:\Архив\Игры</span><span class="s">4 игры · 96 ГБ · только чтение</span>
+                    <span class="tx"><span class="p">E:\Архив\Игры</span><span class="s" id="drvE">4 игры · 79 ГБ · только чтение</span>
                       <span class="fbar"><i style="width:88%" class="warn"></i></span></span>
                     <span class="free">свободно<br><b>52 ГБ</b></span>
                     <button class="ico" aria-label="Убрать папку"><svg><use href="#i-x"/></svg></button></div>
@@ -2426,7 +2426,7 @@ h1.title b{font-weight:800;display:block}
                 <div class="sched-lg">
                   <span><i class="full"></i>без ограничения</span>
                   <span><i></i>предел 2 МБ/с</span>
-                  <span class="now">сейчас 03:00</span>
+                  <span class="now" id="schedNow">сейчас 03:00</span>
                 </div>
                 <div style="margin-top:12px">
                   <div class="opt"><div class="txt"><div class="n">Предел приёма</div><div class="d">Действует в серые часы</div></div><span class="chip">2 МБ/с</span></div>
@@ -2446,7 +2446,7 @@ h1.title b{font-weight:800;display:block}
               <div class="panel">
                 <div class="p-lab">Сколько отдавать</div>
                 <div style="margin-top:6px">
-                  <div class="opt"><div class="txt"><div class="n">Раздавать до рейтинга</div><div class="d">Ваш текущий — 2.41. Ниже 1.0 рой перестаёт вас любить</div></div>
+                  <div class="opt"><div class="txt"><div class="n">Раздавать до рейтинга</div><div class="d" id="seedNow">Ваш текущий — 2,41. Ниже 1.0 рой перестаёт вас любить</div></div>
                     <div class="seg"><button aria-pressed="false">1.0</button><button aria-pressed="true">2.0</button><button aria-pressed="false">Без предела</button></div></div>
                   <div class="opt"><div class="txt"><div class="n">Ограничивать отдачу в игре</div><div class="d">Чтобы раздача не ела пинг</div></div><span class="chip">1 МБ/с</span></div>
                   <div class="opt"><div class="txt"><div class="n">Останавливать раздачу при запуске</div><div class="d">Полностью, а не по лимиту</div></div><button class="sw" aria-pressed="false" aria-label="Останавливать раздачу"></button></div>
@@ -2461,7 +2461,7 @@ h1.title b{font-weight:800;display:block}
               <div class="panel">
                 <div class="p-lab">Облако и защита</div>
                 <div style="margin-top:6px">
-                  <div class="opt"><div class="txt"><div class="n">Выгружать в облако</div><div class="d">4.1 ГБ из 20 занято</div></div><button class="sw" aria-pressed="true" aria-label="Облако"></button></div>
+                  <div class="opt"><div class="txt"><div class="n">Выгружать в облако</div><div class="d">4,1 из 20 ГБ занято</div></div><button class="sw" aria-pressed="true" aria-label="Облако"></button></div>
                   <div class="opt"><div class="txt"><div class="n">Как часто</div><div class="d">Между точками игра не трогается</div></div>
                     <div class="seg"><button aria-pressed="false">1 мин</button><button aria-pressed="true">5 мин</button><button aria-pressed="false">15 мин</button></div></div>
                   <div class="opt"><div class="txt"><div class="n">Шифрование на устройстве</div><div class="d">Ключ не покидает этот компьютер</div></div><span class="chip hot">AES-256</span></div>
@@ -5206,7 +5206,7 @@ $("#sndTest").onclick = () => { Snd.play("evaporate"); };
 const KEYS = [
   ["Навигация по сетке",       "Перемещение между обложками и строками", ["↑","↓","←","→"]],
   ["Выбрать",                  "Открывает карточку игры",                ["Enter"]],
-  ["Назад",                    "Закрывает карточку, диалог или оверлей", ["Esc"]],
+  ["Назад",                    "Закрывает карточку, диалог, оверлей или страницу друга", ["Esc"]],
   ["Следующий раздел",         "По кругу: библиотека → … → профиль",     ["Ctrl","Tab"]],
   ["Раздел по номеру",         "1 библиотека · 6 профиль",               ["1","…","6"]],
   ["Поиск и команды",          "Игры, разделы и действия в одном списке",["/"]],
@@ -5219,15 +5219,32 @@ $("#keysList").innerHTML = KEYS.map(([n, d, k]) => `
   <div class="krow"><span class="kt"><span class="kn">${n}</span><span class="kd">${d}</span></span>
     <span class="kk">${k.map(x => `<em>${x}</em>`).join("")}</span></div>`).join("");
 
+/* папки: сколько игр на диске и сколько они занимают — из библиотеки.
+   Установленные целиком, качающиеся — полученной частью */
+(() => {
+  const ARCHIVE = ["lunar", "glass", "thresh", "depth"];
+  const gb = g => { const t = parseFloat(g.size) || 0;
+    return g.state === "ready" ? t : g.state === "dl" ? t * (g.pct || 0) / 100 : 0; };
+  const line = (list, tail) => {
+    const n = list.length, w = n % 10 === 1 && n % 100 !== 11 ? "игра"
+      : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "игры" : "игр";
+    return `${n} ${w} · ${Math.round(list.reduce((s, g) => s + gb(g), 0))} ГБ · ${tail}`;
+  };
+  $("#drvD").textContent = line(GAMES.filter(g => !ARCHIVE.includes(g.id)), "сюда ставится новое");
+  $("#drvE").textContent = line(GAMES.filter(g => ARCHIVE.includes(g.id)), "только чтение");
+  $("#seedNow").textContent = `Ваш текущий — ${(1400 / 581).toFixed(2).replace(".", ",")}. Ниже 1.0 рой перестаёт вас любить`;
+})();
+
 /* расписание: янтарные часы — без ограничения */
 (() => {
-  const el = $("#sched"), NOW = 3;
+  const el = $("#sched"), NOW = new Date().getHours();
   for(let h = 0; h < 24; h++){
     const b = document.createElement("button");
     b.type = "button";
     b.setAttribute("aria-pressed", String(h < 8));      /* ночью не жалеем канал */
     b.setAttribute("aria-label", h + ":00");
     b.textContent = h % 3 === 0 ? String(h).padStart(2, "0") : "";
+    $("#schedNow").textContent = `сейчас ${String(NOW).padStart(2, "0")}:00`;
     if(h === NOW) b.classList.add("now");
     el.appendChild(b);
   }
@@ -5264,8 +5281,11 @@ scSet.addEventListener("scroll", () => {
 
 /* поиск: прячет строки, потом пустые разделы, потом пункты навигации */
 const setQ = $("#setQ");
+/* основа слова: «скорость» находит «Расписание скорости», «облако» —
+   «облака». Раньше экран предлагал «скорость» и сам же её не находил */
+const setStem = q => q.length > 4 && !q.includes(" ") && "аеёиоуыьъэюяй".includes(q.at(-1)) ? q.slice(0, -1) : q;
 function setFilter(q){
-  const n = q.trim().toLowerCase();
+  const n = setStem(q.trim().toLowerCase());
   let any = false;
   $$(".set-sec", setBody).forEach(sec => {
     /* заголовок раздела и подписи панелей тоже ищутся: «скорость» живёт
@@ -5275,8 +5295,9 @@ function setFilter(q){
                   ...$$(".setnote", sec).map(e => e.textContent)].join(" ").toLowerCase();
     const titleHit = !!n && head.includes(n);
     let hits = titleHit;
-    $$(".opt", sec).forEach(o => {
-      const nm = $(".n", o);
+    /* строки таблицы клавиш ищутся так же, как строки настроек */
+    $$(".opt, .krow", sec).forEach(o => {
+      const nm = $(".n, .kn", o);
       if(nm && !nm.dataset.orig) nm.dataset.orig = nm.innerHTML;
       const txt = o.textContent.toLowerCase();
       const hit = !n || titleHit || txt.includes(n);

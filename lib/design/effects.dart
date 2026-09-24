@@ -65,6 +65,23 @@ class EvEffects extends ChangeNotifier {
         grain: false,
       );
 
+  /// «Сбросить» в настройках: всё как при первом запуске.
+  void reset() {
+    final d = EvEffects();
+    _livingBackground = d._livingBackground;
+    _sparks = d._sparks;
+    _parallax = d._parallax;
+    _grain = d._grain;
+    _glass = d._glass;
+    _refraction = d._refraction;
+    _quality = d._quality;
+    _ritual = d._ritual;
+    _holdToPlay = d._holdToPlay;
+    _throttleInBackground = d._throttleInBackground;
+    d.dispose();
+    notifyListeners();
+  }
+
   bool _livingBackground;
   bool _sparks;
   bool _parallax;

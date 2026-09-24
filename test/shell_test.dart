@@ -8,6 +8,7 @@ import 'package:evaporate_design/design/effects.dart';
 import 'package:evaporate_design/design/theme.dart';
 import 'package:evaporate_design/design/tokens.dart';
 import 'package:evaporate_design/main.dart';
+import 'package:evaporate_design/widgets/ev_controls.dart';
 import 'package:evaporate_design/shell/ev_hints_bar.dart';
 import 'package:evaporate_design/shell/ev_palette.dart';
 import 'package:evaporate_design/shell/ev_rail.dart';
@@ -153,21 +154,27 @@ void main() {
     await _settle(tester);
     await _key(tester, LogicalKeyboardKey.digit4);
 
-    await tester.tap(find.bySemanticsLabel('Зерно'));
+    final grain = _switch('Плёночное зерно');
+    await tester.ensureVisible(grain);
+    await _settle(tester);
+    await tester.tap(grain);
     await _settle(tester);
     expect(effects.grain, isTrue);
 
-    await tester.tap(find.bySemanticsLabel('Параллакс'));
+    final parallax = _switch('Параллакс обложек');
+    await tester.ensureVisible(parallax);
+    await _settle(tester);
+    await tester.tap(parallax);
     await _settle(tester);
     expect(effects.parallax, isTrue);
 
-    final ritual = find.bySemanticsLabel('Ритуал запуска');
+    final ritual = _switch('Ритуал запуска');
     await tester.ensureVisible(ritual);
     await tester.tap(ritual);
     await _settle(tester);
     expect(effects.ritual, isFalse);
 
-    final hold = find.bySemanticsLabel('Удержание');
+    final hold = _switch('Удержание кнопки «Играть»');
     await tester.ensureVisible(hold);
     await tester.tap(hold);
     await _settle(tester);
@@ -452,3 +459,7 @@ LogicalKeyboardKey _digitFor(EvSection s) => [
   LogicalKeyboardKey.digit5,
   LogicalKeyboardKey.digit6,
 ][s.index];
+
+/// Тумблер настройки по подписи его строки.
+Finder _switch(String label) =>
+    find.byWidgetPredicate((w) => w is EvSwitch && w.semanticLabel == label);

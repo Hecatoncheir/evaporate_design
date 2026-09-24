@@ -1,26 +1,38 @@
 import 'package:flutter/material.dart';
 
+import '../data/sample_friends.dart';
 import '../design/appearance.dart';
 import '../design/effects.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
 import '../downloads/download_data.dart';
-import '../gallery/gallery_page.dart';
-import '../glass/glass_lens.dart';
-import '../library/hero_state.dart';
-import '../data/sample_friends.dart';
 import '../friends/friends_data.dart';
+import '../gallery/gallery_page.dart';
+import '../library/hero_state.dart';
 import '../saves/saves_data.dart';
-import '../widgets/ev_focusable.dart';
+import '../settings/ev_settings_widgets.dart';
+import '../settings/settings_catalog.dart';
+import '../settings/settings_data.dart';
+import '../settings/settings_search.dart';
 import '../widgets/ev_controls.dart';
+import '../widgets/ev_focusable.dart';
 import '../widgets/ev_icon.dart';
 import '../widgets/ev_surfaces.dart';
 
-/// Настройки в каркасе: облик и вход в галерею компонентов. Полный экран —
-/// десять разделов, поиск по настройкам, расписание — пока в макете.
-class SettingsPage extends StatelessWidget {
+/// Настройки: липкая колонка слева, поиск и десять разделов, которые
+/// можно назвать вслух. Раньше это была плоская сетка панелей, которая
+/// росла пристройками.
+///
+/// Последним стоит «Разработка»: движка нет, и состояния продукта
+/// переключаются здесь, как панелью «Состояния» в прототипе. Уйдёт
+/// вместе с появлением движка.
+class SettingsPage extends StatefulWidget {
   const SettingsPage({
     super.key,
+    required this.settings,
+    required this.drives,
+    required this.ratio,
+    required this.cloud,
     required this.state,
     required this.onState,
     required this.downloads,
@@ -29,8 +41,23 @@ class SettingsPage extends StatelessWidget {
     required this.onSaves,
     required this.friendsState,
     required this.onFriends,
+    this.hour,
     this.onFriendPage,
   });
+
+  final EvSettings settings;
+
+  /// Папки с играми — из библиотеки.
+  final List<EvDrive> drives;
+
+  /// Рейтинг раздачи из профиля: «2,41».
+  final String ratio;
+
+  /// Облако сохранений: занято и всего, ГБ, — из раздела «Сохранения».
+  final (double, double) cloud;
+
+  /// Который час. `null` — по часам компьютера.
+  final int? hour;
 
   /// Состояние игры в герое. Движка нет, поэтому его переключают здесь.
   final EvHeroState state;
@@ -56,321 +83,12 @@ class SettingsPage extends StatelessWidget {
   /// и закрытый.
   final ValueChanged<EvPerson>? onFriendPage;
 
-  @override
-  Widget build(BuildContext context) {
-    final ev = context.ev;
-    final appearance = EvAppearanceScope.of(context);
-    final effects = EvEffectsScope.maybeOf(context);
-    final gutter = EvSpace.gutterFor(MediaQuery.sizeOf(context));
-    final chrome = MediaQuery.paddingOf(context);
-    return ListView(
-      primary: true,
-      padding: EdgeInsets.fromLTRB(
-        gutter,
-        chrome.top + gutter,
-        gutter,
-        26 + chrome.bottom,
-      ),
-      children: [
-        const EvSectionHeader('Облик', count: 'тема и геометрия'),
-        const SizedBox(height: EvSpace.l),
-        EvPanel(
-          child: Column(
-            children: [
-              EvOption(
-                title: 'Тема',
-                description:
-                    'Температура источника света · ${appearance.skin.hint}',
-                control: EvSegmented<EvSkin>(
-                  items: {for (final s in EvSkin.values) s: s.label},
-                  value: appearance.skin,
-                  onChanged: (s) => appearance.skin = s,
-                ),
-              ),
-              EvOption(
-                last: true,
-                title: 'Скругление',
-                description:
-                    'Потолок радиуса. 8 px — приборная геометрия по умолчанию',
-                control: EvSegmented<EvGeometry>(
-                  items: {for (final g in EvGeometry.values) g: g.label},
-                  value: appearance.geometry,
-                  onChanged: (g) => appearance.geometry = g,
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (effects != null) ...[
-          const SizedBox(height: EvSpace.xxl),
-          const EvSectionHeader('Эффекты', count: 'атмосфера и качество'),
-          const SizedBox(height: EvSpace.l),
-          EvPanel(
-            child: Column(
-              children: [
-                EvOption(
-                  title: 'Живой фон (шейдер)',
-                  description: 'Объёмный плюм пара за интерфейсом',
-                  control: EvSwitch(
-                    value: effects.livingBackground,
-                    semanticLabel: 'Живой фон',
-                    onChanged: (v) => effects.livingBackground = v,
-                  ),
-                ),
-                EvOption(
-                  title: 'Искры и частицы',
-                  description: 'Восходящие угли, аддитивное смешивание',
-                  control: EvSwitch(
-                    value: effects.sparks,
-                    semanticLabel: 'Искры',
-                    onChanged: (v) => effects.sparks = v,
-                  ),
-                ),
-                EvOption(
-                  title: 'Параллакс обложек',
-                  description: 'Четыре слоя глубины, реакция на курсор',
-                  control: EvSwitch(
-                    value: effects.parallax,
-                    semanticLabel: 'Параллакс',
-                    onChanged: (v) => effects.parallax = v,
-                  ),
-                ),
-                EvOption(
-                  title: 'Плёночное зерно',
-                  description: '5 % перекрытия, убирает бандинг на градиентах',
-                  control: EvSwitch(
-                    value: effects.grain,
-                    semanticLabel: 'Зерно',
-                    onChanged: (v) => effects.grain = v,
-                  ),
-                ),
-                EvOption(
-                  title: 'Стекло',
-                  description: 'Рейл, полосы и панели размывают фон под собой',
-                  control: EvSwitch(
-                    value: effects.glass,
-                    semanticLabel: 'Стекло',
-                    onChanged: (v) => effects.glass = v,
-                  ),
-                ),
-                EvOption(
-                  title: 'Преломление стекла',
-                  description: EvGlassLens.supported
-                      ? 'Кадр под кромкой гнётся, как под толстым стеклом'
-                      : 'Кадр гнётся у кромки · нужен Impeller, '
-                            'в этой сборке недоступно',
-                  control: EvSwitch(
-                    value: effects.refraction && EvGlassLens.supported,
-                    semanticLabel: 'Преломление',
-                    onChanged: EvGlassLens.supported
-                        ? (v) => effects.refraction = v
-                        : (_) {},
-                  ),
-                ),
-                EvOption(
-                  title: 'Уровень эффектов',
-                  description: 'Плотность частиц и разрешение шейдера',
-                  control: EvSegmented<EvEffectsQuality>(
-                    items: {
-                      for (final q in EvEffectsQuality.values) q: q.label,
-                    },
-                    value: effects.quality,
-                    onChanged: (q) => effects.quality = q,
-                  ),
-                ),
-                EvOption(
-                  title: 'Ритуал запуска',
-                  description:
-                      'Испарение интерфейса и ударная волна при старте',
-                  control: EvSwitch(
-                    value: effects.ritual,
-                    semanticLabel: 'Ритуал запуска',
-                    onChanged: (v) => effects.ritual = v,
-                  ),
-                ),
-                EvOption(
-                  title: 'Удержание кнопки «Играть»',
-                  description: 'Защита от случайного запуска · 620 мс',
-                  control: EvSwitch(
-                    value: effects.holdToPlay,
-                    semanticLabel: 'Удержание',
-                    onChanged: (v) => effects.holdToPlay = v,
-                  ),
-                ),
-                EvOption(
-                  last: true,
-                  title: 'Ограничить до 30 к/с в фоне',
-                  description: 'Экономит батарею, когда окно неактивно',
-                  control: EvSwitch(
-                    value: effects.throttleInBackground,
-                    semanticLabel: 'Ограничение кадров',
-                    onChanged: (v) => effects.throttleInBackground = v,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (MediaQuery.disableAnimationsOf(context)) ...[
-            const SizedBox(height: EvSpace.m),
-            Text(
-              'В системе включено «уменьшить движение» — атмосфера стоит '
-              'неподвижным кадром, а игра запускается без ритуала, что бы '
-              'здесь ни было выбрано.',
-              style: ev.text.bodySmall.copyWith(color: ev.colors.ink4),
-            ),
-          ],
-        ],
-        const SizedBox(height: EvSpace.xxl),
-        const EvSectionHeader('Разработка'),
-        const SizedBox(height: EvSpace.l),
-        EvPanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              EvOption(
-                title: 'Состояние библиотеки',
-                description:
-                    'Движка ещё нет: состояния героя переключаются здесь. '
-                    'В прототипе это панель «Состояния», в продукте её нет',
-                control: const SizedBox.shrink(),
-              ),
-              for (final (value, name, hint) in _states)
-                _StateRow(
-                  name: name,
-                  hint: hint,
-                  selected: value == state,
-                  onTap: () => onState(value),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: EvSpace.m),
-        EvPanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              EvOption(
-                title: 'Состояние загрузок',
-                description:
-                    'Шесть состояний очереди. «Сеть пропала» — состояние '
-                    'окна: его же увидит герой',
-                control: const SizedBox.shrink(),
-              ),
-              for (final value in EvDownloadsState.values)
-                _StateRow(
-                  name: value.label,
-                  hint: value.hint,
-                  selected: value == downloads,
-                  onTap: () => onDownloads(value),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: EvSpace.m),
-        EvPanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              EvOption(
-                title: 'Состояние сохранений',
-                description:
-                    'Облако, лента и расхождение версий. Разрешить конфликт '
-                    'можно по-настоящему — любой из трёх кнопок',
-                control: const SizedBox.shrink(),
-              ),
-              for (final value in EvSavesState.values)
-                _StateRow(
-                  name: value.label,
-                  hint: value.hint,
-                  selected: value == saves,
-                  onTap: () => onSaves(value),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: EvSpace.m),
-        EvPanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              EvOption(
-                title: 'Состояние друзей',
-                description:
-                    'Заявку можно принять по-настоящему. «Нет сети» здесь '
-                    'нет: это состояние окна, из библиотеки',
-                control: const SizedBox.shrink(),
-              ),
-              for (final value in EvFriendsState.values)
-                _StateRow(
-                  name: value.label,
-                  hint: value.hint,
-                  selected: value == friendsState,
-                  onTap: () => onFriends(value),
-                ),
-            ],
-          ),
-        ),
-        if (onFriendPage != null) ...[
-          const SizedBox(height: EvSpace.m),
-          EvPanel(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                EvOption(
-                  title: 'Профиль друга',
-                  description:
-                      'Открывается и из «Друзей» — кликом по любому из '
-                      'двенадцати. Здесь — два крайних случая',
-                  control: const SizedBox.shrink(),
-                ),
-                for (final (person, name, hint) in [
-                  (
-                    samplePeople[0],
-                    'Открытый профиль',
-                    'Антон К. · показывает всё',
-                  ),
-                  (
-                    samplePeople[6],
-                    'Закрытый профиль',
-                    'Игорь В. · скрыл часы и игру',
-                  ),
-                ])
-                  _StateRow(
-                    name: name,
-                    hint: hint,
-                    selected: false,
-                    onTap: () => onFriendPage!(person),
-                  ),
-              ],
-            ),
-          ),
-        ],
-        const SizedBox(height: EvSpace.m),
-        EvPanel(
-          child: EvOption(
-            last: true,
-            title: 'Галерея компонентов',
-            description:
-                'Все виджеты, перенесённые из макетов, на одной странице',
-            control: EvMiniButton(
-              label: 'Открыть',
-              icon: EvIcons.go,
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const GalleryPage()),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: EvSpace.l),
-        Text(
-          'Остальные разделы — звук, библиотека, загрузки, раздача, '
-          'сохранения, запуск, клавиши, «О программе» — и поиск по настройкам '
-          'пока живут в макете design/evaporate-launcher.html.',
-          style: ev.text.bodySmall.copyWith(color: ev.colors.ink4),
-        ),
-      ],
-    );
-  }
+  /// Уже этого окна колонка разделов встаёт над ними и перестаёт
+  /// быть липкой — `max-width:880px` в прототипе.
+  static const narrow = 880.0;
+
+  /// Ширина левой колонки.
+  static const navWidth = 212.0;
 
   /// Те же состояния и подписи, что в панели прототипа.
   static const _states = [
@@ -385,6 +103,374 @@ class SettingsPage extends StatelessWidget {
     (EvHeroState.running, 'Игра запущена', 'кнопка стала статусом'),
     (EvHeroState.offline, 'Нет сети', 'локальное живёт, сетевое нет'),
   ];
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  final _query = TextEditingController();
+  final _anchors = <String, GlobalKey>{};
+  ScrollController? _scroll;
+  String? _current;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final scroll = PrimaryScrollController.maybeOf(context);
+    if (scroll == _scroll) return;
+    _scroll?.removeListener(_spy);
+    _scroll = scroll?..addListener(_spy);
+  }
+
+  @override
+  void dispose() {
+    _scroll?.removeListener(_spy);
+    _query.dispose();
+    super.dispose();
+  }
+
+  /// Где кончается полоса над экраном: раздел под ней считается открытым.
+  double get _top =>
+      MediaQuery.paddingOf(context).top +
+      EvSpace.gutterFor(MediaQuery.sizeOf(context));
+
+  /// Какой раздел сейчас наверху — его пункт в колонке и подсвечен.
+  void _spy() {
+    String? current;
+    for (final MapEntry(key: id, value: key) in _anchors.entries) {
+      final box = key.currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.attached) continue;
+      if (box.localToGlobal(Offset.zero).dy - 60 <= _top) current = id;
+    }
+    if (current != null && current != _current) {
+      setState(() => _current = current);
+    }
+  }
+
+  void _go(String id) {
+    final box = _anchors[id]?.currentContext?.findRenderObject();
+    final scroll = _scroll;
+    if (box is! RenderBox || scroll == null || !scroll.hasClients) return;
+    final target = scroll.offset + box.localToGlobal(Offset.zero).dy - _top;
+    setState(() => _current = id);
+    scroll.animateTo(
+      target.clamp(0, scroll.position.maxScrollExtent),
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? const Duration(milliseconds: 1)
+          : EvMotion.screen,
+      curve: EvMotion.easeOut,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final effects = EvEffectsScope.maybeOf(context);
+    final appearance = EvAppearanceScope.of(context);
+    return ListenableBuilder(
+      listenable: Listenable.merge([widget.settings, ?effects]),
+      builder: (context, _) {
+        final sections = [
+          ...evSettingsCatalog((
+            appearance: appearance,
+            effects: effects,
+            settings: widget.settings,
+            drives: widget.drives,
+            ratio: widget.ratio,
+            cloud: widget.cloud,
+            hour: widget.hour ?? DateTime.now().hour,
+          )),
+          _development(),
+        ];
+        return _layout(
+          context,
+          sections,
+          EvSettingsMatch.of(sections, _query.text),
+        );
+      },
+    );
+  }
+
+  Widget _layout(
+    BuildContext context,
+    List<EvSettingSection> sections,
+    EvSettingsMatch match,
+  ) {
+    final ev = context.ev;
+    final window = MediaQuery.sizeOf(context);
+    final gutter = EvSpace.gutterFor(window);
+    final chrome = MediaQuery.paddingOf(context);
+    final visible = [
+      for (final s in sections)
+        if (match.section(s)) s,
+    ];
+    final current = visible.any((s) => s.id == _current)
+        ? _current
+        : visible.firstOrNull?.id;
+
+    final nav = SizedBox(
+      width: SettingsPage.navWidth,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          EvSettingsSearch(
+            controller: _query,
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 14),
+          for (final s in visible) ...[
+            EvSettingsNavItem(
+              icon: s.icon,
+              label: s.title,
+              active: s.id == current,
+              onTap: () => _go(s.id),
+            ),
+            const SizedBox(height: 2),
+          ],
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 11),
+            child: Text(
+              'Evaporate ${EvSettings.version}\n'
+              'движок раздач ${EvSettings.engineVersion}',
+              style: ev.text.data.copyWith(
+                fontSize: 10,
+                height: 1.7,
+                color: ev.colors.ink4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (match.empty)
+          const EvNothing(
+            icon: EvIcons.search,
+            title: 'Ничего не нашлось',
+            detail: 'Попробуйте «скорость», «порт», «облако» или «ритуал»',
+          ),
+        for (final (i, s) in visible.indexed) ...[
+          if (i > 0) const SizedBox(height: 30),
+          _Section(
+            key: _anchors[s.id] ??= GlobalKey(debugLabel: s.id),
+            section: s,
+            match: match,
+          ),
+        ],
+      ],
+    );
+
+    final pad = EdgeInsets.fromLTRB(
+      gutter,
+      chrome.top + gutter,
+      gutter,
+      26 + chrome.bottom,
+    );
+    if (window.width < SettingsPage.narrow) {
+      return SingleChildScrollView(
+        primary: true,
+        padding: pad,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [nav, const SizedBox(height: 24), body],
+        ),
+      );
+    }
+    // Колонка слева не прокручивается — это и есть `position: sticky`.
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: gutter, top: chrome.top + gutter),
+          child: nav,
+        ),
+        SizedBox(width: gutter),
+        Expanded(
+          child: SingleChildScrollView(
+            primary: true,
+            padding: pad.copyWith(left: 0),
+            child: body,
+          ),
+        ),
+      ],
+    );
+  }
+
+  EvSettingSection _development() {
+    final w = widget;
+    EvSettingPanel states<T>(
+      String label,
+      String note,
+      List<(T, String, String)> items,
+      T value,
+      ValueChanged<T> onTap,
+    ) => EvSettingPanel(
+      label: label,
+      note: note,
+      body: (_) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (v, name, hint) in items)
+            _StateRow(
+              name: name,
+              hint: hint,
+              selected: v == value,
+              onTap: () => onTap(v),
+            ),
+        ],
+      ),
+    );
+    final friendPage = w.onFriendPage;
+    return EvSettingSection(
+      id: 'dev',
+      title: 'Разработка',
+      icon: EvIcons.verified,
+      panels: [
+        states(
+          'Состояние библиотеки',
+          'Движка ещё нет: состояния героя переключаются здесь. '
+              'В прототипе это панель «Состояния», в продукте её нет',
+          SettingsPage._states,
+          w.state,
+          w.onState,
+        ),
+        states(
+          'Состояние загрузок',
+          'Шесть состояний очереди. «Сеть пропала» — состояние окна: '
+              'его же увидит герой',
+          [for (final v in EvDownloadsState.values) (v, v.label, v.hint)],
+          w.downloads,
+          w.onDownloads,
+        ),
+        states(
+          'Состояние сохранений',
+          'Облако, лента и расхождение версий. Разрешить конфликт можно '
+              'по-настоящему — любой из трёх кнопок',
+          [for (final v in EvSavesState.values) (v, v.label, v.hint)],
+          w.saves,
+          w.onSaves,
+        ),
+        states(
+          'Состояние друзей',
+          'Заявку можно принять по-настоящему. «Нет сети» здесь нет: это '
+              'состояние окна, из библиотеки',
+          [for (final v in EvFriendsState.values) (v, v.label, v.hint)],
+          w.friendsState,
+          w.onFriends,
+        ),
+        if (friendPage != null)
+          states<EvPerson?>(
+            'Профиль друга',
+            'Открывается и из «Друзей» — кликом по любому из двенадцати. '
+                'Здесь — два крайних случая',
+            [
+              (
+                samplePeople[0],
+                'Открытый профиль',
+                'Антон К. · показывает всё',
+              ),
+              (
+                samplePeople[6],
+                'Закрытый профиль',
+                'Игорь В. · скрыл часы и игру',
+              ),
+            ],
+            // Страница друга открывается вместо настроек — выбранной
+            // здесь она не остаётся.
+            null,
+            (p) => friendPage(p!),
+          ),
+        EvSettingPanel(
+          label: 'Галерея компонентов',
+          rows: [
+            EvSettingRow(
+              title: 'Галерея компонентов',
+              detail: 'Все виджеты, перенесённые из макетов, на одной странице',
+              control: (context) => EvMiniButton(
+                label: 'Открыть',
+                icon: EvIcons.go,
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder: (_) => const GalleryPage()),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Раздел: заголовок и панели. Строки, которых нет в выдаче поиска,
+/// не рисуются; найденное в подписи подсвечено.
+class _Section extends StatelessWidget {
+  const _Section({super.key, required this.section, required this.match});
+
+  final EvSettingSection section;
+  final EvSettingsMatch match;
+
+  @override
+  Widget build(BuildContext context) {
+    final ev = context.ev;
+    final c = ev.colors;
+    final panels = [
+      for (final p in section.panels)
+        if (match.panel(p)) p,
+    ];
+    final noteStyle = ev.text.body.copyWith(fontSize: 12.5, color: c.ink4);
+    Widget panel(EvSettingPanel p) {
+      final rows = match.rows(p);
+      return EvPanel(
+        glowCorner: p.glowCorner,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(p.label.toUpperCase(), style: ev.text.label),
+            if (p.note != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: ConstrainedBox(
+                  // 62ch — мера строки пояснения в прототипе.
+                  constraints: BoxConstraints(
+                    maxWidth: evCharWidth(noteStyle) * 62,
+                  ),
+                  child: Text(p.note!, style: noteStyle),
+                ),
+              ),
+            if (p.body != null) ...[
+              const SizedBox(height: 14),
+              p.body!(context),
+            ],
+            if (rows.isNotEmpty) const SizedBox(height: 6),
+            for (final (i, r) in rows.indexed)
+              EvOption(
+                title: r.title,
+                description: r.detail,
+                highlight: match.highlight(r.title),
+                last: i == rows.length - 1,
+                control: r.control(context),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        EvSettingsHeader(section.title, onReset: section.onReset),
+        const SizedBox(height: 14),
+        for (final (i, p) in panels.indexed) ...[
+          if (i > 0) const SizedBox(height: 13),
+          panel(p),
+        ],
+      ],
+    );
+  }
 }
 
 /// Строка списка состояний: точка, название и чем это состояние
