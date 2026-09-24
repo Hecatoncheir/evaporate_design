@@ -35,6 +35,7 @@ class EvPerson {
     required this.name,
     required this.tint,
     required this.common,
+    required this.traffic,
     this.status = EvPersonStatus.offline,
     this.game,
     this.session,
@@ -47,6 +48,9 @@ class EvPerson {
 
   /// Сколько игр у вас общих. Больше библиотеки быть не может.
   final int common;
+
+  /// Сколько вы раздали друг другу за всё время.
+  final EvTraffic traffic;
 
   final EvPersonStatus status;
 
@@ -76,6 +80,21 @@ class EvPerson {
   };
 
   String get line => lineFor(status);
+}
+
+/// Раздача между вами и другом за всё время — в обе стороны.
+@immutable
+class EvTraffic {
+  const EvTraffic({required this.toYouGb, required this.fromYouGb});
+
+  /// Он вам, ГБ.
+  final int toYouGb;
+
+  /// Вы ему, ГБ.
+  final int fromYouGb;
+
+  /// Какая доля трафика между вами шла от него, 0…1.
+  double get share => toYouGb / (toYouGb + fromYouGb);
 }
 
 /// Друг, который раздаёт вам одну из ваших загрузок.
@@ -186,7 +205,6 @@ class EvFriends {
     required this.seeders,
     required this.feed,
     required this.library,
-    required this.givenGb,
     this.invite,
     this.offline = false,
   });
@@ -198,9 +216,6 @@ class EvFriends {
 
   final List<EvFeedEntry> feed;
   final EvSharedLibrary library;
-
-  /// Сколько вы отдали друзьям за всё время.
-  final String givenGb;
 
   final EvInvite? invite;
 
@@ -217,6 +232,9 @@ class EvFriends {
   int get online => offline
       ? 0
       : people.where((p) => p.status != EvPersonStatus.offline).length;
+
+  /// Сколько вы отдали друзьям за всё время, ГБ, — сумма по каждому.
+  int get givenGb => people.fold(0, (sum, p) => sum + p.traffic.fromYouGb);
 
   /// Сколько друзья дают прямо сейчас, КБ/с — сумма по раздающим.
   int get fromFriendsKb => seeders.fold(0, (sum, s) => sum + s.rateKb);

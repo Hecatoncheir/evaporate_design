@@ -509,12 +509,17 @@ class EvOption extends StatelessWidget {
     required this.title,
     required this.description,
     required this.control,
+    this.leading,
     this.last = false,
   });
 
   final String title;
   final String description;
   final Widget control;
+
+  /// Знак слева: устройство в списке устройств.
+  final Widget? leading;
+
   final bool last;
 
   @override
@@ -529,6 +534,7 @@ class EvOption extends StatelessWidget {
       ),
       child: Row(
         children: [
+          if (leading != null) ...[leading!, const SizedBox(width: 14)],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

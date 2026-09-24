@@ -152,7 +152,11 @@ void main() {
       );
       expect(find.text('6'), findsOneWidget, reason: 'в сети');
       expect(find.text('12'), findsOneWidget, reason: 'всего');
-      expect(find.text('214 ГБ'), findsOneWidget);
+      expect(
+        find.text('510 ГБ'),
+        findsOneWidget,
+        reason: 'отдано друзьям — сумма по каждому',
+      );
 
       expect(find.byType(EvNowPlayingCard), findsNWidgets(3));
       expect(find.text('3 из 12'), findsOneWidget);

@@ -46,12 +46,60 @@ class _GalleryBodyState extends State<_GalleryBody> {
   String? _launched;
 
   static const _games = [
-    ('Пепельный Предел', 'Action-RPG · 24 ч', EvCoverPalette.ash, 1207, EvGameState.ready, null, null),
-    ('Глубина 9', 'Хоррор · 6 ч', EvCoverPalette.deepSea, 9314, EvGameState.ready, null, null),
-    ('Неон Хальцион', 'Киберпанк · в очереди', EvCoverPalette.neon, 4422, EvGameState.queued, null, 'в очереди'),
-    ('Лунная Колея', 'Симулятор · 12 ч', EvCoverPalette.lunar, 7781, EvGameState.ready, null, null),
-    ('Красный Меридиан', 'Тактика · 31 ч', EvCoverPalette.crimson, 2960, EvGameState.ready, null, null),
-    ('Орбита 7', 'Космосим · качается', EvCoverPalette.orbit, 8802, EvGameState.downloading, 0.41, '41 %'),
+    (
+      'Пепельный Предел',
+      'Action-RPG · 284 ч',
+      EvCoverPalette.ash,
+      1207,
+      EvGameState.ready,
+      null,
+      null,
+    ),
+    (
+      'Глубина 9',
+      'Хоррор · 64 ч',
+      EvCoverPalette.deepSea,
+      9314,
+      EvGameState.ready,
+      null,
+      null,
+    ),
+    (
+      'Неон Хальцион',
+      'Киберпанк · в очереди',
+      EvCoverPalette.neon,
+      4422,
+      EvGameState.queued,
+      null,
+      'в очереди',
+    ),
+    (
+      'Лунная Колея',
+      'Симулятор · 92 ч',
+      EvCoverPalette.lunar,
+      7781,
+      EvGameState.ready,
+      null,
+      null,
+    ),
+    (
+      'Красный Меридиан',
+      'Тактика · 196 ч',
+      EvCoverPalette.crimson,
+      2960,
+      EvGameState.ready,
+      null,
+      null,
+    ),
+    (
+      'Орбита 7',
+      'Космосим · качается',
+      EvCoverPalette.orbit,
+      8802,
+      EvGameState.downloading,
+      0.41,
+      '41 %',
+    ),
   ];
 
   @override
@@ -74,8 +122,10 @@ class _GalleryBodyState extends State<_GalleryBody> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Единственный насыщенный объект на экране',
-                      style: ev.text.label),
+                  Text(
+                    'Единственный насыщенный объект на экране',
+                    style: ev.text.label,
+                  ),
                   const SizedBox(height: EvSpace.l),
                   Wrap(
                     spacing: EvSpace.m,

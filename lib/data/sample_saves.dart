@@ -15,6 +15,7 @@ const evThisPc = EvDevice(
   detail: 'Windows 11 · этот компьютер',
   icon: EvIcons.desktop,
   short: 'КУЗНЯ',
+  os: 'Windows 11',
   online: true,
   here: true,
 );
@@ -24,6 +25,8 @@ const evLaptop = EvDevice(
   detail: 'Linux · 2 часа назад',
   icon: EvIcons.laptop,
   short: 'ДОРОГА',
+  os: 'Linux',
+  seen: '2 часа назад',
 );
 
 const evVault = EvDevice(

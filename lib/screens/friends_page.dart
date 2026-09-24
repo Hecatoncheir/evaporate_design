@@ -240,7 +240,7 @@ class _FromFriendsPanel extends StatelessWidget {
               ('В сети', '${f.online}', EvColors.ok),
               ('Всего', '${f.people.length}', c.ink),
               ('Раздают вам', '${f.seeders.length}', c.cool),
-              ('Отдано друзьям', f.givenGb, c.hot2),
+              ('Отдано друзьям', '${f.givenGb} ГБ', c.hot2),
             ],
           ),
         ],

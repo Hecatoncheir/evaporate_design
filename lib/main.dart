@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'data/sample_data.dart';
 import 'data/sample_friends.dart';
+import 'data/sample_profile.dart';
 import 'data/sample_downloads.dart';
 import 'data/sample_saves.dart';
 import 'design/appearance.dart';
@@ -12,13 +13,14 @@ import 'downloads/download_data.dart';
 import 'friends/friends_data.dart';
 import 'launch/ev_launch_ritual.dart';
 import 'library/hero_state.dart';
+import 'profile/profile_data.dart';
 import 'saves/saves_data.dart';
 import 'sheet/ev_game_sheet.dart';
 import 'screens/downloads_page.dart';
 import 'screens/friends_page.dart';
 import 'screens/library_page.dart';
 import 'screens/saves_page.dart';
-import 'screens/placeholder_page.dart';
+import 'screens/profile_page.dart';
 import 'screens/settings_page.dart';
 import 'shell/ev_palette.dart';
 import 'shell/ev_section.dart';
@@ -49,6 +51,9 @@ class _EvaporateAppState extends State<EvaporateApp> {
   final _downloads = ValueNotifier<EvDownloadsState>(EvDownloadsState.active);
   final _saves = ValueNotifier<EvSavesState>(EvSavesState.synced);
   final _friendsState = ValueNotifier<EvFriendsState>(EvFriendsState.normal);
+  // Тумблеры приватности — настройка, а не состояние раздела: уход
+  // на другой экран их не сбрасывает.
+  final _shares = ValueNotifier<Set<EvShare>>(EvShare.values.toSet());
   late final _ownEffects = widget.effects == null ? EvEffects() : null;
   final _shell = EvShellController();
 
@@ -77,6 +82,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
 
   @override
   void dispose() {
+    _shares.dispose();
     _friendsState.dispose();
     _saves.dispose();
     _downloads.dispose();
@@ -108,6 +114,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
                 _downloads,
                 _saves,
                 _friendsState,
+                _shares,
               ]),
               builder: (context, _) => _Home(
                 shell: _shell,
@@ -119,6 +126,10 @@ class _EvaporateAppState extends State<EvaporateApp> {
                 onSaves: (next) => _saves.value = next,
                 friendsState: _friendsState.value,
                 onFriends: (next) => _friendsState.value = next,
+                shares: _shares.value,
+                onShare: (share, on) => _shares.value = on
+                    ? {..._shares.value, share}
+                    : ({..._shares.value}..remove(share)),
               ),
             ),
           ),
@@ -139,6 +150,8 @@ class _Home extends StatelessWidget {
     required this.onSaves,
     required this.friendsState,
     required this.onFriends,
+    required this.shares,
+    required this.onShare,
   });
 
   final EvShellController shell;
@@ -165,6 +178,11 @@ class _Home extends StatelessWidget {
   final EvFriendsState friendsState;
 
   final ValueChanged<EvFriendsState> onFriends;
+
+  /// Что видят друзья — тумблеры в профиле.
+  final Set<EvShare> shares;
+
+  final void Function(EvShare share, bool on) onShare;
 
   /// Запуск игры — ритуал поверх всего окна.
   static void _launch(BuildContext context, SampleGame game) =>
@@ -321,7 +339,11 @@ class _Home extends StatelessWidget {
           friendsState: friendsState,
           onFriends: onFriends,
         ),
-        _ => PlaceholderPage(section: section),
+        EvSection.profile => ProfilePage(
+          profile: sampleProfile,
+          shares: shares,
+          onShare: onShare,
+        ),
       },
     );
   }

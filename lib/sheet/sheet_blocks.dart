@@ -10,6 +10,7 @@ import '../design/tokens.dart';
 import '../friends/ev_avatar.dart';
 import '../util/units.dart';
 import '../widgets/ev_focusable.dart';
+import '../widgets/ev_achievement.dart';
 import '../widgets/ev_icon.dart';
 import '../widgets/ev_surfaces.dart';
 
@@ -358,26 +359,15 @@ class _Achievements extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         if (facts.unlocked > 0) ...[_Nearest(), const SizedBox(height: 12)],
-        LayoutBuilder(
-          builder: (context, box) {
-            final columns = math.max(1, (box.maxWidth + 6) ~/ 196);
-            return Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final (i, (name, rule))
-                    in EvGameFacts.achievements.indexed)
-                  SizedBox(
-                    width: (box.maxWidth - 6 * (columns - 1)) / columns,
-                    child: _Achievement(
-                      name: name,
-                      rule: rule,
-                      unlocked: i < facts.unlocked,
-                    ),
-                  ),
-              ],
-            );
-          },
+        EvAchievementGrid(
+          children: [
+            for (final (i, (name, rule)) in EvGameFacts.achievements.indexed)
+              EvAchievementTile(
+                name: name,
+                detail: rule,
+                unlocked: i < facts.unlocked,
+              ),
+          ],
         ),
       ],
     );
@@ -399,7 +389,7 @@ class _Nearest extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _TrophyIcon(unlocked: true, size: 32),
+          EvTrophyIcon(unlocked: true, size: 32),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -429,94 +419,6 @@ class _Nearest extends StatelessWidget {
             style: ev.text.data.copyWith(fontSize: 15, color: c.hot2),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Achievement extends StatelessWidget {
-  const _Achievement({
-    required this.name,
-    required this.rule,
-    required this.unlocked,
-  });
-
-  final String name;
-  final String rule;
-  final bool unlocked;
-
-  @override
-  Widget build(BuildContext context) {
-    final ev = context.ev;
-    final c = ev.colors;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        borderRadius: ev.radii.b2,
-        color: c.ink.withValues(alpha: .022),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _TrophyIcon(unlocked: unlocked, size: 32),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  name,
-                  style: ev.text.ui(
-                    ev.text.body,
-                    weight: FontWeight.w500,
-                    size: 13,
-                    color: c.ink,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  rule,
-                  style: ev.text.body.copyWith(fontSize: 11.5, color: c.ink4),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TrophyIcon extends StatelessWidget {
-  const _TrophyIcon({required this.unlocked, required this.size});
-
-  final bool unlocked;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final ev = context.ev;
-    final c = ev.colors;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        borderRadius: ev.radii.b4,
-        border: Border.all(
-          color: unlocked ? c.hot1.withValues(alpha: .45) : c.line,
-        ),
-        color: unlocked ? c.hot1.withValues(alpha: .1) : null,
-        boxShadow: unlocked
-            ? [BoxShadow(color: c.hot1.withValues(alpha: .25), blurRadius: 20)]
-            : null,
-      ),
-      child: Center(
-        child: EvIcon(
-          EvIcons.trophy,
-          size: 15,
-          color: unlocked ? c.hot2 : c.ink4,
-        ),
       ),
     );
   }

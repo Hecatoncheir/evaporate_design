@@ -72,6 +72,11 @@ class EvHeadPanels extends StatelessWidget {
 
   static const breakpoint = 900.0;
 
+  /// Ширина левой панели при ширине ряда [width] — для того, что внутри
+  /// неё должно знать свою ширину без `LayoutBuilder`.
+  static double leftWidth(Size window, double width) =>
+      window.width < breakpoint ? width : (width - EvSpace.l) * 125 / 225;
+
   @override
   Widget build(BuildContext context) {
     if (MediaQuery.sizeOf(context).width < breakpoint) {

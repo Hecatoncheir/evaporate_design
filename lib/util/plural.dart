@@ -5,3 +5,7 @@ String ruPlural(int n, String one, String few, String many) {
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
   return many;
 }
+
+/// «193 дня», «392 часа» — числительное вместе с числом.
+String ruCount(int n, String one, String few, String many) =>
+    '$n ${ruPlural(n, one, few, many)}';

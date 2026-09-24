@@ -65,7 +65,7 @@ class SampleGame {
   /// Появилась в библиотеке недавно.
   final bool isNew;
 
-  /// Подпись на полке: «Action-RPG · 24 ч».
+  /// Подпись на полке: «Action-RPG · 284 ч».
   String get subtitle => switch (state) {
     EvGameState.ready => '$genre · ${played.inHours} ч',
     EvGameState.downloading => '$genre · качается',
@@ -103,7 +103,7 @@ const sampleLibrary = [
     version: 'v2.4.1',
     size: '68.4 ГБ',
     tags: ['Action-RPG', 'Одиночная'],
-    played: Duration(hours: 24, minutes: 10),
+    played: Duration(hours: 284, minutes: 10),
     lastPlayed: '6 минут назад',
     blurb:
         'Пятая глава разблокирована. Ваш отряд ждёт у Кузни Сумерек — '
@@ -117,7 +117,7 @@ const sampleLibrary = [
     version: 'v1.7',
     size: '41.2 ГБ',
     tags: ['Выживание', 'Одиночная'],
-    played: Duration(hours: 6),
+    played: Duration(hours: 64),
     lastPlayed: 'вчера в 23:40',
     blurb:
         'Станция «Мерло» затоплена до шестого уровня. Кислорода на '
@@ -144,7 +144,7 @@ const sampleLibrary = [
     version: 'v3.0',
     size: '18.9 ГБ',
     tags: ['Симулятор'],
-    played: Duration(hours: 12),
+    played: Duration(hours: 92),
     blurb:
         'Тихая колонизация без единого выстрела. Стройте маршруты между '
         'куполами и слушайте, как реголит скрипит под шасси.',
@@ -157,7 +157,7 @@ const sampleLibrary = [
     version: 'v2.2',
     size: '22.6 ГБ',
     tags: ['Тактика', 'Кооп'],
-    played: Duration(hours: 31),
+    played: Duration(hours: 196),
     lastPlayed: 'вчера в 21:15',
     blurb:
         'Пошаговые бои на изломе фронта. Каждый выживший боец переносит '
@@ -171,7 +171,7 @@ const sampleLibrary = [
     version: 'v1.4',
     size: '7.3 ГБ',
     tags: ['Головоломка'],
-    played: Duration(hours: 4),
+    played: Duration(hours: 41),
     blurb:
         'Сто двадцать комнат, выращенных из света. Ни одной подсказки — '
         'только то, что вы успели заметить.',
@@ -184,7 +184,7 @@ const sampleLibrary = [
     version: 'v4.1',
     size: '92.7 ГБ',
     tags: ['Выживание'],
-    played: Duration(hours: 58),
+    played: Duration(hours: 312),
     lastPlayed: 'вчера в 19:05',
     blurb:
         'Тайга размером с область, без маркеров на карте. Ориентируйтесь '
@@ -227,7 +227,7 @@ const sampleLibrary = [
     version: 'v2.0',
     size: '53.4 ГБ',
     tags: ['Гонки'],
-    played: Duration(hours: 17),
+    played: Duration(hours: 148),
     blurb:
         'Трассы переписывает погода. Сухая линия исчезает на втором круге, '
         'и держаться приходится за то, чего уже нет.',
@@ -289,7 +289,7 @@ final sampleDownloadsActive = sampleDownloading.length;
 /// Всё про «Пепельный Предел»: это игра в герое.
 const sampleHeroStates = <EvHeroState, EvHeroContent>{
   EvHeroState.ready: EvHeroContent(
-    eyebrow: 'Продолжить · сыграно 24 ч 10 мин',
+    eyebrow: 'Продолжить · сыграно 284 ч 10 мин',
     blurb:
         'Пятая глава разблокирована. Ваш отряд ждёт у Кузни Сумерек — '
         'последнее сохранение синхронизировано 6 минут назад.',

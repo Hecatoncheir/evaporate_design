@@ -1616,8 +1616,11 @@ h1.title b{font-weight:800;display:block}
 .mstat.hot .v{color:var(--hot-2)}
 
 /* год игры */
-.year{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,1fr);gap:3px;overflow-x:auto;padding-bottom:4px}
-.year i{width:11px;height:11px;border-radius:2.5px;background:rgba(255,255,255,.05)}
+/* ячейки квадратные и тянутся во всю ширину, но не крупнее 22 px: у колонок
+   и строк один шов — раньше колонки растягивались, а ячейки в 11 px оставались
+   у их левого края */
+.year{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,auto);grid-auto-columns:minmax(0,22px);gap:3px}
+.year i{width:100%;aspect-ratio:1;border-radius:23%;background:rgba(255,255,255,.05)}
 .year i.l1{background:rgb(var(--glow-hot)/.28)}
 .year i.l2{background:rgb(var(--glow-hot)/.5)}
 .year i.l3{background:rgb(var(--glow-hot)/.75)}
@@ -1978,6 +1981,7 @@ h1.title b{font-weight:800;display:block}
     <symbol id="i-magnet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5.4 4.2v7.6a6.6 6.6 0 0 0 13.2 0V4.2h-4.4v7.6a2.2 2.2 0 0 1-4.4 0V4.2H5.4Z" stroke-linejoin="round"/><path d="M5.4 8.6h4.4M14.2 8.6h4.4"/></symbol>
     <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9.5 6 6 6-6"/></symbol>
     <symbol id="i-retry" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.4 3.6v4.8h-4.8"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8.4" y="8.4" width="11.2" height="11.2" rx="2"/><path d="M15.6 8.4V6.2a1.8 1.8 0 0 0-1.8-1.8H6.2a1.8 1.8 0 0 0-1.8 1.8v7.6a1.8 1.8 0 0 0 1.8 1.8h2.2"/></symbol>
     <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4.6" y="10.4" width="14.8" height="9.6" rx="2.2"/><path d="M8.2 10.4V7.8a3.8 3.8 0 0 1 7.6 0v2.6" stroke-linecap="round"/><path d="M12 14.2v2" stroke-linecap="round"/></symbol>
     <symbol id="i-wall" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.4" y="3.4" width="7.4" height="7.4" rx="1.4"/><rect x="13.2" y="3.4" width="7.4" height="7.4" rx="1.4"/><rect x="3.4" y="13.2" width="7.4" height="7.4" rx="1.4"/><rect x="13.2" y="13.2" width="7.4" height="7.4" rx="1.4"/></symbol>
     <symbol id="i-rows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.6 6h16.8M3.6 12h16.8M3.6 18h16.8"/><path d="M3.6 6h3M3.6 12h3M3.6 18h3" stroke-width="2.6"/></symbol>
@@ -2099,7 +2103,7 @@ h1.title b{font-weight:800;display:block}
           <div class="hl mid" data-d="14"></div>
           <div class="hl sub" data-d="30"></div>
           <div class="hero-body" data-d="-8">
-            <div class="eyebrow">Продолжить · сыграно 24 ч 10 мин</div>
+            <div class="eyebrow">Продолжить · сыграно 284 ч 10 мин</div>
             <h1 class="title">Пепельный<b>Предел</b></h1>
             <p class="blurb">Пятая глава разблокирована. Ваш отряд ждёт у Кузни Сумерек — последнее сохранение синхронизировано 6 минут назад.</p>
             <div class="meta">
@@ -2521,7 +2525,7 @@ h1.title b{font-weight:800;display:block}
               <div class="kpi"><div class="p-lab">В сети</div><div class="v ok" id="frOn">6</div></div>
               <div class="kpi"><div class="p-lab">Всего</div><div class="v" id="frTotal">12</div></div>
               <div class="kpi"><div class="p-lab">Раздают вам</div><div class="v c" id="frSeeds">3</div></div>
-              <div class="kpi"><div class="p-lab">Отдано друзьям</div><div class="v h">214 ГБ</div></div>
+              <div class="kpi"><div class="p-lab">Отдано друзьям</div><div class="v h" id="frGiven">510 ГБ</div></div>
             </div>
           </div>
           <div class="panel">
@@ -2574,12 +2578,12 @@ h1.title b{font-weight:800;display:block}
               <h1 class="title" style="font-size:clamp(28px,4vw,50px)">Виталий <b>В.</b></h1>
               <div class="meta" style="margin-top:12px">
                 <span class="chip hot">Код: EVP-8К4М-ТРПЛ</span>
-                <span class="chip">12 друзей</span>
+                <span class="chip" id="meFriends">12 друзей</span>
                 <span class="chip">КУЗНЯ · Windows 11</span>
               </div>
             </div>
             <div class="me-acts">
-              <button class="mini"><svg><use href="#i-plus"/></svg>Скопировать код</button>
+              <button class="mini" id="meCopy"><svg><use href="#i-copy"/></svg><span>Скопировать код</span></button>
               <button class="mini"><svg><use href="#i-set"/></svg>Изменить</button>
             </div>
           </div>
@@ -2588,9 +2592,9 @@ h1.title b{font-weight:800;display:block}
         <div class="sec">
           <div class="me-stats">
             <div class="mstat"><div class="k">Часов в играх</div><div class="v">1 284</div><div class="s">+17 за неделю</div></div>
-            <div class="mstat"><div class="k">Игр в библиотеке</div><div class="v">12</div><div class="s">8 установлено</div></div>
-            <div class="mstat"><div class="k">Достижений</div><div class="v">61<u>/ 140</u></div><div class="s">44 % от всех</div></div>
-            <div class="mstat hot"><div class="k">Рейтинг раздачи</div><div class="v">2,41</div><div class="s">отдано 1.4 ТБ</div></div>
+            <div class="mstat"><div class="k">Игр в библиотеке</div><div class="v" id="meGames">12</div><div class="s" id="meInst">8 установлено</div></div>
+            <div class="mstat"><div class="k">Достижений</div><div class="v" id="meAchV">24<u>/ 60</u></div><div class="s" id="meAchS">40 % от всех</div></div>
+            <div class="mstat hot"><div class="k">Рейтинг раздачи</div><div class="v" id="meRatio">2,41</div><div class="s" id="meRatioS">отдано 1,4 ТБ</div></div>
           </div>
         </div>
 
@@ -2600,7 +2604,7 @@ h1.title b{font-weight:800;display:block}
             <div class="year" id="meYear"></div>
             <div class="year-lg">
               <span>меньше</span><i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i><span>больше</span>
-              <span class="sp"></span><span id="meStreak">Самая длинная серия — 11 дней подряд</span>
+              <span class="sp"></span><span id="meStreak">Самая длинная серия — 13 дней подряд</span>
             </div>
           </div>
         </div>
@@ -2613,13 +2617,13 @@ h1.title b{font-weight:800;display:block}
           <div class="panel">
             <div class="glowcorner"></div>
             <div class="p-lab">Отдача</div>
-            <div class="big">1,4<u>ТБ отдано</u></div>
-            <div class="ratio" style="margin-top:16px"><i style="width:71%"></i></div>
-            <div class="stats" style="margin-top:12px">
-              <span class="st"><svg><use href="#i-seed"/></svg>отдано<b>1.4 ТБ</b></span>
+            <div class="big" id="meUpBig">1,4<u>ТБ отдано</u></div>
+            <div class="ratio" style="margin-top:16px"><i id="meUpBar" style="width:71%"></i></div>
+            <div class="stats" style="margin-top:12px" id="meUpStats">
+              <span class="st"><svg><use href="#i-seed"/></svg>отдано<b>1,4 ТБ</b></span>
               <span class="st"><svg><use href="#i-dl"/></svg>получено<b>581 ГБ</b></span>
             </div>
-            <div class="cta-note cool" style="margin-top:14px"><svg><use href="#i-peers"/></svg>На каждый скачанный гигабайт вы вернули рою 2.41</div>
+            <div class="cta-note cool" style="margin-top:14px"><svg><use href="#i-peers"/></svg><span id="meUpNote">На каждый скачанный гигабайт вы вернули рою 2,41</span></div>
             <div class="p-lab" style="margin-top:20px">Кому отдали больше всего</div>
             <div style="margin-top:8px" id="meSeeded"></div>
           </div>
@@ -2640,7 +2644,7 @@ h1.title b{font-weight:800;display:block}
             </div>
             <div class="p-lab" style="margin-top:20px">Устройства</div>
             <div style="margin-top:8px">
-              <div class="opt"><svg style="width:18px;height:18px;color:var(--ink-3)"><use href="#i-pc"/></svg><div class="txt"><div class="n">КУЗНЯ</div><div class="d">Этот компьютер · 1 106 часов</div></div><span class="dev sync">активно</span></div>
+              <div class="opt"><svg style="width:18px;height:18px;color:var(--ink-3)"><use href="#i-pc"/></svg><div class="txt"><div class="n">КУЗНЯ</div><div class="d" id="meHere">Этот компьютер · 1 106 часов</div></div><span class="dev sync">активно</span></div>
               <div class="opt"><svg style="width:18px;height:18px;color:var(--ink-3)"><use href="#i-lap"/></svg><div class="txt"><div class="n">ДОРОГА</div><div class="d">Linux · 178 часов · 2 часа назад</div></div><span class="dev">офлайн</span></div>
             </div>
           </div>
@@ -3133,25 +3137,25 @@ const P = {
   storm :{deep:"#04182c",mid:"#020c18",mid2:"#0d4a7a",hot:"#5ee7ff",hot2:"#d6f8ff"},
 };
 const GAMES=[
-  {id:"ashen",  t:"Пепельный Предел", sub:"Action-RPG · 24 ч",      pal:P.ash,    size:"68.4 ГБ", state:"ready", seed:1207,
+  {id:"ashen",  t:"Пепельный Предел", sub:"Action-RPG · 284 ч",      pal:P.ash,    size:"68.4 ГБ", state:"ready", seed:1207,
    blurb:"Пятая глава разблокирована. Ваш отряд ждёт у Кузни Сумерек — последнее сохранение синхронизировано 6 минут назад.",
    tags:["Установлена","v2.4.1","68.4 ГБ","Action-RPG","Одиночная"]},
-  {id:"depth",  t:"Глубина 9",        sub:"Хоррор · 6 ч",           pal:P.deep,   size:"41.2 ГБ", state:"ready", seed:9314,
+  {id:"depth",  t:"Глубина 9",        sub:"Хоррор · 64 ч",           pal:P.deep,   size:"41.2 ГБ", state:"ready", seed:9314,
    blurb:"Станция «Мерло» затоплена до шестого уровня. Кислорода на 41 минуту — этого хватит ровно на один правильный маршрут.",
    tags:["Установлена","v1.7","41.2 ГБ","Выживание","Одиночная"]},
   {id:"neon",   t:"Неон Хальцион",    sub:"Киберпанк · в очереди",  pal:P.neon,   size:"24.1 ГБ", state:"queue", seed:4422,
    blurb:"Открытый мир на 40 часов. Сеть города живая: каждая вышка, которую вы перехватываете, меняет расписание патрулей.",
    tags:["В очереди","v1.9","24.1 ГБ","Открытый мир"]},
-  {id:"lunar",  t:"Лунная Колея",     sub:"Исследование · 12 ч",    pal:P.lunar,  size:"18.9 ГБ", state:"ready", seed:7781,
+  {id:"lunar",  t:"Лунная Колея",     sub:"Исследование · 92 ч",    pal:P.lunar,  size:"18.9 ГБ", state:"ready", seed:7781,
    blurb:"Тихая колонизация без единого выстрела. Стройте маршруты между куполами и слушайте, как реголит скрипит под шасси.",
    tags:["Установлена","v3.0","18.9 ГБ","Симулятор"]},
-  {id:"crimson",t:"Красный Меридиан", sub:"Тактика · 31 ч",         pal:P.crimson,size:"22.6 ГБ", state:"ready", seed:2960,
+  {id:"crimson",t:"Красный Меридиан", sub:"Тактика · 196 ч",         pal:P.crimson,size:"22.6 ГБ", state:"ready", seed:2960,
    blurb:"Пошаговые бои на изломе фронта. Каждый выживший боец переносит шрамы и привычки в следующую кампанию.",
    tags:["Установлена","v2.2","22.6 ГБ","Тактика","Кооп"]},
-  {id:"glass",  t:"Стеклянный Сад",   sub:"Головоломка · 4 ч",      pal:P.glass,  size:"7.3 ГБ",  state:"ready", seed:5518,
+  {id:"glass",  t:"Стеклянный Сад",   sub:"Головоломка · 41 ч",      pal:P.glass,  size:"7.3 ГБ",  state:"ready", seed:5518,
    blurb:"Сто двадцать комнат, выращенных из света. Ни одной подсказки — только то, что вы успели заметить.",
    tags:["Установлена","v1.4","7.3 ГБ","Головоломка"]},
-  {id:"wolf",   t:"Волчья Тропа",     sub:"Открытый мир · 58 ч",    pal:P.wolf,   size:"92.7 ГБ", state:"ready", seed:3345,
+  {id:"wolf",   t:"Волчья Тропа",     sub:"Открытый мир · 312 ч",    pal:P.wolf,   size:"92.7 ГБ", state:"ready", seed:3345,
    blurb:"Тайга размером с область, без маркеров на карте. Ориентируйтесь по звёздам, дыму и следам на снегу.",
    tags:["Установлена","v4.1","92.7 ГБ","Выживание"]},
   {id:"orbita", t:"Орбита 7",         sub:"Космосим · качается",    pal:P.orbit,  size:"36.0 ГБ", state:"dl", pct:41, dlSeeds:27, dlPeers:31, seed:8802,
@@ -3160,7 +3164,7 @@ const GAMES=[
   {id:"thresh", t:"Тихий Порог",      sub:"История · 9 ч",          pal:P.thresh, size:"11.8 ГБ", state:"ready", seed:6127,
    blurb:"Один дом, одна ночь, шесть голосов. Всё, что вы решите не открывать, останется закрытым навсегда.",
    tags:["Установлена","v1.1","11.8 ГБ","Нарратив"]},
-  {id:"storm",  t:"Грозовой Фронт",   sub:"Гонки · 17 ч",           pal:P.storm,  size:"53.4 ГБ", state:"ready", seed:1993,
+  {id:"storm",  t:"Грозовой Фронт",   sub:"Гонки · 148 ч",           pal:P.storm,  size:"53.4 ГБ", state:"ready", seed:1993,
    blurb:"Трассы переписывает погода. Сухая линия исчезает на втором круге, и держаться приходится за то, чего уже нет.",
    tags:["Установлена","v2.0","53.4 ГБ","Гонки"]},
   {id:"halc2",  t:"Хальцион: Эхо",    sub:"Дополнение · качается",  pal:P.neon,   size:"9.4 ГБ",  state:"dl", pct:66, dlSeeds:81, dlPeers:82, seed:2211,
@@ -4056,7 +4060,7 @@ function setNote(html){
 
 const HERO = {
   ready: {
-    eyebrow:"Продолжить · сыграно 24 ч 10 мин",
+    eyebrow:"Продолжить · сыграно 284 ч 10 мин",
     title:"Пепельный<b>Предел</b>",
     blurb:"Пятая глава разблокирована. Ваш отряд ждёт у Кузни Сумерек — последнее сохранение синхронизировано 6 минут назад.",
     chips:[["Установлена",1],["v2.4.1"],["68.4 ГБ"],["Action-RPG"],["Одиночная"]],
@@ -5328,10 +5332,49 @@ $("#meArt").style.backgroundImage = `url(${makeArt(1400, 460, GAMES[0].pal, GAME
   const life = total + 892;
   $$(".mstat")[0].querySelector(".v").textContent = life.toLocaleString("ru-RU");
   $$(".mstat")[0].querySelector(".s").textContent = `${plural(total, "час", "часа", "часов")} за последний год`;
+  /* часы этого компьютера — остаток: всё, что сыграно не на ноутбуке */
+  const here = life - 178;
+  $("#meHere").textContent = `Этот компьютер · ${plural(here, "час", "часа", "часов").replace(/^\d+/, here.toLocaleString("ru-RU"))}`;
+  $("#meFriends").textContent = plural(PEOPLE.length, "друг", "друга", "друзей");
+
+  /* библиотека и достижения — из карточек игр, а не рядом с ними */
+  const inst = GAMES.filter(g => g.state === "ready").length;
+  $("#meGames").textContent = GAMES.length;
+  $("#meInst").textContent = `${inst} ${inst % 10 === 1 && inst % 100 !== 11 ? "установлена" : "установлено"}`;
+  const got = GAMES.reduce((s, g) => s + cardData(g).got, 0), all = GAMES.length * ACH_NAMES.length;
+  $("#meAchV").innerHTML = `${got}<u>/ ${all}</u>`;
+  $("#meAchS").textContent = `${Math.round(got / all * 100)} % от всех`;
+
+  /* отдача: рейтинг, полоса и строка считаются из двух чисел */
+  const UP = 1400, DOWN = 581;
+  const vol = gb => gb < 1000 ? `${gb} ГБ` : `${(gb / 1000).toFixed(1).replace(".", ",")} ТБ`;
+  const ratio = (UP / DOWN).toFixed(2).replace(".", ",");
+  $("#meRatio").textContent = ratio;
+  $("#meRatioS").textContent = `отдано ${vol(UP)}`;
+  $("#meUpBig").innerHTML = `${vol(UP).split(" ")[0]}<u>${vol(UP).split(" ")[1]} отдано</u>`;
+  $("#meUpBar").style.width = Math.round(UP / (UP + DOWN) * 100) + "%";
+  $("#meUpStats").innerHTML = `
+    <span class="st"><svg><use href="#i-seed"/></svg>отдано<b>${vol(UP)}</b></span>
+    <span class="st"><svg><use href="#i-dl"/></svg>получено<b>${vol(DOWN)}</b></span>`;
+  $("#meUpNote").textContent = `На каждый скачанный гигабайт вы вернули рою ${ratio}`;
 })();
 
+$("#meCopy").onclick = () => {
+  navigator.clipboard?.writeText("EVP-8К4М-ТРПЛ").catch(() => {});
+  const b = $("#meCopy");
+  b.querySelector("span").textContent = "Код скопирован";
+  b.querySelector("use").setAttribute("href", "#i-check");
+  clearTimeout(b._t);
+  b._t = setTimeout(() => {
+    b.querySelector("span").textContent = "Скопировать код";
+    b.querySelector("use").setAttribute("href", "#i-copy");
+  }, 2000);
+};
+
 (() => {
-  const top = [["wolf", 312], ["ashen", 284], ["crimson", 196], ["storm", 148], ["lunar", 92], ["depth", 64]];
+  /* часы по играм — из библиотеки: те же, что в карточке игры */
+  const top = GAMES.map(g => [g.id, cardData(g).hours]).filter(([, h]) => h)
+    .sort((a, b) => b[1] - a[1]).slice(0, 6);
   const mx = top[0][1];
   $("#meTop").innerHTML = top.map(([id, h]) => {
     const g = byId(id);
@@ -5341,17 +5384,13 @@ $("#meArt").style.backgroundImage = `url(${makeArt(1400, 460, GAMES[0].pal, GAME
       <span class="h">${h} ч</span></div>`;
   }).join("");
 
-  $("#meSeeded").innerHTML = [["АК", "Антон К.", "214 ГБ", 0], ["ЛП", "Лена П.", "168 ГБ", 3], ["НТ", "Ника Т.", "96 ГБ", 1]]
-    .map(([i, n, v, a]) => `<div class="frow">
-      <span class="av" style="background:${AV[a]}">${i}</span>
-      <span class="fn">${n}</span><span class="fs">${v}</span></div>`).join("");
-
+  /* только то, что карточка игры показывает полученным: первые три */
   $("#meAch").innerHTML = [
-    ["Тихий шаг", "Пепельный Предел · 3 часа назад"],
-    ["Без единой царапины", "Красный Меридиан · вчера"],
-    ["Зимовье", "Волчья Тропа · 4 дня назад"],
-    ["Сто двадцать комнат", "Стеклянный Сад · неделю назад"]
-  ].map(([n, d]) => `<div class="ach got"><span class="ic"><svg><use href="#i-trophy"/></svg></span>
+    ["ashen", 1, "3 часа назад"],
+    ["crimson", 2, "вчера"],
+    ["wolf", 0, "4 дня назад"],
+    ["glass", 1, "неделю назад"]
+  ].map(([id, k, when]) => [ACH_NAMES[k][0], `${byId(id).t} · ${when}`]).map(([n, d]) => `<div class="ach got"><span class="ic"><svg><use href="#i-trophy"/></svg></span>
     <span class="tx"><span class="n">${n}</span><span class="d">${d}</span></span></div>`).join("");
 })();
 
@@ -5614,7 +5653,9 @@ function fpData(i){
   if(FP[i]) return FP[i];
   const p = PEOPLE[i], r = rng32(i * 7919 + 13);
   const pool = GAMES.filter(g => g.state === "ready").slice(0, Math.min(5, p.common));
-  const gave = 20 + Math.round(r() * 180), got = 20 + Math.round(r() * 180);
+  /* десятки гигабайт, а не сотни: иначе друзья отдали бы вам больше,
+     чем вы вообще получили (581 ГБ в профиле) */
+  const gave = 4 + Math.round(r() * 36), got = 4 + Math.round(r() * 36);
   return {
     since: "в друзьях с 2025 года",
     hours: 400 + Math.round(r() * 1600),
@@ -5627,6 +5668,17 @@ function fpData(i){
     only: null
   };
 }
+/* кому вы отдали больше всего и сколько всего отдали друзьям —
+   из той же раздачи в обе стороны, что на странице друга */
+(() => {
+  const given = PEOPLE.map((p, i) => [p, parseInt(fpData(i).got)]);
+  $("#frGiven").textContent = given.reduce((s, [, gb]) => s + gb, 0) + " ГБ";
+  $("#meSeeded").innerHTML = given.slice().sort((a, b) => b[1] - a[1]).slice(0, 3)
+    .map(([p, gb]) => `<div class="frow">
+      <span class="av" style="background:${p.av}">${p.i}</span>
+      <span class="fn">${p.n}</span><span class="fs">${gb} ГБ</span></div>`).join("");
+})();
+
 const scFp = $("#sc-fprofile");
 let fpI = 0;
 

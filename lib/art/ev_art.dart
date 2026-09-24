@@ -85,6 +85,7 @@ abstract final class EvArtCache {
   static final _covers = <Object, ui.Image>{};
   static final _heroLayers = <Object, ui.Image>{};
   static final _sheetLayers = <Object, ui.Image>{};
+  static final _banners = <Object, ui.Image>{};
 
   /// Обложки: полка, продолжение, палитра, загрузки — с запасом на смену
   /// размеров окна.
@@ -96,6 +97,9 @@ abstract final class EvArtCache {
   /// Карточка открыта одна, и слоёв в ней два — с запасом на ступень
   /// масштаба при перетаскивании края окна.
   static const _sheetCapacity = 4;
+
+  /// Шапка страницы одна на экран — с запасом на ступень масштаба.
+  static const _bannerCapacity = 3;
 
   /// Обложка — сцена 300 × 400 прототипа в текстуре [width] × [height].
   static ui.Image cover(
@@ -151,10 +155,34 @@ abstract final class EvArtCache {
     ),
   );
 
+  /// Широкий кадр шапки: сцена 1400 × 460 с масштабом [scale].
+  static ui.Image banner(EvBanner banner, double scale) => _lookup(
+    _banners,
+    (banner, scale),
+    _bannerCapacity,
+    () => _rasterize(
+      evBannerScene,
+      (evBannerScene.width * scale).round(),
+      (evBannerScene.height * scale).round(),
+      (canvas) => paintKeyScene(
+        canvas,
+        evBannerScene,
+        banner.palette,
+        banner.seed,
+        ridges: 2,
+        sunX: banner.sunX,
+        sunY: banner.sunY,
+      ),
+    ),
+  );
+
   /// Сколько растров сейчас в кэше.
   @visibleForTesting
   static int get length =>
-      _covers.length + _heroLayers.length + _sheetLayers.length;
+      _covers.length +
+      _heroLayers.length +
+      _sheetLayers.length +
+      _banners.length;
 
   @visibleForTesting
   static void clear() {
@@ -162,12 +190,14 @@ abstract final class EvArtCache {
       ..._covers.values,
       ..._heroLayers.values,
       ..._sheetLayers.values,
+      ..._banners.values,
     ]) {
       image.dispose();
     }
     _covers.clear();
     _heroLayers.clear();
     _sheetLayers.clear();
+    _banners.clear();
   }
 
   static ui.Image _lookup(
@@ -199,6 +229,66 @@ abstract final class EvArtCache {
     picture.dispose();
     return image;
   }
+}
+
+/// Широкий кадр под шапкой страницы — профиль, профиль друга: палитра
+/// игры, зерно и где стоит солнце. `makeArt(1400, 460, …, {ridges: 2})`
+/// в прототипе.
+typedef EvBanner = ({
+  EvCoverPalette palette,
+  int seed,
+  double sunX,
+  double sunY,
+});
+
+/// Холст шапки в прототипе.
+const evBannerScene = Size(1400, 460);
+
+/// Шапка страницы: кадр заполняет свой размер по `background-size: cover`.
+/// Растр берётся ступенями в четверть масштаба, чтобы перетаскивание края
+/// окна не рисовало сцену заново на каждом кадре.
+class EvBannerArt extends StatelessWidget {
+  const EvBannerArt(this.banner, {super.key});
+
+  final EvBanner banner;
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    painter: _BannerPainter(banner, MediaQuery.devicePixelRatioOf(context)),
+    size: Size.infinite,
+  );
+}
+
+class _BannerPainter extends CustomPainter {
+  _BannerPainter(this.banner, this.devicePixelRatio);
+
+  final EvBanner banner;
+  final double devicePixelRatio;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    final fit = math.max(
+      size.width / evBannerScene.width,
+      size.height / evBannerScene.height,
+    );
+    final scale = (fit * devicePixelRatio * 4).ceil().clamp(1, 12) / 4;
+    final image = EvArtCache.banner(banner, scale);
+    canvas.drawImageRect(
+      image,
+      Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+      Rect.fromCenter(
+        center: size.center(Offset.zero),
+        width: evBannerScene.width * fit,
+        height: evBannerScene.height * fit,
+      ),
+      Paint()..filterQuality = FilterQuality.low,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_BannerPainter old) =>
+      old.banner != banner || old.devicePixelRatio != devicePixelRatio;
 }
 
 /// Сцена обложки в прототипе — холст 300 × 400.

@@ -1,3 +1,4 @@
+import '../art/key_art.dart';
 import '../friends/friends_data.dart';
 import '../design/tokens.dart';
 import 'sample_data.dart';
@@ -17,12 +18,24 @@ const _tints = EvAvatarTint.values;
 
 EvAvatarTint _tint(int i) => _tints[i % _tints.length];
 
+/// Раздача с тем, у кого своего профиля в данных нет, выводится из его
+/// номера — `fpData` в прототипе: тот же генератор и тот же порядок.
+/// Антон и Игорь написаны руками: это два состояния профиля друга.
+EvTraffic _traffic(int i) {
+  final r = EvArtRandom(i * 7919 + 13);
+  return EvTraffic(
+    toYouGb: 4 + (r.next() * 36).round(),
+    fromYouGb: 4 + (r.next() * 36).round(),
+  );
+}
+
 final samplePeople = <EvPerson>[
   EvPerson(
     initials: 'АК',
     name: 'Антон К.',
     tint: _tint(0),
     common: 11,
+    traffic: const EvTraffic(toYouGb: 214, fromYouGb: 96),
     status: EvPersonStatus.playing,
     game: _game('Пепельный Предел'),
     session: '2 ч 14 мин · Глава 5',
@@ -32,6 +45,7 @@ final samplePeople = <EvPerson>[
     name: 'Мира С.',
     tint: _tint(1),
     common: 9,
+    traffic: _traffic(1),
     status: EvPersonStatus.playing,
     game: _game('Красный Меридиан'),
     session: '41 мин · Излом, ход 42',
@@ -41,6 +55,7 @@ final samplePeople = <EvPerson>[
     name: 'Лена П.',
     tint: _tint(2),
     common: 10,
+    traffic: _traffic(2),
     status: EvPersonStatus.playing,
     game: _game('Волчья Тропа'),
     session: '5 ч 02 мин · Чёрная река',
@@ -50,6 +65,7 @@ final samplePeople = <EvPerson>[
     name: 'Дан Р.',
     tint: _tint(3),
     common: 6,
+    traffic: _traffic(3),
     status: EvPersonStatus.online,
   ),
   EvPerson(
@@ -57,6 +73,7 @@ final samplePeople = <EvPerson>[
     name: 'Ника Т.',
     tint: _tint(4),
     common: 8,
+    traffic: _traffic(4),
     status: EvPersonStatus.online,
   ),
   EvPerson(
@@ -64,6 +81,7 @@ final samplePeople = <EvPerson>[
     name: 'Юля С.',
     tint: _tint(5),
     common: 5,
+    traffic: _traffic(5),
     status: EvPersonStatus.online,
   ),
   EvPerson(
@@ -71,6 +89,7 @@ final samplePeople = <EvPerson>[
     name: 'Игорь В.',
     tint: _tint(6),
     common: 9,
+    traffic: const EvTraffic(toYouGb: 12, fromYouGb: 204),
     was: 'был вчера в 22:10',
   ),
   EvPerson(
@@ -78,6 +97,7 @@ final samplePeople = <EvPerson>[
     name: 'Саша М.',
     tint: _tint(7),
     common: 4,
+    traffic: _traffic(7),
     was: '3 дня назад',
   ),
   EvPerson(
@@ -85,6 +105,7 @@ final samplePeople = <EvPerson>[
     name: 'Рома Б.',
     tint: _tint(8),
     common: 7,
+    traffic: _traffic(8),
     was: 'неделю назад',
   ),
   EvPerson(
@@ -92,6 +113,7 @@ final samplePeople = <EvPerson>[
     name: 'Марк Л.',
     tint: _tint(9),
     common: 2,
+    traffic: _traffic(9),
     was: 'месяц назад',
   ),
   EvPerson(
@@ -99,6 +121,7 @@ final samplePeople = <EvPerson>[
     name: 'Вера Г.',
     tint: _tint(10),
     common: 3,
+    traffic: _traffic(10),
     was: 'месяц назад',
   ),
   EvPerson(
@@ -106,6 +129,7 @@ final samplePeople = <EvPerson>[
     name: 'Пётр К.',
     tint: _tint(11),
     common: 1,
+    traffic: _traffic(11),
     was: 'два месяца назад',
   ),
 ];
@@ -215,7 +239,6 @@ EvFriends sampleFriendsFor(EvFriendsState state, {bool offline = false}) =>
       seeders: offline ? const [] : _seeders(),
       feed: _feed,
       library: _library,
-      givenGb: '214 ГБ',
       invite: state == EvFriendsState.invite ? _invite : null,
       offline: offline,
     );

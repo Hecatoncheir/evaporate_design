@@ -90,7 +90,7 @@ void main() {
       _window(tester, 1440, 900);
 
       await _library(tester, EvHeroState.ready);
-      expect(find.text('ПРОДОЛЖИТЬ · СЫГРАНО 24 Ч 10 МИН'), findsOneWidget);
+      expect(find.text('ПРОДОЛЖИТЬ · СЫГРАНО 284 Ч 10 МИН'), findsOneWidget);
       expect(find.byType(EvPlayButton), findsOneWidget);
       expect(find.text('Подробнее'), findsOneWidget);
       expect(find.byType(EvCtaNote), findsNothing);

@@ -17,3 +17,20 @@ String formatPlayed(Duration played) {
   if (hours == 0) return '$minutes мин';
   return minutes == 0 ? '$hours ч' : '$hours ч $minutes мин';
 }
+
+/// Трафик: до тысячи — гигабайты, дальше — терабайты с одной цифрой.
+String formatTraffic(int gb) => gb < 1000
+    ? '$gb ГБ'
+    : '${(gb / 1000).toStringAsFixed(1).replaceAll('.', ',')} ТБ';
+
+/// Число с неразрывным пробелом в разрядах: «1 284», как
+/// `toLocaleString('ru-RU')` в прототипе.
+String formatThousands(int n) {
+  final digits = '$n';
+  final out = StringBuffer();
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 == 0) out.write('\u00A0');
+    out.write(digits[i]);
+  }
+  return out.toString();
+}

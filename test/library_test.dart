@@ -251,7 +251,7 @@ void main() {
         hero.left,
         EvSpace.railWidth + EvSpace.gutterFor(tester.view.physicalSize),
       );
-      expect(find.text('ПРОДОЛЖИТЬ · СЫГРАНО 24 Ч 10 МИН'), findsOneWidget);
+      expect(find.text('ПРОДОЛЖИТЬ · СЫГРАНО 284 Ч 10 МИН'), findsOneWidget);
       expect(find.text('Пепельный'), findsOneWidget);
       expect(find.text('Предел'), findsOneWidget);
       expect(find.text('Установлена'), findsOneWidget);
@@ -264,7 +264,7 @@ void main() {
 
       expect(find.byType(EvSessionRow), findsNWidgets(3));
       expect(find.text('3 сессии'), findsOneWidget);
-      expect(find.text('6 ч · вчера в 23:40'), findsOneWidget);
+      expect(find.text('64 ч · вчера в 23:40'), findsOneWidget);
       expect(find.text('8 установлено'), findsOneWidget);
       expect(find.text('СКОРО НА ДИСКЕ'), findsOneWidget);
       expect(tester.getSize(find.byType(EvGameCard).first).width, 178);
@@ -344,7 +344,7 @@ void main() {
       final atmosphere = tester.state<EvAtmosphereState>(
         find.byType(EvAtmosphere),
       );
-      const eyebrow = 'ПРОДОЛЖИТЬ · СЫГРАНО 24 Ч 10 МИН';
+      const eyebrow = 'ПРОДОЛЖИТЬ · СЫГРАНО 284 Ч 10 МИН';
       final before = tester.getTopLeft(find.text(eyebrow));
       expect(atmosphere.isAnimating, isFalse, reason: 'курсор ещё не двигался');
 
@@ -401,7 +401,7 @@ void main() {
     ) async {
       _window(tester, 1440, 900);
       await _app(tester);
-      const eyebrow = 'ПРОДОЛЖИТЬ · СЫГРАНО 24 Ч 10 МИН';
+      const eyebrow = 'ПРОДОЛЖИТЬ · СЫГРАНО 284 Ч 10 МИН';
       final before = tester.getTopLeft(find.text(eyebrow));
       await moveMouse(tester, Offset.zero);
       await _settle(tester);

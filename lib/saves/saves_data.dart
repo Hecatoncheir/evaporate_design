@@ -23,6 +23,8 @@ class EvDevice {
     required this.detail,
     required this.icon,
     required this.short,
+    this.os,
+    this.seen,
     this.online = false,
     this.here = false,
   });
@@ -38,6 +40,13 @@ class EvDevice {
   /// Как устройство подписано в ленте: «КУЗНЯ».
   final String short;
 
+  /// Система: «Windows 11». У хранилища её нет.
+  final String? os;
+
+  /// Когда было в сети последний раз: «2 часа назад». Этот компьютер
+  /// в сети всегда.
+  final String? seen;
+
   final bool online;
 
   /// Этот компьютер.
@@ -48,6 +57,8 @@ class EvDevice {
     detail: detail ?? this.detail,
     icon: icon,
     short: short,
+    os: os,
+    seen: seen,
     online: online ?? this.online,
     here: here,
   );

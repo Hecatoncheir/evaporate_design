@@ -96,4 +96,7 @@ abstract final class EvIcons {
 
   /// Повторить: перекачать части, проверить связь.
   static const retry = 'retry';
+
+  /// Скопировать: код для друзей — в буфер обмена.
+  static const copy = 'copy';
 }

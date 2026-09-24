@@ -56,7 +56,7 @@ void main() {
     // cardData, и в том же порядке обращений к генератору.
     test('«Пепельный Предел» — установленная игра', () {
       final f = EvGameFacts.of(sampleHero);
-      expect(f.hours, 24);
+      expect(f.hours, 284);
       expect(f.lastMinutes, 90, reason: '1 ч 30 мин');
       expect(f.lastAgo, '3 дня назад');
       expect(f.unlocked, 3);
@@ -108,7 +108,7 @@ void main() {
       await _openFromHero(tester);
 
       expect(_inSheet('Пепельный Предел'), findsOneWidget);
-      expect(_inSheet('В БИБЛИОТЕКЕ · СЫГРАНО 24 Ч'), findsOneWidget);
+      expect(_inSheet('В БИБЛИОТЕКЕ · СЫГРАНО 284 Ч'), findsOneWidget);
       expect(_inSheet('ВАША ИСТОРИЯ'), findsOneWidget);
       expect(_inSheet('Глава 5 · 62 %'), findsOneWidget);
       expect(_inSheet('68,4 ГБ на диске'), findsOneWidget);
