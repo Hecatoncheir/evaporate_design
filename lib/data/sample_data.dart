@@ -65,6 +65,20 @@ class SampleGame {
   /// Появилась в библиотеке недавно.
   final bool isNew;
 
+  /// Та же игра только что с диска: без часов, с пометкой «новое».
+  /// Так она выглядит в первом запуске, пока в неё не играли.
+  SampleGame fresh() => SampleGame(
+    title,
+    genre,
+    palette,
+    seed,
+    version: version,
+    size: size,
+    blurb: blurb,
+    tags: tags,
+    isNew: true,
+  );
+
   /// Подпись на полке: «Action-RPG · 284 ч».
   String get subtitle => switch (state) {
     EvGameState.ready => '$genre · ${played.inHours} ч',

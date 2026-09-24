@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 
 import '../data/sample_data.dart';
+import '../first_run/ev_first_run_widgets.dart';
+import '../first_run/first_run_data.dart';
 import '../library/ev_hero.dart';
 import '../library/hero_state.dart';
 import '../library/ev_session_row.dart';
@@ -28,6 +30,9 @@ class LibraryPage extends StatelessWidget {
     required this.friendsOnline,
     required this.downloadSlots,
     this.state = EvHeroState.ready,
+    this.catalog = EvCatalog.normal,
+    this.heroContent,
+    this.onAdd,
     this.onLaunch,
     this.onOpen,
     this.onInstall,
@@ -51,6 +56,16 @@ class LibraryPage extends StatelessWidget {
   /// Состояние игры в герое: установлена, качается, идёт, офлайн.
   final EvHeroState state;
 
+  /// Что с каталогом: пуст — вместо героя приглашение, читается —
+  /// скелет. Пустой список игр — тоже пустой каталог.
+  final EvCatalog catalog;
+
+  /// Герой не из шести состояний, а свой: первая игра в первом запуске.
+  final EvHeroContent? heroContent;
+
+  /// Добавить игру: оба пути из пустой библиотеки и зона перетаскивания.
+  final VoidCallback? onAdd;
+
   /// Удержание «Играть» в герое дошло до конца.
   final ValueChanged<SampleGame>? onLaunch;
 
@@ -66,6 +81,18 @@ class LibraryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final layout = EvLibraryLayout.of(MediaQuery.sizeOf(context));
+    if (catalog == EvCatalog.reading) {
+      return _Bare(
+        layout: layout,
+        child: EvLibrarySkeleton(layout: layout),
+      );
+    }
+    if (catalog == EvCatalog.empty || games.isEmpty) {
+      return _Bare(
+        layout: layout,
+        child: EvLibraryEmpty(onScan: onAdd, onMagnet: onAdd, onDrop: onAdd),
+      );
+    }
     final installed = [
       for (final g in games)
         if (g.state == EvGameState.ready) g,
@@ -97,7 +124,7 @@ class LibraryPage extends StatelessWidget {
           seed: hero.seed,
           title: hero.title,
           state: state,
-          content: sampleHeroStates[state]!,
+          content: heroContent ?? sampleHeroStates[state]!,
           onLaunch: onLaunch == null ? null : () => onLaunch!(hero),
           onDetails: onOpen == null ? null : () => onOpen!(hero),
           onInstall: onInstall,
@@ -175,6 +202,29 @@ class LibraryPage extends StatelessWidget {
             ],
           ),
       ],
+    );
+  }
+}
+
+/// Библиотека без героя и полок: пустая или ещё читается.
+class _Bare extends StatelessWidget {
+  const _Bare({required this.layout, required this.child});
+
+  final EvLibraryLayout layout;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final chrome = MediaQuery.paddingOf(context);
+    return ListView(
+      primary: true,
+      padding: EdgeInsets.fromLTRB(
+        layout.gutter,
+        chrome.top,
+        layout.gutter,
+        26 + chrome.bottom,
+      ),
+      children: [child],
     );
   }
 }

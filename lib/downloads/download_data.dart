@@ -130,7 +130,7 @@ class EvTorrent {
   final int seeds;
   final int peers;
 
-  /// «осталось 4 ч 12 мин», «пауза», «время не определено».
+  /// «осталось 7 ч 59 мин», «пауза», «время не определено».
   final String eta;
 
   final bool paused;

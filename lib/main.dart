@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'data/sample_data.dart';
 import 'data/sample_friends.dart';
@@ -10,6 +11,10 @@ import 'design/appearance.dart';
 import 'design/effects.dart';
 import 'design/theme.dart';
 import 'design/tokens.dart';
+import 'first_run/ev_add_torrent.dart';
+import 'first_run/ev_first_run_widgets.dart';
+import 'first_run/first_run_controller.dart';
+import 'first_run/first_run_data.dart';
 import 'downloads/download_data.dart';
 import 'friends/friends_data.dart';
 import 'launch/ev_launch_ritual.dart';
@@ -36,7 +41,11 @@ import 'widgets/ev_surfaces.dart';
 void main() => runApp(const EvaporateApp());
 
 class EvaporateApp extends StatefulWidget {
-  const EvaporateApp({super.key, this.effects});
+  const EvaporateApp({super.key, this.effects, this.readCatalog = true});
+
+  /// Показывать чтение каталога первые 300 мс. Тесты, которым скелет
+  /// не нужен, его выключают.
+  final bool readCatalog;
 
   /// Эффекты атмосферы. Не задано — приложение заводит свои, всё включено.
   /// Тесты передают [EvEffects.still], чтобы кадры не шли бесконечно.
@@ -60,6 +69,89 @@ class _EvaporateAppState extends State<EvaporateApp> {
   final _settings = EvSettings();
   late final _ownEffects = widget.effects == null ? EvEffects() : null;
   final _shell = EvShellController();
+  final _navigator = GlobalKey<NavigatorState>();
+  late final _firstRun = EvFirstRunController(
+    onStep: _enterStep,
+    onExit: _leaveFlow,
+    read: widget.readCatalog,
+  );
+  Route<double>? _addRoute;
+
+  /// Вход на шаг первого запуска: куда смотреть и что открыть.
+  void _enterStep(EvFirstRunStep step) {
+    _shell.go(step.downloads ? EvSection.downloads : EvSection.library);
+    final open = _addRoute;
+    if (step != EvFirstRunStep.magnet && open != null && open.isActive) {
+      // Шаг пролистали стрелкой — диалог уходит вместе с ним.
+      _navigator.currentState?.removeRoute(open);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _navigator.currentContext;
+      if (context == null) return;
+      if (step == EvFirstRunStep.magnet) _askMagnet();
+      if (step == EvFirstRunStep.launch) {
+        showEvLaunchRitual(
+          context,
+          title: EvFirstRun.game.title,
+          stages: sampleLaunchStages,
+        );
+      }
+    });
+  }
+
+  /// Из сценария — в обычную библиотеку; открытый диалог закрывается.
+  void _leaveFlow() {
+    final open = _addRoute;
+    if (open != null && open.isActive) {
+      _navigator.currentState?.removeRoute(open);
+    }
+    _shell.go(EvSection.library);
+  }
+
+  /// Диалог «Добавить раздачу». «Скачать» ведёт в очередь, отказ —
+  /// обратно к пустой библиотеке.
+  Future<void> _askMagnet() async {
+    final navigator = _navigator.currentState;
+    if (navigator == null || _addRoute != null) return;
+    final drive = sampleDrives.first;
+    final route = evAddTorrentRoute(
+      game: EvFirstRun.game,
+      freeGb: drive.freeGb,
+      folder: '${drive.path}\\AshenVerge',
+    );
+    _addRoute = route;
+    final gb = await navigator.push(route);
+    _addRoute = null;
+    if (_firstRun.run?.step != EvFirstRunStep.magnet) return;
+    gb == null
+        ? _firstRun.go(EvFirstRunStep.installed)
+        : _firstRun.download(gb);
+  }
+
+  /// Клавиши сценария: `←` `→` листают. Из пустой библиотеки `Ctrl+V`
+  /// и `Ctrl+O` ведут к добавлению раздачи.
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    final run = _firstRun.run;
+    if (run != null && key == LogicalKeyboardKey.arrowRight) {
+      _firstRun.next();
+      return KeyEventResult.handled;
+    }
+    if (run != null && key == LogicalKeyboardKey.arrowLeft) {
+      _firstRun.previous();
+      return KeyEventResult.handled;
+    }
+    final paste =
+        HardwareKeyboard.instance.isControlPressed &&
+        (key == LogicalKeyboardKey.keyV || key == LogicalKeyboardKey.keyO);
+    final empty = run?.step.empty ?? _firstRun.catalog == EvCatalog.empty;
+    if (paste && empty && _shell.section == EvSection.library) {
+      _firstRun.go(EvFirstRunStep.magnet);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
 
   EvEffects get _effects => widget.effects ?? _ownEffects!;
 
@@ -86,6 +178,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
 
   @override
   void dispose() {
+    _firstRun.dispose();
     _settings.dispose();
     _shares.dispose();
     _friendsState.dispose();
@@ -113,6 +206,17 @@ class _EvaporateAppState extends State<EvaporateApp> {
             theme: _appearance.theme,
             themeAnimationDuration: EvMotion.screen,
             themeAnimationCurve: EvMotion.easeOut,
+            navigatorKey: _navigator,
+            // Полоса сценария — над всеми маршрутами, и над диалогом тоже:
+            // `z-index` у неё в прототипе выше, чем у диалога.
+            builder: (context, child) => Focus(
+              onKeyEvent: _onKey,
+              child: ListenableBuilder(
+                listenable: _firstRun,
+                builder: (context, _) =>
+                    _FlowLayer(controller: _firstRun, child: child!),
+              ),
+            ),
             home: ListenableBuilder(
               listenable: Listenable.merge([
                 _state,
@@ -121,6 +225,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
                 _friendsState,
                 _shares,
                 _settings,
+                _firstRun,
               ]),
               builder: (context, _) => _Home(
                 shell: _shell,
@@ -133,6 +238,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
                 friendsState: _friendsState.value,
                 onFriends: (next) => _friendsState.value = next,
                 settings: _settings,
+                firstRun: _firstRun,
                 shares: _shares.value,
                 onShare: (share, on) => _shares.value = on
                     ? {..._shares.value, share}
@@ -158,6 +264,7 @@ class _Home extends StatelessWidget {
     required this.friendsState,
     required this.onFriends,
     required this.settings,
+    required this.firstRun,
     required this.shares,
     required this.onShare,
   });
@@ -190,6 +297,9 @@ class _Home extends StatelessWidget {
   /// Всё, что выбрано в «Настройках».
   final EvSettings settings;
 
+  /// Первый запуск и каталог — состояние окна.
+  final EvFirstRunController firstRun;
+
   /// Что видят друзья — тумблеры в профиле.
   final Set<EvShare> shares;
 
@@ -214,9 +324,41 @@ class _Home extends StatelessWidget {
     onQuit: () => onState(EvHeroState.ready),
   );
 
+  /// Очередь первого запуска: одна раздача первой игры в фазе шага,
+  /// до неё и после — пусто.
+  EvDownloads _firstQueue(EvFirstRun run) {
+    final t = run.torrent;
+    return EvDownloads(
+      torrents: [?t],
+      queue: const [],
+      slots: settings.slots,
+      peakKb: t?.peakKb ?? 0,
+      toDiskShare: .92,
+    );
+  }
+
   /// Плашки верхней полосы читают оба состояния окна. Левая — всегда
   /// приём, и он складывается из раздач, а не пишется отдельным числом.
-  List<EvPill> _pills(EvDownloads queue) => switch (state) {
+  /// В первом запуске правая — что с движком на этом шаге.
+  List<EvPill> _pills(EvDownloads queue) {
+    final engine =
+        firstRun.run?.engine ??
+        (firstRun.catalog == EvCatalog.reading
+            ? ('Читаем каталог', EvStatus.busy)
+            : null);
+    if (engine != null && state != EvHeroState.offline) {
+      return [
+        EvPill(
+          formatRate(queue.downKb, digits: 1),
+          status: queue.downKb == 0 ? EvStatus.idle : EvStatus.busy,
+        ),
+        EvPill(engine.$1, status: engine.$2),
+      ];
+    }
+    return _statePills(queue);
+  }
+
+  List<EvPill> _statePills(EvDownloads queue) => switch (state) {
     EvHeroState.offline => const [
       EvPill('Нет сети', status: EvStatus.idle),
       EvPill('Движок на паузе', status: EvStatus.idle),
@@ -267,7 +409,10 @@ class _Home extends StatelessWidget {
     final appearance = EvAppearanceScope.of(context);
     // Предел одновременных загрузок — из настроек: лишние раздачи ждут
     // в очереди, и друзья по ним не раздают.
-    final queue = sampleDownloadsFor(downloads).withSlots(settings.slots);
+    final run = firstRun.run;
+    final queue = run == null
+        ? sampleDownloadsFor(downloads).withSlots(settings.slots)
+        : _firstQueue(run);
     final offline = state == EvHeroState.offline;
     final friends = sampleFriendsFor(
       friendsState,
@@ -323,12 +468,27 @@ class _Home extends StatelessWidget {
       ],
       pageBuilder: (context, section) => switch (section) {
         EvSection.library => LibraryPage(
-          state: state,
+          // В первом запуске библиотека, герой и его состояние — шага.
+          state: switch (run?.step) {
+            null => state,
+            EvFirstRunStep.installing => EvHeroState.installing,
+            _ => EvHeroState.ready,
+          },
+          catalog: run == null
+              ? firstRun.catalog
+              : run.step.empty
+              ? EvCatalog.empty
+              : EvCatalog.normal,
+          heroContent:
+              run != null && run.step.index >= EvFirstRunStep.firstGame.index
+              ? run.hero
+              : null,
+          onAdd: () => firstRun.go(EvFirstRunStep.magnet),
           onInstall: () => onState(EvHeroState.installing),
           onQuit: () => onState(EvHeroState.ready),
-          games: sampleLibrary,
-          hero: sampleHero,
-          sessions: sampleSessions,
+          games: run?.library ?? sampleLibrary,
+          hero: run?.library.firstOrNull ?? sampleHero,
+          sessions: run == null ? sampleSessions : const [],
           // Правая колонка библиотеки показывает тех же друзей, что
           // и раздел, — и так же гаснет без сети.
           friends: friends.people.take(4).toList(),
@@ -377,6 +537,9 @@ class _Home extends StatelessWidget {
           onSaves: onSaves,
           friendsState: friendsState,
           onFriends: onFriends,
+          catalog: firstRun.catalog,
+          onCatalog: (c) => firstRun.catalog = c,
+          onFirstRun: () => firstRun.go(EvFirstRunStep.installed),
           onFriendPage: (p) => shell.open(EvSection.friends, p, crumb: p.name),
         ),
         EvSection.profile => ProfilePage(
@@ -385,6 +548,50 @@ class _Home extends StatelessWidget {
           onShare: onShare,
         ),
       },
+    );
+  }
+}
+
+/// Слой над маршрутами: окно и, пока идёт сценарий, его полоса внизу.
+class _FlowLayer extends StatelessWidget {
+  const _FlowLayer({required this.controller, required this.child});
+
+  final EvFirstRunController controller;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final run = controller.run;
+    if (run == null) return child;
+    final width = MediaQuery.sizeOf(context).width;
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 16,
+          child: Center(
+            child: SizedBox(
+              width: (width - 24).clamp(0, EvFlowBar.width),
+              // Над навигатором нет Material: без него у текста не было
+              // бы стиля, и Flutter подчеркнул бы его жёлтым.
+              child: Material(
+                type: MaterialType.transparency,
+                child: EvFlowBar(
+                  index: run.step.index,
+                  count: EvFirstRunStep.values.length,
+                  title: run.step.title,
+                  detail: run.detail,
+                  onPrevious: controller.previous,
+                  onNext: controller.next,
+                  onExit: controller.exit,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

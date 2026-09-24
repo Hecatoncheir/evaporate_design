@@ -5,6 +5,7 @@ import '../design/appearance.dart';
 import '../design/effects.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
+import '../first_run/first_run_data.dart';
 import '../downloads/download_data.dart';
 import '../friends/friends_data.dart';
 import '../gallery/gallery_page.dart';
@@ -43,6 +44,9 @@ class SettingsPage extends StatefulWidget {
     required this.onFriends,
     this.hour,
     this.onFriendPage,
+    this.catalog = EvCatalog.normal,
+    this.onCatalog,
+    this.onFirstRun,
   });
 
   final EvSettings settings;
@@ -82,6 +86,14 @@ class SettingsPage extends StatefulWidget {
   /// Открыть страницу друга — два состояния прототипа: открытый профиль
   /// и закрытый.
   final ValueChanged<EvPerson>? onFriendPage;
+
+  /// Что с каталогом игр: обычный, пустой, читается.
+  final EvCatalog catalog;
+
+  final ValueChanged<EvCatalog>? onCatalog;
+
+  /// Пройти первый запуск с начала.
+  final VoidCallback? onFirstRun;
 
   /// Уже этого окна колонка разделов встаёт над ними и перестаёт
   /// быть липкой — `max-width:880px` в прототипе.
@@ -325,11 +337,35 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
     final friendPage = w.onFriendPage;
+    final onCatalog = w.onCatalog;
+    final onFirstRun = w.onFirstRun;
     return EvSettingSection(
       id: 'dev',
       title: 'Разработка',
       icon: EvIcons.verified,
       panels: [
+        if (onFirstRun != null)
+          EvSettingPanel(
+            label: 'Сценарий',
+            note:
+                'Восемь шагов от пустой библиотеки до запущенной игры. '
+                'Листаются стрелками ← → и кнопками внизу окна',
+            body: (_) => _StateRow(
+              name: 'Первый запуск',
+              hint: '8 шагов · пусто → игра',
+              selected: false,
+              onTap: onFirstRun,
+            ),
+          ),
+        if (onCatalog != null)
+          states(
+            'Каталог',
+            'Пустой каталог — точка входа, а не заглушка. Чтение каталога '
+                'при каждом старте длится 300 мс',
+            [for (final v in EvCatalog.values) (v, v.label, v.hint)],
+            w.catalog,
+            onCatalog,
+          ),
         states(
           'Состояние библиотеки',
           'Движка ещё нет: состояния героя переключаются здесь. '

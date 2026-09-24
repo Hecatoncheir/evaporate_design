@@ -392,7 +392,7 @@ class _EvFriendRowState extends State<EvFriendRow> {
                   width: 86,
                   child: Text(
                     '${p.common} '
-                  '${ruPlural(p.common, 'общая', 'общие', 'общих')}',
+                    '${ruPlural(p.common, 'общая', 'общие', 'общих')}',
                     textAlign: TextAlign.right,
                     style: ev.text.data.copyWith(fontSize: 10.5),
                   ),

@@ -155,7 +155,7 @@ void main() {
 
       expect(find.byType(EvTorrentRow), findsNWidgets(2));
       expect(
-        find.text('11.8 ГБ / 28.8 ГБ · осталось 4 ч 12 мин'),
+        find.text('11.8 ГБ / 28.8 ГБ · осталось 7 ч 59 мин'),
         findsOneWidget,
       );
       expect(find.text('41%'), findsOneWidget);

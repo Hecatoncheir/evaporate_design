@@ -34,3 +34,13 @@ String formatThousands(int n) {
   }
   return out.toString();
 }
+
+/// Сколько осталось качать [gb] гигабайт на скорости [kbPerSecond]:
+/// «осталось 7 ч 54 мин», «осталось 12 мин». Время — следствие скорости,
+/// а не число рядом с ней.
+String formatEta(double gb, int kbPerSecond) {
+  if (kbPerSecond <= 0) return 'время не определено';
+  final minutes = (gb * 1e6 / kbPerSecond / 60).round();
+  final h = minutes ~/ 60, m = minutes % 60;
+  return h == 0 ? 'осталось $m мин' : 'осталось $h ч $m мин';
+}

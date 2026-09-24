@@ -1,6 +1,7 @@
 import '../downloads/download_data.dart';
 import '../widgets/ev_icon.dart';
 import '../widgets/ev_surfaces.dart';
+import '../util/units.dart';
 import 'sample_data.dart';
 
 // Содержимое раздела «Загрузки» — то же, что `DL` в прототипе. Раздачи
@@ -27,7 +28,9 @@ final _orbita = EvTorrent(
   peakKb: 7000,
   seeds: 27,
   peers: 31,
-  eta: 'осталось 4 ч 12 мин',
+  // Из остатка и скорости: 17 ГБ на 592 КБ/с — почти восемь часов,
+  // а не «4 ч 12 мин», как стояло в прототипе.
+  eta: formatEta(28.8 - 11.8, 592),
 );
 
 final _halcyon = EvTorrent(

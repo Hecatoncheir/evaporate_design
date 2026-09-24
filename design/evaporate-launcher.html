@@ -699,7 +699,7 @@ h1.title b{font-weight:800;display:block}
   margin:0;font-family:var(--font-dsp);font-weight:300;
   font-size:clamp(24px,4vw,40px);letter-spacing:-.025em;line-height:1.02;text-wrap:balance;
 }
-.empty h2 b{font-weight:800}
+.empty h2 b{font-weight:800;display:block}
 .empty p{color:var(--ink-2);max-width:48ch;margin:0;font-size:14.5px}
 .empty .acts{display:flex;gap:11px;flex-wrap:wrap;justify-content:center;margin-top:2px}
 .drop{
@@ -3254,7 +3254,7 @@ $("#contRows").innerHTML = ["depth","crimson","wolf"].map(id=>{const g=byId(id);
 /* ── downloads ─────────────────────────────────────────────── */
 const TOR=[
   {g:"orbita", name:"orbita-7 · Полное издание [RU+ENG] (2026) v5.2 + 3 DLC", path:"D:\\Игры\\Orbita7\\ · 24 файла · rutracker-6904761",
-   pct:41,size:"11.8 ГБ / 28.8 ГБ",dn:"592 КБ/с",up:"1.6 МБ/с",peak:"7.0 МБ/с",seeds:27,peers:31,eta:"осталось 4 ч 12 мин",cool:false},
+   pct:41,size:"11.8 ГБ / 28.8 ГБ",dn:"592 КБ/с",up:"1.6 МБ/с",peak:"7.0 МБ/с",seeds:27,peers:31,eta:"осталось 7 ч 59 мин",cool:false},
   {g:"halc2", name:"neon-halcyon-echo · дополнение «Эхо» v1.0", path:"D:\\Игры\\NeonHalcyon\\dlc · 6 файлов · rutracker-6913022",
    pct:66,size:"6.2 ГБ / 9.4 ГБ",dn:"1.03 МБ/с",up:"340 КБ/с",peak:"11.0 МБ/с",seeds:81,peers:82,eta:"осталось 51 мин",cool:true},
 ];
@@ -3326,7 +3326,9 @@ $("#torrents").innerHTML = TOR.map(t=>`
     const[lx,ly]=pt(N-1);tipC.setAttribute("cx",lx-1);tipC.setAttribute("cy",ly);
     const v=hist[N-1];
     $("#bigRate").innerHTML=v.toFixed(2)+"<u>МБ/с</u>";
-    $("#netRate").textContent=v.toFixed(1)+" МБ/с";
+    /* сценарий первого запуска переписывает плашку целиком — тогда
+       числа в ней уже нет, и график каждую секунду падал бы */
+    const nr=$("#netRate"); if(nr) nr.textContent=v.toFixed(1)+" МБ/с";
   }
   draw();
   if(!RM) setInterval(()=>{hist.push(clamp(hist[N-1]+(Math.random()-.48)*.7,.25,4.2));hist.shift();draw()},1100);
@@ -4152,7 +4154,7 @@ function torRow(t){
 const BASE_A = {g:"orbita", name:"orbita-7 · Полное издание [RU+ENG] (2026) v5.2 + 3 DLC",
   path:"D:\\Игры\\Orbita7\\ · 24 файла · rutracker-6904761",
   pct:41, size:"11.8 ГБ / 28.8 ГБ", dn:"592 КБ/с", up:"1.6 МБ/с", peak:"7.0 МБ/с",
-  seeds:27, peers:31, eta:"осталось 4 ч 12 мин"};
+  seeds:27, peers:31, eta:"осталось 7 ч 59 мин"};
 const BASE_B = {g:"halc2", name:"neon-halcyon-echo · дополнение «Эхо» v1.0",
   path:"D:\\Игры\\NeonHalcyon\\dlc · 6 файлов · rutracker-6913022",
   pct:66, size:"6.2 ГБ / 9.4 ГБ", dn:"1.03 МБ/с", up:"340 КБ/с", peak:"11.0 МБ/с",
@@ -4535,6 +4537,12 @@ $$(".filerow", addDlg).forEach(r => r.onclick = () => {
   r.setAttribute("aria-pressed", String(r.getAttribute("aria-pressed") !== "true"));
   addSum();
 });
+/* части раздачи — те же, что в карточке игры: доли от полного размера */
+cardData(byId("ashen")).parts.forEach((part, i) => {
+  const r = $$(".filerow", addDlg)[i];
+  r.dataset.sz = part.sz;
+  $(".sz", r).textContent = part.sz.toFixed(1).replace(".", ",") + " ГБ";
+});
 addSum();
 function openAdd(){ addDlg.classList.add("on"); }
 function closeAdd(){ addDlg.classList.remove("on"); }
@@ -4549,15 +4557,22 @@ const FIRST = {
   path:"D:\\Игры\\AshenVerge\\ · 118 421 файл · magnet 9f2c…a41b",
   peak:"2.1 МБ/с", seeds:27, peers:31
 };
-const FIRST_START = mix(FIRST, {pct:0, dn:"218 КБ/с", up:"0 Б/с",
-  size:"0.3 ГБ / 68.4 ГБ", eta:"оцениваем скорость"});
-const FIRST_MID = mix(FIRST, {pct:41, dn:"1.42 МБ/с", up:"612 КБ/с",
-  size:"28.0 ГБ / 68.4 ГБ", eta:"осталось 4 ч 12 мин"});
-const FIRST_VERIFY = mix(FIRST, {pct:88, state:"arc", barClass:"arc",
-  dn:"1.10 МБ/с", up:"1.9 МБ/с", size:"60.2 ГБ / 68.4 ГБ", eta:"проверка 88 %",
-  alert:{kind:"arc", icon:"verified", h:"Проверяем целостность",
-    d:"Хеши сходятся на 88 %. Проверка идёт параллельно с докачкой — ждать отдельно не придётся.",
-    acts:[{label:"Журнал", icon:"info"}]}});
+/* размер — то, что выбрали в диалоге, а не всегда 68.4 ГБ; время до конца
+   считается из остатка и скорости: «4 ч 12 мин» стояло рядом с 1.42 МБ/с,
+   на которых 40 ГБ качаются почти восемь часов */
+const gbs = v => v.toFixed(1).replace(".", ",") + " ГБ";
+const eta = (gb, kb) => { const m = Math.round(gb * 1e6 / kb / 60), h = Math.floor(m / 60);
+  return h ? `осталось ${h} ч ${m % 60} мин` : `осталось ${m % 60} мин`; };
+const firstStart = () => { const t = addSum();
+  return mix(FIRST, {pct:0, dn:"218 КБ/с", up:"0 Б/с", size:`${gbs(t * .004)} / ${gbs(t)}`, eta:"оцениваем скорость"}); };
+const firstMid = () => { const t = addSum();
+  return mix(FIRST, {pct:41, dn:"1.42 МБ/с", up:"612 КБ/с", size:`${gbs(t * .41)} / ${gbs(t)}`, eta:eta(t * .59, 1420)}); };
+const firstVerify = () => { const t = addSum();
+  return mix(FIRST, {pct:88, state:"arc", barClass:"arc",
+    dn:"1.10 МБ/с", up:"1.9 МБ/с", size:`${gbs(t * .88)} / ${gbs(t)}`, eta:"проверка 88 %",
+    alert:{kind:"arc", icon:"verified", h:"Проверяем целостность",
+      d:"Хеши сходятся на 88 %. Проверка идёт параллельно с докачкой — ждать отдельно не придётся.",
+      acts:[{label:"Журнал", icon:"info"}]}}); };
 
 /* ── шаги ──────────────────────────────────────────────────── */
 const FLOW = [
@@ -4568,15 +4583,15 @@ const FLOW = [
     applyState("lib-empty"); openAdd();
   }},
   {h:"Загрузка встала в очередь", d:"первые части пошли, скорость ещё оценивается", run(){
-    closeAdd(); applyState("dl-default"); renderDL([FIRST_START]);
+    closeAdd(); applyState("dl-default"); renderDL([firstStart()]);
     pills[0].innerHTML = `<span class="dot busy"></span>218 КБ/с`;
     pills[1].innerHTML = `<span class="dot busy"></span>Разгоняемся`;
   }},
-  {h:"Качается", d:"41 % · 28.0 ГБ из 68.4 ГБ · осталось 4 ч 12 мин", run(){
-    closeAdd(); applyState("dl-default"); renderDL([FIRST_MID]);
+  {h:"Качается", get d(){ const m = firstMid(); return `41 % · ${m.size.replace(" / ", " из ")} · ${m.eta}`; }, run(){
+    closeAdd(); applyState("dl-default"); renderDL([firstMid()]);
   }},
   {h:"Проверка файлов", d:"хеши сходятся, докачка идёт параллельно", run(){
-    closeAdd(); applyState("dl-default"); renderDL([FIRST_VERIFY]);
+    closeAdd(); applyState("dl-default"); renderDL([firstVerify()]);
     pills[1].innerHTML = `<span class="dot busy"></span>Проверка 88 %`;
   }},
   {h:"Установка на диск", d:"распаковка 41 % · можно свернуть окно", run(){
@@ -4589,7 +4604,7 @@ const FLOW = [
       eyebrow:"Готово · установлена только что",
       title:"Пепельный<b>Предел</b>",
       blurb:"Первая игра в вашей библиотеке. Удерживайте «Играть» — 620 мс, чтобы запустить её не случайно.",
-      chips:[["Новое",1],["v2.4.1"],["68.4 ГБ"],["Action-RPG"]],
+      chips:[["Новое",1],["v2.4.1"],[gbs(addSum())],["Action-RPG"]],
       cta:"play"
     });
     pills[1].innerHTML = `<span class="dot"></span>Движок готов`;
