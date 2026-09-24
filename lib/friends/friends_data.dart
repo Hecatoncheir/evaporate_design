@@ -36,6 +36,7 @@ class EvPerson {
     required this.tint,
     required this.common,
     required this.traffic,
+    this.female = false,
     this.status = EvPersonStatus.offline,
     this.game,
     this.session,
@@ -51,6 +52,27 @@ class EvPerson {
 
   /// Сколько вы раздали друг другу за всё время.
   final EvTraffic traffic;
+
+  /// Род — для «раздала вам», «она не показывает», «это её выбор».
+  final bool female;
+
+  /// Имя без инициала фамилии: «Антон».
+  String get firstName => name.split(' ').first;
+
+  /// «он» / «она».
+  String get he => female ? 'она' : 'он';
+
+  /// «его» / «её».
+  String get his => female ? 'её' : 'его';
+
+  /// После предлога: «от него» / «от неё».
+  String get fromHim => female ? 'неё' : 'него';
+
+  /// «ему» / «ей».
+  String get him => female ? 'ей' : 'ему';
+
+  /// Прошедшее время: «раздал» → «раздала».
+  String past(String verb) => female ? '$verbа' : verb;
 
   final EvPersonStatus status;
 

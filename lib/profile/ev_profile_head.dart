@@ -4,6 +4,9 @@ import 'package:flutter/widgets.dart';
 
 import '../art/ev_art.dart';
 import '../design/theme.dart';
+import '../design/tokens.dart';
+import '../friends/ev_avatar.dart';
+import '../widgets/ev_icon.dart';
 import '../widgets/ev_surfaces.dart';
 
 /// Шапка страницы игрока: широкий кадр, аватар, надглавие, имя в две
@@ -134,10 +137,23 @@ class EvProfileHead extends StatelessWidget {
 }
 
 /// Большой аватар шапки: инициалы на кольце из цветов облика.
+///
+/// У друга — его цвет вместо кольца и точка состояния в углу.
 class EvProfileAvatar extends StatelessWidget {
-  const EvProfileAvatar({super.key, required this.initials});
+  const EvProfileAvatar({
+    super.key,
+    required this.initials,
+    this.tint,
+    this.status,
+  });
 
   final String initials;
+
+  /// Цвет друга. `null` — своя страница, кольцо из цветов облика.
+  final EvAvatarTint? tint;
+
+  /// Точка состояния. `null` — без точки.
+  final Color? status;
 
   static const size = 84.0;
 
@@ -145,18 +161,24 @@ class EvProfileAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final ev = context.ev;
     final c = ev.colors;
-    return Container(
+    final disc = Container(
       width: size,
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        // conic-gradient(from 200deg…): у Flutter ноль — на трёх часах,
-        // у CSS — на двенадцати.
-        gradient: SweepGradient(
-          colors: [c.hot2, c.hot1, c.arc, c.hot2],
-          transform: const GradientRotation((200 - 90) * math.pi / 180),
-        ),
+        gradient: tint != null
+            ? LinearGradient(
+                begin: const Alignment(-.64, -.77),
+                end: const Alignment(.64, .77),
+                colors: evAvatarColors(c, tint!),
+              )
+            // conic-gradient(from 200deg…): у Flutter ноль — на трёх
+            // часах, у CSS — на двенадцати.
+            : SweepGradient(
+                colors: [c.hot2, c.hot1, c.arc, c.hot2],
+                transform: const GradientRotation((200 - 90) * math.pi / 180),
+              ),
         boxShadow: [
           BoxShadow(
             color: const Color.fromRGBO(255, 255, 255, .16),
@@ -178,6 +200,31 @@ class EvProfileAvatar extends StatelessWidget {
         ),
       ),
     );
+    if (status == null) return disc;
+    return SizedBox.square(
+      dimension: size,
+      child: Stack(
+        children: [
+          disc,
+          Positioned(
+            right: 3,
+            bottom: 3,
+            child: Container(
+              width: 17,
+              height: 17,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: status,
+                border: Border.all(color: c.sub, width: 3),
+                boxShadow: status == c.ink4
+                    ? null
+                    : [BoxShadow(color: status!, blurRadius: 12)],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -192,7 +239,14 @@ class EvStat {
     this.tail,
     required this.sub,
     this.hot = false,
-  });
+  }) : hidden = false;
+
+  /// Скрытое остаётся плашкой: на месте числа замок и «скрыто».
+  const EvStat.hidden(this.label, {required this.sub})
+    : value = 'скрыто',
+      tail = null,
+      hot = false,
+      hidden = true;
 
   final String label;
   final String value;
@@ -202,6 +256,7 @@ class EvStat {
 
   final String sub;
   final bool hot;
+  final bool hidden;
 }
 
 /// Ряд плашек сводки. Колонки от 178 px: на широком окне все в ряд, на
@@ -309,24 +364,45 @@ class _StatTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(text: stat.value),
-                if (stat.tail != null)
-                  TextSpan(
-                    text: '  ${stat.tail}',
-                    style: ev.text.mono(
-                      ev.text.data,
-                      size: value.fontSize! * .38,
+          if (stat.hidden)
+            SizedBox(
+              height: value.fontSize,
+              child: Row(
+                children: [
+                  EvIcon(EvIcons.lock, size: 16, color: c.ink4),
+                  const SizedBox(width: 7),
+                  Text(
+                    stat.value,
+                    style: value.copyWith(
+                      fontSize: (MediaQuery.sizeOf(context).width * .02).clamp(
+                        18.0,
+                        22.0,
+                      ),
                       color: c.ink4,
                     ),
                   ),
-              ],
+                ],
+              ),
+            )
+          else
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: stat.value),
+                  if (stat.tail != null)
+                    TextSpan(
+                      text: '  ${stat.tail}',
+                      style: ev.text.mono(
+                        ev.text.data,
+                        size: value.fontSize! * .38,
+                        color: c.ink4,
+                      ),
+                    ),
+                ],
+              ),
+              maxLines: 1,
+              style: value.copyWith(color: stat.hot ? c.hot2 : c.ink),
             ),
-            maxLines: 1,
-            style: value.copyWith(color: stat.hot ? c.hot2 : c.ink),
-          ),
           const SizedBox(height: 9),
           Text(
             stat.sub,

@@ -99,4 +99,7 @@ abstract final class EvIcons {
 
   /// Скопировать: код для друзей — в буфер обмена.
   static const copy = 'copy';
+
+  /// Скрыто: друг выключил это в своём профиле.
+  static const lock = 'lock';
 }

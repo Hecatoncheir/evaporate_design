@@ -2681,7 +2681,7 @@ h1.title b{font-weight:800;display:block}
 
         <div class="dl-head">
           <div class="panel">
-            <div class="p-lab">Общие игры</div>
+            <div class="p-lab" style="display:flex">Общие игры<span id="fpCommonCnt" style="margin-left:auto;letter-spacing:0"></span></div>
             <div class="cg-lg" style="margin-top:12px">
               <span><i style="background:var(--hot-2)"></i>вы</span>
               <span><i style="background:var(--cool)"></i><b id="fpWho2"></b></span>
@@ -4815,16 +4815,16 @@ const AV = [
 ];
 const PEOPLE = [
   {i:"АК", n:"Антон К.",  st:"play", g:"ashen",   t:"2 ч 14 мин · Глава 5",        common:11},
-  {i:"МС", n:"Мира С.",   st:"play", g:"crimson", t:"41 мин · Излом, ход 42",      common:9},
-  {i:"ЛП", n:"Лена П.",   st:"play", g:"wolf",    t:"5 ч 02 мин · Чёрная река",    common:10},
+  {i:"МС", n:"Мира С.", f:1,   st:"play", g:"crimson", t:"41 мин · Излом, ход 42",      common:9},
+  {i:"ЛП", n:"Лена П.", f:1,   st:"play", g:"wolf",    t:"5 ч 02 мин · Чёрная река",    common:10},
   {i:"ДР", n:"Дан Р.",    st:"on",   was:"в сети",                                  common:6},
-  {i:"НТ", n:"Ника Т.",   st:"on",   was:"в сети",                                  common:8},
-  {i:"ЮС", n:"Юля С.",    st:"on",   was:"в сети",                                  common:5},
+  {i:"НТ", n:"Ника Т.", f:1,   st:"on",   was:"в сети",                                  common:8},
+  {i:"ЮС", n:"Юля С.", f:1,    st:"on",   was:"в сети",                                  common:5},
   {i:"ИВ", n:"Игорь В.",  st:"off",  was:"был вчера в 22:10",                       common:9},
   {i:"СМ", n:"Саша М.",   st:"off",  was:"3 дня назад",                             common:4},
   {i:"РБ", n:"Рома Б.",   st:"off",  was:"неделю назад",                            common:7},
   {i:"МЛ", n:"Марк Л.",   st:"off",  was:"месяц назад",                             common:2},
-  {i:"ВГ", n:"Вера Г.",   st:"off",  was:"месяц назад",                             common:3},
+  {i:"ВГ", n:"Вера Г.", f:1,   st:"off",  was:"месяц назад",                             common:3},
   {i:"ПК", n:"Пётр К.",   st:"off",  was:"два месяца назад",                        common:1}
 ];
 PEOPLE.forEach((p, i) => p.av = AV[i % AV.length]);
@@ -4883,7 +4883,7 @@ function renderFriends(mode){
               <span class="to">раздаёт <b>${byId(s.g).t}</b> · ${share} % из ${kbs(s.ofKb)}</span></span>
             <span class="contrib"><i style="width:${share}%"></i><u style="width:${100 - share}%"></u></span>
           </span>
-          <span class="rate"><span class="v">${kbs(s.kb)}</span><span class="k">от него</span></span>
+          <span class="rate"><span class="v">${kbs(s.kb)}</span><span class="k">от ${PEOPLE[s.p].f ? "неё" : "него"}</span></span>
         </div>`;
       }).join("");
 
@@ -4908,7 +4908,7 @@ function renderFriends(mode){
       ${frAv(p)}
       <span class="nm">${p.n}</span>
       <span class="st">${line}</span>
-      <span class="common">${p.common} общих</span>
+      <span class="common">${p.common} ${p.common % 10 === 1 && p.common % 100 !== 11 ? "общая" : p.common % 10 >= 2 && p.common % 10 <= 4 && (p.common % 100 < 12 || p.common % 100 > 14) ? "общие" : "общих"}</span>
       <span class="go"><button class="mini"><svg><use href="#i-note"/></svg>Написать</button></span>
     </div>`;
   }).join("");
@@ -5632,38 +5632,44 @@ const FP = {
   0: {                                   /* Антон К. — открыт полностью */
     since: "в друзьях с марта 2025",
     hours: 2140, ach: [96, 240],
-    gave: "214 ГБ", got: "96 ГБ", ratio: 69,
-    common: [["ashen", 284, 412], ["crimson", 196, 88], ["wolf", 312, 240], ["depth", 64, 121], ["storm", 148, 36]],
+    /* его часы; ваши берутся из библиотеки, как в карточке игры */
+    common: [["ashen", 412], ["crimson", 88], ["wolf", 240], ["depth", 121], ["storm", 36]],
     shows: {playing: true, hours: true, seeding: true},
-    only: [["Полный круг", "Пепельный Предел · все побочные линии"],
-           ["Глубже нельзя", "Глубина 9 · без единого всплытия"],
-           ["Первый снег", "Волчья Тропа · зимовье в одиночку"]]
+    /* только то, чего нет у вас: в карточках этих игр — неполученные */
+    only: [["ashen", 4], ["depth", 3], ["wolf", 4]]
   },
   6: {                                   /* Игорь В. — закрыл часы и достижения */
     since: "в друзьях с ноября 2024",
     hours: null, ach: null,
-    gave: "12 ГБ", got: "204 ГБ", ratio: 6,
-    common: [["ashen", 284, null], ["lunar", 92, null], ["glass", 41, null]],
+    common: [["ashen", null], ["lunar", null], ["glass", null]],
     shows: {playing: false, hours: false, seeding: true},
     only: null
   }
 };
+/* раздача между вами в обе стороны: он вам, вы ему */
+const TRAFFIC = {0: [214, 96], 6: [12, 204]};
 /* у остальных друзей профиль выводится из их же данных, а не копируется */
 function fpData(i){
-  if(FP[i]) return FP[i];
   const p = PEOPLE[i], r = rng32(i * 7919 + 13);
-  const pool = GAMES.filter(g => g.state === "ready").slice(0, Math.min(5, p.common));
   /* десятки гигабайт, а не сотни: иначе друзья отдали бы вам больше,
      чем вы вообще получили (581 ГБ в профиле) */
   const gave = 4 + Math.round(r() * 36), got = 4 + Math.round(r() * 36);
+  const [g0, g1] = TRAFFIC[i] || [gave, got];
+  const base = {gave: g0, got: g1, share: g0 / (g0 + g1)};
+  if(FP[i]) return {...FP[i], ...base,
+    common: FP[i].common.map(([id, his]) => [id, cardData(byId(id)).hours, his])};
+  const rest = 400 + Math.round(r() * 1600), ach = 20 + Math.round(r() * 90);
+  const pool = GAMES.filter(g => g.state === "ready").slice(0, Math.min(5, p.common));
+  const common = pool.map(g => { const h = cardData(g).hours;
+    return [g.id, h, Math.max(4, Math.round(h * (.4 + r() * 1.6)))]; });
   return {
+    ...base,
     since: "в друзьях с 2025 года",
-    hours: 400 + Math.round(r() * 1600),
-    ach: [20 + Math.round(r() * 90), 240],
-    gave: gave + " ГБ", got: got + " ГБ",
-    ratio: Math.round(gave / (gave + got) * 100),
-    common: pool.map(g => { const h = cardData(g).hours;
-      return [g.id, h, Math.max(4, Math.round(h * (.4 + r() * 1.6)))]; }),
+    /* общие игры и всё остальное: иначе общие могли бы оказаться больше,
+       чем он наиграл вообще (у Лены было 922 ч в общих при 898 всего) */
+    hours: common.reduce((s, c) => s + c[2], 0) + rest,
+    ach: [ach, 240],
+    common,
     shows: {playing: true, hours: true, seeding: true},
     only: null
   };
@@ -5671,7 +5677,7 @@ function fpData(i){
 /* кому вы отдали больше всего и сколько всего отдали друзьям —
    из той же раздачи в обе стороны, что на странице друга */
 (() => {
-  const given = PEOPLE.map((p, i) => [p, parseInt(fpData(i).got)]);
+  const given = PEOPLE.map((p, i) => [p, fpData(i).got]);
   $("#frGiven").textContent = given.reduce((s, [, gb]) => s + gb, 0) + " ГБ";
   $("#meSeeded").innerHTML = given.slice().sort((a, b) => b[1] - a[1]).slice(0, 3)
     .map(([p, gb]) => `<div class="frow">
@@ -5681,10 +5687,17 @@ function fpData(i){
 
 const scFp = $("#sc-fprofile");
 let fpI = 0;
+const ruN = (v, a, b, c) => {
+  const t = v % 100, o = v % 10;
+  return v + " " + (t > 10 && t < 20 ? c : o === 1 ? a : o >= 2 && o <= 4 ? b : c);
+};
 
 function fpRender(i){
   const p = PEOPLE[i], d = fpData(i);
   fpI = i;
+  /* род: пятеро из двенадцати — «она», а не «он» */
+  const he = p.f ? "она" : "он", him = p.f ? "ей" : "ему", his = p.f ? "её" : "его",
+        from = p.f ? "неё" : "него", gave = p.f ? "раздала" : "раздал", name = p.n.split(" ")[0];
   const playing = p.st === "play" && d.shows.playing;
   const art = playing ? byId(p.g) : GAMES[0];
 
@@ -5696,43 +5709,54 @@ function fpRender(i){
   $("#fpEye").textContent = playing ? `В игре · ${byId(p.g).t} · ${p.t}`
     : p.st === "off" ? p.was : "В сети";
   $("#fpChips").innerHTML = [
-    [d.since, 1], [`${p.common} общих игр`], [d.shows.seeding ? `раздал вам ${d.gave}` : "раздача скрыта"]
+    [d.since, 1], [ruN(p.common, "общая игра", "общие игры", "общих игр")],
+    [d.shows.seeding ? `${gave} вам ${d.gave} ГБ` : "раздача скрыта"]
   ].map(([t, hot]) => `<span class="chip${hot ? " hot" : ""}">${t}</span>`).join("");
-  $("#fpWho2").textContent = p.n.split(" ")[0].toLowerCase();
+  $("#fpWho2").textContent = name.toLowerCase();
 
-  /* плашки: скрытое остаётся плашкой, а не исчезает */
+  /* плашки: первая — сколько он раздал вам, а не его часы; скрытое
+     остаётся плашкой, а не исчезает */
   const lock = `<svg><use href="#i-lock"/></svg>скрыто`;
   $("#fpStats").innerHTML = `
+    <div class="mstat hot"><div class="k">${gave} вам</div><div class="v">${d.gave} ГБ</div>
+      <div class="s">вы ${him} — ${d.got} ГБ</div></div>
     <div class="mstat${d.hours ? "" : " hid"}"><div class="k">Часов в играх</div>
       <div class="v">${d.hours ? d.hours.toLocaleString("ru-RU") : lock}</div>
-      <div class="s">${d.hours ? "за всё время" : "он не показывает часы"}</div></div>
+      <div class="s">${d.hours ? "за всё время" : `${he} не показывает часы`}</div></div>
     <div class="mstat"><div class="k">Общих игр</div><div class="v">${p.common}</div>
       <div class="s">из ${GAMES.length} в вашей библиотеке</div></div>
-    <div class="mstat hot"><div class="k">Раздал вам</div><div class="v">${d.gave}</div>
-      <div class="s">вы ему — ${d.got}</div></div>
     <div class="mstat${d.ach ? "" : " hid"}"><div class="k">Достижений</div>
       <div class="v">${d.ach ? d.ach[0] + "<u>/ " + d.ach[1] + "</u>" : lock}</div>
-      <div class="s">${d.ach ? Math.round(d.ach[0] / d.ach[1] * 100) + " % от всех" : "он не показывает достижения"}</div></div>`;
+      <div class="s">${d.ach ? Math.round(d.ach[0] / d.ach[1] * 100) + " % от всех" : `${he} не показывает достижения`}</div></div>`;
 
-  /* сейчас играет */
-  $("#fpNowCnt").textContent = playing ? "" : "скрыто";
+  /* сейчас играет. Скрыл игру и просто не играет — разные вещи */
+  $("#fpNowCnt").textContent = playing ? "" : d.shows.playing ? "не играет" : "скрыто";
+  const box = (ic, h, t) => `<div class="hidden-box"><svg><use href="#${ic}"/></svg>
+         <span class="tx"><span class="h">${h}</span><span class="d">${t}</span></span></div>`;
   $("#fpNow").innerHTML = playing ? `
     <div class="fp-now">
       <span class="art" style="background-image:url(${byId(p.g).cover})"></span>
       <span class="in">
-        <span class="tx"><span class="g">${byId(p.g).t}</span><span class="s">${p.t} · та же глава, что у вас</span></span>
+        <span class="tx"><span class="g">${byId(p.g).t}</span><span class="s">${p.t}${p.g === GAMES[0].id ? " · та же глава, что у вас" : ""}</span></span>
         <span class="acts">
           <button class="play" style="height:42px;font-size:13px"><svg><use href="#i-play"/></svg><span>Присоединиться</span></button>
           <button class="ghost" style="height:42px" data-id="${p.g}"><svg><use href="#i-info"/></svg>Об игре</button>
         </span>
       </span>
     </div>`
-    : `<div class="hidden-box"><svg><use href="#i-lock"/></svg>
-         <span class="tx"><span class="h">${p.n.split(" ")[0]} не показывает, во что играет</span>
-         <span class="d">Это выключается одним тумблером в своём профиле. Вы увидите его в сети, но не увидите игру.</span></span></div>`;
+    : !d.shows.playing
+    ? box("i-lock", `${name} не показывает, во что играет`,
+          `Это выключается одним тумблером в своём профиле. Вы увидите ${his} в сети, но не увидите игру.`)
+    : p.st === "off"
+    ? box("i-friends", `${name} не в сети`, `${p.was[0].toUpperCase() + p.was.slice(1)}. Когда ${he} запустит игру, она появится здесь.`)
+    : box("i-friends", `${name} в сети, но не в игре`, `Когда ${he} запустит игру, она появится здесь.`);
 
-  /* общие игры — расходящееся сравнение */
-  $("#fpCommon").innerHTML = d.common.map(([id, mine, his]) => {
+  /* общие игры — расходящееся сравнение, самые долгие сверху; показаны
+     не все общие, и подпись говорит, сколько из скольких */
+  const top = h => Math.max(h[1], h[2] || 0);
+  const common = d.common.slice().sort((a, b) => top(b) - top(a));
+  $("#fpCommonCnt").textContent = `${common.length} из ${p.common}`;
+  $("#fpCommon").innerHTML = common.map(([id, mine, his]) => {
     const g = byId(id), mx = Math.max(mine, his || 0) || 1;
     return `<div class="cg">
       <span class="cv" style="background-image:url(${g.cover})"></span>
@@ -5746,15 +5770,16 @@ function fpRender(i){
     </div>`;
   }).join("");
 
-  /* раздача между вами */
-  $("#fpSeedBig").innerHTML = `${d.gave.split(" ")[0]}<u>ГБ вам</u>`;
-  $("#fpSeedBar").style.width = d.ratio + "%";
+  /* раздача между вами — доля считается, а не пишется */
+  const pct = Math.round(d.share * 100);
+  $("#fpSeedBig").innerHTML = `${d.gave}<u>ГБ вам</u>`;
+  $("#fpSeedBar").style.width = pct + "%";
   $("#fpSeedStats").innerHTML = `
-    <span class="st"><svg><use href="#i-seed"/></svg>он вам<b>${d.gave}</b></span>
-    <span class="st"><svg><use href="#i-dl"/></svg>вы ему<b>${d.got}</b></span>`;
+    <span class="st"><svg><use href="#i-seed"/></svg>${he} вам<b>${d.gave} ГБ</b></span>
+    <span class="st"><svg><use href="#i-dl"/></svg>вы ${him}<b>${d.got} ГБ</b></span>`;
   $("#fpSeedNote").innerHTML = `<svg><use href="#i-peers"/></svg>${
-    d.ratio >= 50 ? `${d.ratio} % трафика между вами шло от него — он раздаёт вам чаще, чем вы ему`
-                  : `Только ${d.ratio} % шло от него: вы раздаёте ему заметно больше`}`;
+    pct >= 50 ? `${pct} % трафика между вами шло от ${from} — ${he} раздаёт вам чаще, чем вы ${him}`
+              : `Только ${pct} % шло от ${from}: вы раздаёте ${him} заметно больше`}`;
 
   /* что скрыто */
   const hid = [];
@@ -5765,11 +5790,10 @@ function fpRender(i){
   $("#fpHidden").innerHTML = hid.length
     ? hid.map(([t, ic]) => `<div class="hid-row"><svg><use href="#${ic}"/></svg>${t}<em>скрыто</em></div>`).join("")
       + `<div class="hidden-box" style="margin-top:12px"><svg><use href="#i-info"/></svg>
-         <span class="tx"><span class="h">Это его выбор, а не ошибка</span>
-         <span class="d">Те же четыре тумблера есть и у вас — в своём профиле, раздел «Что видят друзья».</span></span></div>`
-    : `<div class="hidden-box"><svg><use href="#i-check"/></svg>
-         <span class="tx"><span class="h">Ничего не скрыто</span>
-         <span class="d">${p.n.split(" ")[0]} показывает друзьям всё: игру, часы, достижения и раздачу.</span></span></div>`;
+         <span class="tx"><span class="h">Это ${his} выбор, а не ошибка</span>
+         <span class="d">Те же четыре тумблера есть и у вас — в своём профиле, раздел «Что видят друзья».</span>
+         <button class="mini" data-goto="profile" style="margin-top:8px;align-self:flex-start"><svg><use href="#i-arrow"/></svg>Мой профиль</button></span></div>`
+    : box("i-check", "Ничего не скрыто", `${name} показывает друзьям всё: игру, часы, достижения и раздачу.`);
 
   /* год игры и чужие достижения — только если часы открыты */
   $("#fpYearSec").hidden = !d.hours;
@@ -5788,13 +5812,14 @@ function fpRender(i){
         el.appendChild(c);
       }
     }
-    $("#fpYearV").textContent = `${days} дней · около ${tot} часов`;
+    /* «182 дней» — по-русски так не говорят */
+    $("#fpYearV").textContent = `${ruN(days, "день", "дня", "дней")} · около ${ruN(tot, "часа", "часов", "часов")}`;
   }
   if(d.only){
     $("#fpAchCnt").textContent = d.only.length;
-    $("#fpAch").innerHTML = d.only.map(([n, s]) => `
+    $("#fpAch").innerHTML = d.only.map(([id, k]) => `
       <div class="ach got"><span class="ic"><svg><use href="#i-trophy"/></svg></span>
-        <span class="tx"><span class="n">${n}</span><span class="d">${s}</span></span></div>`).join("");
+        <span class="tx"><span class="n">${ACH_NAMES[k][0]}</span><span class="d">${byId(id).t} · ${ACH_NAMES[k][1]}</span></span></div>`).join("");
   }
 }
 
@@ -5804,6 +5829,12 @@ function openFriend(i){
   $("#crumb").textContent = PEOPLE[i].n;
   scFp.scrollTop = 0;
 }
+
+/* «Все друзья» и «Мой профиль» — раньше кнопку «назад» никто не слушал */
+scFp.addEventListener("click", e => {
+  const a = e.target.closest("[data-goto]");
+  if(a) go(a.dataset.goto);
+});
 
 /* вход из раздела «Друзья» */
 $("#sc-friends").addEventListener("click", e => {

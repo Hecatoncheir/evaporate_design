@@ -7,10 +7,7 @@ import 'theme.dart';
 /// Живёт над `MaterialApp`, поэтому его видят все маршруты — и каркас,
 /// и настройки, и галерея компонентов — без протаскивания через параметры.
 class EvAppearance extends ChangeNotifier {
-  EvAppearance({
-    this._skin = EvSkin.magma,
-    this._geometry = EvGeometry.tight,
-  });
+  EvAppearance({this._skin = EvSkin.magma, this._geometry = EvGeometry.tight});
 
   EvSkin _skin;
   EvGeometry _geometry;

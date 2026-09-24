@@ -22,16 +22,47 @@ class EvShellController extends ChangeNotifier {
   EvSection _section;
   EvSection get section => _section;
 
+  Object? _detail;
+  String? _crumb;
+
+  /// Страница внутри раздела — профиль друга внутри «Друзей». `null` —
+  /// сам раздел.
+  Object? get detail => _detail;
+
+  /// Что стоит в хлебной крошке вместо названия раздела: имя друга.
+  String? get crumb => _crumb;
+
+  /// Открыть страницу [detail] внутри [section].
+  void open(EvSection section, Object detail, {required String crumb}) {
+    _section = section;
+    _detail = detail;
+    _crumb = crumb;
+    notifyListeners();
+  }
+
+  /// Назад со вложенной страницы в раздел. Ничего не открыто — `false`.
+  bool back() {
+    if (_detail == null) return false;
+    _detail = null;
+    _crumb = null;
+    notifyListeners();
+    return true;
+  }
+
   final _reselected = ValueNotifier<int>(0);
 
   /// Выбран раздел, который уже открыт: экран возвращается к началу.
   Listenable get reselected => _reselected;
 
+  /// Выбор раздела закрывает вложенную страницу — и того же раздела
+  /// тоже: рейл ведёт к разделу, а не к последней открытой в нём странице.
   void go(EvSection section) {
-    if (section == _section) {
+    if (section == _section && !back()) {
       _reselected.value++;
       return;
     }
+    _detail = null;
+    _crumb = null;
     _section = section;
     notifyListeners();
   }
@@ -174,6 +205,12 @@ class _EvShellState extends State<EvShell> {
     }
 
     if (ctrl || keys.isShiftPressed) return KeyEventResult.ignored;
+    // Esc — «Назад» из строки подсказок: с чужой страницы к списку.
+    if (key == LogicalKeyboardKey.escape) {
+      return _controller.back()
+          ? KeyEventResult.handled
+          : KeyEventResult.ignored;
+    }
     final index = _digits[key];
     if (index == null) return KeyEventResult.ignored;
     _controller.go(EvSection.values[index]);
@@ -201,7 +238,7 @@ class _EvShellState extends State<EvShell> {
                 layoutBuilder: _stackPages,
                 transitionBuilder: _pageTransition,
                 child: _SectionHost(
-                  key: ValueKey(section),
+                  key: ValueKey((section, _controller.detail)),
                   reselected: _controller.reselected,
                   child: Builder(
                     builder: (context) => widget.pageBuilder(context, section),
@@ -255,7 +292,7 @@ class _EvShellState extends State<EvShell> {
                               right: 0,
                               top: 0,
                               child: EvTopBar(
-                                section: section.label,
+                                section: _controller.crumb ?? section.label,
                                 onSearch: _openPalette,
                                 trailing: narrow ? const [] : widget.status,
                               ),

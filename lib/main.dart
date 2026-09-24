@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'data/sample_data.dart';
 import 'data/sample_friends.dart';
+import 'data/sample_friend_profiles.dart';
 import 'data/sample_profile.dart';
 import 'data/sample_downloads.dart';
 import 'data/sample_saves.dart';
@@ -20,6 +21,7 @@ import 'screens/downloads_page.dart';
 import 'screens/friends_page.dart';
 import 'screens/library_page.dart';
 import 'screens/saves_page.dart';
+import 'screens/friend_profile_page.dart';
 import 'screens/profile_page.dart';
 import 'screens/settings_page.dart';
 import 'shell/ev_palette.dart';
@@ -318,8 +320,23 @@ class _Home extends StatelessWidget {
           onOpen: (g) => _open(context, g),
         ),
         EvSection.downloads => DownloadsPage(downloads: queue),
+        // Страница друга — внутри раздела: рейл остаётся на «Друзьях»,
+        // в хлебной крошке имя, Esc и «Все друзья» ведут обратно.
+        EvSection.friends when shell.detail is EvPerson => FriendProfilePage(
+          profile: sampleFriendProfile(shell.detail! as EvPerson),
+          library: sampleLibrary,
+          yourGame: sampleHero,
+          offline: offline,
+          onBack: shell.back,
+          onJoin: (g) => g.state == EvGameState.ready
+              ? _launch(context, g)
+              : shell.go(EvSection.downloads),
+          onAbout: (g) => _open(context, g),
+          onOwnPrivacy: () => shell.go(EvSection.profile),
+        ),
         EvSection.friends => FriendsPage(
           friends: friends,
+          onPerson: (p) => shell.open(EvSection.friends, p, crumb: p.name),
           rateKb: queue.downKb,
           onInvite: () => onFriends(EvFriendsState.normal),
           onDownloads: () => shell.go(EvSection.downloads),
@@ -338,6 +355,7 @@ class _Home extends StatelessWidget {
           onSaves: onSaves,
           friendsState: friendsState,
           onFriends: onFriends,
+          onFriendPage: (p) => shell.open(EvSection.friends, p, crumb: p.name),
         ),
         EvSection.profile => ProfilePage(
           profile: sampleProfile,

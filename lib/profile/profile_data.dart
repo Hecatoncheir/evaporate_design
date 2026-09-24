@@ -18,35 +18,49 @@ class EvPlayYear {
     : assert(levels.length == weeks * 7),
       levels = List.unmodifiable(levels);
 
-  /// Год, как его рисует прототип: `rng32(20260914)`, зимой играют
-  /// больше, по выходным — в полтора раза.
-  factory EvPlayYear.sample(int seed) {
+  /// Год, как его рисует прототип: зимой играют больше, по выходным —
+  /// в полтора раза. Своя страница — `rng32(20260914)` с сезоном
+  /// `.55 + .45·sin` и порогами [ownCuts]; страница друга — своё зерно,
+  /// сезон `.5 + .5·sin`, сдвинутый на его номер, и пороги [friendCuts].
+  factory EvPlayYear.sample(
+    int seed, {
+    double base = .55,
+    double phase = 1.1,
+    List<double> cuts = ownCuts,
+  }) {
     final r = EvArtRandom(seed);
+    int level(double v) {
+      final i = cuts.indexWhere((c) => v < c);
+      return i < 0 ? cuts.length : i;
+    }
+
     return EvPlayYear([
       for (var w = 0; w < weeks; w++)
         for (var d = 0; d < 7; d++)
-          _level(
+          level(
             r.next() *
-                (.55 + .45 * math.sin(w / weeks * 6.283 + 1.1)) *
+                (base + (1 - base) * math.sin(w / weeks * 6.283 + phase)) *
                 (d >= 5 ? 1.5 : 1),
           ),
     ]);
   }
 
+  /// Год друга с номером [index] в списке и инициалами [initials] —
+  /// зерно и сезон из `fpRender` прототипа.
+  factory EvPlayYear.friend(int index, String initials) => EvPlayYear.sample(
+    initials.codeUnitAt(0) * 977 + index,
+    base: .5,
+    phase: index.toDouble(),
+    cuts: friendCuts,
+  );
+
+  static const ownCuts = [.2, .38, .56, .76];
+  static const friendCuts = [.18, .36, .54, .74];
+
   static const weeks = 52;
 
   /// Самый тёмный уровень — не играли, самый светлый — четыре часа.
   static const maxLevel = 4;
-
-  static int _level(double v) => v < .2
-      ? 0
-      : v < .38
-      ? 1
-      : v < .56
-      ? 2
-      : v < .76
-      ? 3
-      : 4;
 
   /// Уровни по дням: неделя за неделей, внутри недели — с понедельника.
   final List<int> levels;

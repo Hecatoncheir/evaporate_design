@@ -47,20 +47,7 @@ class EvFriendAvatar extends StatelessWidget {
                 // 140° в CSS
                 begin: const Alignment(-.64, -.77),
                 end: const Alignment(.64, .77),
-                colors: switch (tint) {
-                  EvAvatarTint.hot => [c.hot2, c.hot1],
-                  EvAvatarTint.cool => [c.cool, const Color(0xFF1B6F8A)],
-                  EvAvatarTint.arc => [c.arc, const Color(0xFF5A2FA8)],
-                  EvAvatarTint.ok => const [EvColors.ok, Color(0xFF146C48)],
-                  EvAvatarTint.rose => const [
-                    Color(0xFFFF8AE0),
-                    Color(0xFFA8226F),
-                  ],
-                  EvAvatarTint.sky => const [
-                    Color(0xFF8FB6FF),
-                    Color(0xFF2B4A8F),
-                  ],
-                },
+                colors: evAvatarColors(c, tint),
               ),
             ),
             child: Text(
@@ -97,3 +84,13 @@ class EvFriendAvatar extends StatelessWidget {
     );
   }
 }
+
+/// Градиент аватара: два цвета под 140°.
+List<Color> evAvatarColors(EvColors c, EvAvatarTint tint) => switch (tint) {
+  EvAvatarTint.hot => [c.hot2, c.hot1],
+  EvAvatarTint.cool => [c.cool, const Color(0xFF1B6F8A)],
+  EvAvatarTint.arc => [c.arc, const Color(0xFF5A2FA8)],
+  EvAvatarTint.ok => const [EvColors.ok, Color(0xFF146C48)],
+  EvAvatarTint.rose => const [Color(0xFFFF8AE0), Color(0xFFA8226F)],
+  EvAvatarTint.sky => const [Color(0xFF8FB6FF), Color(0xFF2B4A8F)],
+};

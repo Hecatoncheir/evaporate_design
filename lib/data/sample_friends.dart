@@ -43,6 +43,7 @@ final samplePeople = <EvPerson>[
   EvPerson(
     initials: 'МС',
     name: 'Мира С.',
+    female: true,
     tint: _tint(1),
     common: 9,
     traffic: _traffic(1),
@@ -53,6 +54,7 @@ final samplePeople = <EvPerson>[
   EvPerson(
     initials: 'ЛП',
     name: 'Лена П.',
+    female: true,
     tint: _tint(2),
     common: 10,
     traffic: _traffic(2),
@@ -71,6 +73,7 @@ final samplePeople = <EvPerson>[
   EvPerson(
     initials: 'НТ',
     name: 'Ника Т.',
+    female: true,
     tint: _tint(4),
     common: 8,
     traffic: _traffic(4),
@@ -79,6 +82,7 @@ final samplePeople = <EvPerson>[
   EvPerson(
     initials: 'ЮС',
     name: 'Юля С.',
+    female: true,
     tint: _tint(5),
     common: 5,
     traffic: _traffic(5),
@@ -119,6 +123,7 @@ final samplePeople = <EvPerson>[
   EvPerson(
     initials: 'ВГ',
     name: 'Вера Г.',
+    female: true,
     tint: _tint(10),
     common: 3,
     traffic: _traffic(10),

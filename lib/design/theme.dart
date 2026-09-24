@@ -9,10 +9,15 @@ import 'typography.dart';
 /// смена облика или потолка радиуса не требует правок в самих виджетах.
 @immutable
 class EvTheme extends ThemeExtension<EvTheme> {
-  const EvTheme({required this.colors, required this.radii, required this.text});
+  const EvTheme({
+    required this.colors,
+    required this.radii,
+    required this.text,
+  });
 
   final EvColors colors;
   final EvRadii radii;
+
   /// Типографика. Имя `type` занято `ThemeExtension.type` —
   /// это ключ, по которому ThemeData находит расширение.
   final EvType text;
@@ -36,7 +41,10 @@ class EvTheme extends ThemeExtension<EvTheme> {
   /// Свечение активного. Цветной бывает только эта тень и только у того,
   /// что реагирует на пользователя.
   List<BoxShadow> glow(Color c, {double opacity = 0.3, double blur = 42}) => [
-    BoxShadow(color: c.withValues(alpha: opacity), blurRadius: blur),
+    BoxShadow(
+      color: c.withValues(alpha: opacity),
+      blurRadius: blur,
+    ),
   ];
 
   /// Заливка панели: градиент белого 3 % → 0.6 %.
@@ -115,7 +123,8 @@ ThemeData buildEvTheme({
         (s) => s.contains(WidgetState.hovered) ? 9 : 6,
       ),
       thumbColor: WidgetStateProperty.resolveWith(
-        (s) => s.contains(WidgetState.hovered) || s.contains(WidgetState.dragged)
+        (s) =>
+            s.contains(WidgetState.hovered) || s.contains(WidgetState.dragged)
             ? c.ink4
             : c.line,
       ),

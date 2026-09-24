@@ -8,6 +8,7 @@ import '../downloads/download_data.dart';
 import '../gallery/gallery_page.dart';
 import '../glass/glass_lens.dart';
 import '../library/hero_state.dart';
+import '../data/sample_friends.dart';
 import '../friends/friends_data.dart';
 import '../saves/saves_data.dart';
 import '../widgets/ev_focusable.dart';
@@ -28,6 +29,7 @@ class SettingsPage extends StatelessWidget {
     required this.onSaves,
     required this.friendsState,
     required this.onFriends,
+    this.onFriendPage,
   });
 
   /// Состояние игры в герое. Движка нет, поэтому его переключают здесь.
@@ -49,6 +51,10 @@ class SettingsPage extends StatelessWidget {
   final EvFriendsState friendsState;
 
   final ValueChanged<EvFriendsState> onFriends;
+
+  /// Открыть страницу друга — два состояния прототипа: открытый профиль
+  /// и закрытый.
+  final ValueChanged<EvPerson>? onFriendPage;
 
   @override
   Widget build(BuildContext context) {
@@ -304,6 +310,41 @@ class SettingsPage extends StatelessWidget {
             ],
           ),
         ),
+        if (onFriendPage != null) ...[
+          const SizedBox(height: EvSpace.m),
+          EvPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                EvOption(
+                  title: 'Профиль друга',
+                  description:
+                      'Открывается и из «Друзей» — кликом по любому из '
+                      'двенадцати. Здесь — два крайних случая',
+                  control: const SizedBox.shrink(),
+                ),
+                for (final (person, name, hint) in [
+                  (
+                    samplePeople[0],
+                    'Открытый профиль',
+                    'Антон К. · показывает всё',
+                  ),
+                  (
+                    samplePeople[6],
+                    'Закрытый профиль',
+                    'Игорь В. · скрыл часы и игру',
+                  ),
+                ])
+                  _StateRow(
+                    name: name,
+                    hint: hint,
+                    selected: false,
+                    onTap: () => onFriendPage!(person),
+                  ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: EvSpace.m),
         EvPanel(
           child: EvOption(

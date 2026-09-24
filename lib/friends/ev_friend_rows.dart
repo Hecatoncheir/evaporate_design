@@ -4,6 +4,7 @@ import '../art/ev_art.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
 import '../util/units.dart';
+import '../util/plural.dart';
 import '../widgets/ev_controls.dart';
 import '../widgets/ev_focusable.dart';
 import '../widgets/ev_icon.dart';
@@ -282,7 +283,7 @@ class EvSeederRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'от него',
+                    'от ${seeder.person.fromHim}',
                     style: ev.text.data.copyWith(fontSize: 9.5, color: c.ink4),
                   ),
                 ],
@@ -302,6 +303,7 @@ class EvFriendRow extends StatefulWidget {
     required this.person,
     required this.last,
     this.offline = false,
+    this.onOpen,
     this.onWrite,
   });
 
@@ -310,6 +312,9 @@ class EvFriendRow extends StatefulWidget {
 
   /// Сети нет — все показаны не в сети.
   final bool offline;
+
+  /// Клик по строке — страница друга.
+  final VoidCallback? onOpen;
 
   final VoidCallback? onWrite;
 
@@ -334,73 +339,78 @@ class _EvFriendRowState extends State<EvFriendRow> {
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
-        decoration: BoxDecoration(
-          color: _hover ? c.ink.withValues(alpha: .03) : null,
-          border: widget.last
-              ? null
-              : Border(bottom: BorderSide(color: c.lineSoft)),
-        ),
-        child: Row(
-          children: [
-            EvFriendAvatar(
-              initials: p.initials,
-              tint: p.tint,
-              size: 32,
-              status: color,
-            ),
-            const SizedBox(width: 13),
-            Expanded(
-              flex: 14,
-              child: Text(
-                p.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: ev.text.ui(
-                  ev.text.title,
-                  size: 13.5,
-                  weight: FontWeight.w400,
-                  color: status == EvPersonStatus.offline ? c.ink3 : c.ink,
-                ),
+      child: EvFocusable(
+        onActivate: widget.onOpen,
+        radius: 0,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
+          decoration: BoxDecoration(
+            color: _hover ? c.ink.withValues(alpha: .03) : null,
+            border: widget.last
+                ? null
+                : Border(bottom: BorderSide(color: c.lineSoft)),
+          ),
+          child: Row(
+            children: [
+              EvFriendAvatar(
+                initials: p.initials,
+                tint: p.tint,
+                size: 32,
+                status: color,
               ),
-            ),
-            const SizedBox(width: 13),
-            Expanded(
-              flex: 10,
-              child: Text(
-                p.lineFor(status),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: ev.text.data.copyWith(
-                  fontSize: 10.5,
-                  color: status == EvPersonStatus.offline ? c.ink4 : color,
-                ),
-              ),
-            ),
-            if (wide) ...[
               const SizedBox(width: 13),
-              SizedBox(
-                width: 86,
+              Expanded(
+                flex: 14,
                 child: Text(
-                  '${p.common} общих',
-                  textAlign: TextAlign.right,
-                  style: ev.text.data.copyWith(fontSize: 10.5),
+                  p.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ev.text.ui(
+                    ev.text.title,
+                    size: 13.5,
+                    weight: FontWeight.w400,
+                    color: status == EvPersonStatus.offline ? c.ink3 : c.ink,
+                  ),
                 ),
               ),
               const SizedBox(width: 13),
-              // Кнопка появляется под курсором, но место под неё занято
-              // всегда — иначе строка дёргалась бы при наведении.
-              Opacity(
-                opacity: _hover ? 1 : 0,
-                child: EvMiniButton(
-                  label: 'Написать',
-                  icon: EvIcons.note,
-                  onPressed: _hover ? widget.onWrite : null,
+              Expanded(
+                flex: 10,
+                child: Text(
+                  p.lineFor(status),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ev.text.data.copyWith(
+                    fontSize: 10.5,
+                    color: status == EvPersonStatus.offline ? c.ink4 : color,
+                  ),
                 ),
               ),
+              if (wide) ...[
+                const SizedBox(width: 13),
+                SizedBox(
+                  width: 86,
+                  child: Text(
+                    '${p.common} '
+                  '${ruPlural(p.common, 'общая', 'общие', 'общих')}',
+                    textAlign: TextAlign.right,
+                    style: ev.text.data.copyWith(fontSize: 10.5),
+                  ),
+                ),
+                const SizedBox(width: 13),
+                // Кнопка появляется под курсором, но место под неё занято
+                // всегда — иначе строка дёргалась бы при наведении.
+                Opacity(
+                  opacity: _hover ? 1 : 0,
+                  child: EvMiniButton(
+                    label: 'Написать',
+                    icon: EvIcons.note,
+                    onPressed: _hover ? widget.onWrite : null,
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

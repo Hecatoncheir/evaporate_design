@@ -143,7 +143,7 @@ class FriendsPage extends StatelessWidget {
                       person: p,
                       offline: f.offline,
                       last: i == f.people.length - 1,
-                      onWrite: onPerson == null ? null : () => onPerson!(p),
+                      onOpen: onPerson == null ? null : () => onPerson!(p),
                     ),
                 ],
               ),
