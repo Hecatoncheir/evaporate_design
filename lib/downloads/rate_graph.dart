@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 
 import '../art/key_art.dart';
 import '../design/theme.dart';
+import '../design/tokens.dart';
 
 /// Шестьдесят секунд приёма: по одному отсчёту в секунду.
 ///
@@ -47,12 +48,18 @@ class EvRateSeries {
 }
 
 /// График приёма. Растягивается по ширине панели, высота — 74 px.
+///
+/// [EvRateGraph.frames] — тот же график для кадров в оверлее: зелёный,
+/// на постоянной шкале, без точки на конце.
 class EvRateGraph extends StatelessWidget {
-  const EvRateGraph(this.series, {super.key});
+  const EvRateGraph(this.series, {super.key}) : frames = false, height = 74;
+
+  const EvRateGraph.frames(this.series, {super.key, required this.height})
+    : frames = true;
 
   final List<double> series;
-
-  static const height = 74.0;
+  final bool frames;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
@@ -60,17 +67,33 @@ class EvRateGraph extends StatelessWidget {
     return SizedBox(
       height: height,
       child: CustomPaint(
-        painter: _RatePainter(
-          series: series,
-          line: c.hot2,
-          fill: c.hot1,
-          grid: c.lineSoft,
-          tip: c.ink,
-        ),
+        painter: frames
+            ? _RatePainter(
+                series: series,
+                line: EvColors.ok,
+                fill: EvColors.ok,
+                fillAlpha: .34,
+                grid: c.lineSoft,
+                gridAt: const [1 / 3, 2 / 3],
+                scale: (EvFrameScale.low, EvFrameScale.high),
+              )
+            : _RatePainter(
+                series: series,
+                line: c.hot2,
+                fill: c.hot1,
+                grid: c.lineSoft,
+                tip: c.ink,
+              ),
         size: Size.infinite,
       ),
     );
   }
+}
+
+/// Шкала графика кадров: всё, что ниже 96 и выше 168, прижимается к краю.
+abstract final class EvFrameScale {
+  static const low = 96.0;
+  static const high = 168.0;
 }
 
 class _RatePainter extends CustomPainter {
@@ -79,26 +102,38 @@ class _RatePainter extends CustomPainter {
     required this.line,
     required this.fill,
     required this.grid,
-    required this.tip,
+    this.tip,
+    this.fillAlpha = .42,
+    this.gridAt = const [.25, .5, .75],
+    this.scale,
   });
 
   final List<double> series;
-  final Color line, fill, grid, tip;
+  final Color line, fill, grid;
+  final double fillAlpha;
+  final List<double> gridAt;
+
+  /// Точка на конце линии; `null` — без неё.
+  final Color? tip;
+
+  /// Постоянная шкала; `null` — от нуля до потолка по данным.
+  final (double, double)? scale;
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width, h = size.height;
     // Потолок не ниже 2.4 МБ/с, иначе тихий приём распирало бы на всю
     // высоту и график врал бы о масштабе.
-    final max = math.max(2.4, series.reduce(math.max)) * 1.12;
+    final (low, high) =
+        scale ?? (0.0, math.max(2.4, series.reduce(math.max)) * 1.12);
     final grid1 = Paint()..color = grid;
-    for (final k in const [.25, .5, .75]) {
+    for (final k in gridAt) {
       canvas.drawLine(Offset(0, h * k), Offset(w, h * k), grid1);
     }
 
     Offset point(int i) => Offset(
       i / (series.length - 1) * w,
-      h - 2 - (series[i] / max) * (h - 8),
+      h - 2 - (series[i].clamp(low, high) - low) / (high - low) * (h - 8),
     );
 
     final path = Path()..moveTo(point(0).dx, point(0).dy);
@@ -115,7 +150,10 @@ class _RatePainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [fill.withValues(alpha: .42), fill.withValues(alpha: 0)],
+          colors: [
+            fill.withValues(alpha: fillAlpha),
+            fill.withValues(alpha: 0),
+          ],
         ).createShader(Rect.fromLTWH(0, 0, w, h)),
     );
     canvas.drawPath(
@@ -127,12 +165,14 @@ class _RatePainter extends CustomPainter {
         ..color = line
         ..maskFilter = const MaskFilter.blur(BlurStyle.solid, 6),
     );
+    final dot = tip;
+    if (dot == null) return;
     final last = point(series.length - 1);
     canvas.drawCircle(
       last.translate(-1, 0),
       3,
       Paint()
-        ..color = tip
+        ..color = dot
         ..maskFilter = const MaskFilter.blur(BlurStyle.solid, 8),
     );
   }

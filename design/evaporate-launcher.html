@@ -2867,7 +2867,7 @@ h1.title b{font-weight:800;display:block}
       </div>
       <div class="p-lab" style="margin-top:17px">Достижения в этой сессии</div>
       <div class="ach got" style="padding-top:9px"><span class="ic"><svg><use href="#i-trophy"/></svg></span>
-        <span class="tx"><span class="n">Тихий шаг</span><span class="d">Получено 22 минуты назад</span></span></div>
+        <span class="tx"><span class="n">Без единой царапины</span><span class="d">Получено 22 минуты назад</span></span></div>
       <div class="ach"><span class="ic"><svg><use href="#i-trophy"/></svg></span>
         <span class="tx"><span class="n">Собиратель · 37 из 60</span><span class="d">Осталось 23 реликвии</span></span></div>
     </div>
@@ -2877,11 +2877,13 @@ h1.title b{font-weight:800;display:block}
       <div style="margin-top:9px">
         <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--hot-2),var(--hot-1))">АК</span><span class="fn">Антон К.</span><span class="fs">та же глава</span></div>
         <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--cool),#1b6f8a)">МС</span><span class="fn">Мира С.</span><span class="fs">Красный Меридиан</span></div>
-        <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--arc),#5a2fa8)">ДР</span><span class="fn">Дан Р.</span><span class="fs">в сети</span></div>
-        <div class="frow"><span class="av" style="background:linear-gradient(140deg,#3be39b,#146c48)">ЛП</span><span class="fn">Лена П.</span><span class="fs">Волчья Тропа</span></div>
+        <div class="frow"><span class="av" style="background:linear-gradient(140deg,var(--arc),#5a2fa8)">ЛП</span><span class="fn">Лена П.</span><span class="fs">Волчья Тропа</span></div>
+        <div class="frow"><span class="av" style="background:linear-gradient(140deg,#3be39b,#146c48)">ДР</span><span class="fn">Дан Р.</span><span class="fs">в сети</span></div>
       </div>
       <div class="p-lab" style="margin-top:17px">Фоном</div>
-      <div class="tor-f" style="margin-top:9px"><span>orbita-7 · 592 КБ/с</span><span class="pc">41 %</span></div>
+      <!-- пока идёт игра, приём ужат до 1 МБ/с: из 592 + 1030 КБ/с «Орбите»
+           остаётся её доля — 365 КБ/с, а не прежние 592 -->
+      <div class="tor-f" style="margin-top:9px"><span>orbita-7 · 365 КБ/с</span><span class="pc">41 %</span></div>
       <div class="bar" style="margin-top:8px"><i style="width:41%"></i></div>
       <div class="cta-note cool" style="margin-top:10px"><svg><use href="#i-speed"/></svg>Загрузка ограничена до 1 МБ/с, пока игра запущена</div>
     </div>
@@ -3387,11 +3389,14 @@ $$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
 
 /* ── карточка игры ─────────────────────────────────────────── */
 const sheet = $("#sheet");
+/* получены первые три; «Собиратель» стоял третьим — полученным — и тут же
+   был «ближе всего» с 37 из 60, хотя просил 40. «Без единой царапины» просило
+   победить Кузнеца, а вы ещё в его Кузне */
 const ACH_NAMES = [
   ["Первый выдох",        "Пережить вступительную главу"],
   ["Тихий шаг",           "Пройти уровень, не подняв тревогу"],
-  ["Собиратель",          "Найти 40 из 60 реликвий"],
-  ["Без единой царапины", "Победить Кузнеца, не получив урона"],
+  ["Без единой царапины", "Пройти главу, не получив урона"],
+  ["Собиратель",          "Найти все 60 реликвий"],
   ["Полный круг",         "Завершить все побочные линии"]
 ];
 const FRIENDS = [
@@ -4217,6 +4222,7 @@ $("#ovlBg").style.backgroundImage = `url(${makeArt(760, 440, GAMES[0].pal, GAMES
 (() => {
   const svg = $("#ovlSpark"), W = 300, H = 56, N = 64;
   const d = Array.from({length:N}, (_, i) => 138 + Math.sin(i / 4) * 6 + Math.random() * 9);
+  d[N - 1] = 144; /* те же кадры, что в чипе героя, а не случайное число */
   const ns = "http://www.w3.org/2000/svg";
   const grid = document.createElementNS(ns, "path");
   grid.setAttribute("stroke", "var(--line-soft)"); grid.setAttribute("fill", "none");
@@ -5430,7 +5436,8 @@ $("#meCopy").onclick = () => {
 
   /* только то, что карточка игры показывает полученным: первые три */
   $("#meAch").innerHTML = [
-    ["ashen", 1, "3 часа назад"],
+    /* то же, что оверлей хвалит в идущей сессии */
+    ["ashen", 2, "22 минуты назад"],
     ["crimson", 2, "вчера"],
     ["wolf", 0, "4 дня назад"],
     ["glass", 1, "неделю назад"]

@@ -59,6 +59,10 @@ class _DownloadsPageState extends State<DownloadsPage>
     if (MediaQuery.disableAnimationsOf(context)) {
       _clock.stop();
     } else if (!_clock.isAnimating) {
+      // Часы после остановки идут с нуля — счёт шагов тоже, иначе
+      // приборы стояли бы столько же, сколько шли до «меньше движения».
+      _ticks = 0;
+      _heat = 0;
       _clock.repeat();
     }
   }

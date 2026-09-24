@@ -255,11 +255,21 @@ enum EvStatus {
 }
 
 class EvPill extends StatelessWidget {
-  const EvPill(this.label, {super.key, this.status = EvStatus.ok, this.onTap});
+  const EvPill(
+    this.label, {
+    super.key,
+    this.status = EvStatus.ok,
+    this.onTap,
+    this.dot = true,
+  });
 
   final String label;
   final EvStatus status;
   final VoidCallback? onTap;
+
+  /// Точка состояния слева. Без неё плашка — просто подпись: где вы
+  /// в игре, а не что с ней.
+  final bool dot;
 
   Color _dot(EvColors c) => switch (status) {
     EvStatus.ok => EvColors.ok,
@@ -292,16 +302,18 @@ class EvPill extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: dot,
-                boxShadow: [BoxShadow(color: dot, blurRadius: 9)],
+            if (this.dot) ...[
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: dot,
+                  boxShadow: [BoxShadow(color: dot, blurRadius: 9)],
+                ),
               ),
-            ),
-            const SizedBox(width: 7),
+              const SizedBox(width: 7),
+            ],
             Text(
               label,
               style: ev.text.data.copyWith(

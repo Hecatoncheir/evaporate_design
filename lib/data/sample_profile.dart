@@ -2,6 +2,7 @@ import '../profile/profile_data.dart';
 import 'sample_data.dart';
 import 'sample_friends.dart';
 import 'sample_saves.dart';
+import 'sample_session.dart';
 
 // Своя страница. Руками здесь только то, что лаунчер про прошлое не
 // хранит по отдельности: часы до последнего года и весь трафик. Остальное
@@ -28,9 +29,9 @@ final sampleProfile = EvProfile(
   here: evThisPc,
   away: const [(evLaptop, 178)],
   // Только то, что карточка игры показывает полученным: первые три
-  // достижения в каждой игре, где есть часы.
+  // достижения в каждой игре, где есть часы. Первое — из идущей сессии.
   recent: [
-    EvEarned(_game('Пепельный Предел'), 1, '3 часа назад'),
+    sampleSession.earned,
     EvEarned(_game('Красный Меридиан'), 2, 'вчера'),
     EvEarned(_game('Волчья Тропа'), 0, '4 дня назад'),
     EvEarned(_game('Стеклянный Сад'), 1, 'неделю назад'),

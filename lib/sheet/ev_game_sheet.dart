@@ -8,6 +8,7 @@ import '../art/ev_art.dart';
 import '../art/key_art.dart';
 import '../data/game_facts.dart';
 import '../data/sample_data.dart';
+import '../data/sample_session.dart';
 import '../design/effects.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
@@ -39,6 +40,7 @@ Future<void> showEvGameSheet(
   VoidCallback? onLaunch,
   VoidCallback? onInstall,
   VoidCallback? onQuit,
+  VoidCallback? onOverlay,
 }) {
   final reduced = MediaQuery.disableAnimationsOf(context);
   return Navigator.of(context).push(
@@ -48,6 +50,7 @@ Future<void> showEvGameSheet(
       onLaunch: onLaunch,
       onInstall: onInstall,
       onQuit: onQuit,
+      onOverlay: onOverlay,
       reduced: reduced,
     ),
   );
@@ -60,6 +63,7 @@ class _EvSheetRoute extends PopupRoute<void> {
     required this.onLaunch,
     required this.onInstall,
     required this.onQuit,
+    required this.onOverlay,
     required this.reduced,
   });
 
@@ -68,6 +72,7 @@ class _EvSheetRoute extends PopupRoute<void> {
   final VoidCallback? onLaunch;
   final VoidCallback? onInstall;
   final VoidCallback? onQuit;
+  final VoidCallback? onOverlay;
   final bool reduced;
 
   CurvedAnimation? _fade;
@@ -101,6 +106,7 @@ class _EvSheetRoute extends PopupRoute<void> {
     onLaunch: onLaunch,
     onInstall: onInstall,
     onQuit: onQuit,
+    onOverlay: onOverlay,
   );
 
   /// Затемнение проявляется за 300 мс, лист за 420 приезжает снизу на
@@ -154,6 +160,7 @@ class EvGameSheet extends StatelessWidget {
     this.onLaunch,
     this.onInstall,
     this.onQuit,
+    this.onOverlay,
   });
 
   final SampleGame game;
@@ -170,6 +177,9 @@ class EvGameSheet extends StatelessWidget {
 
   /// «Завершить».
   final VoidCallback? onQuit;
+
+  /// «Оверлей» — карточка закрывается, оверлей открывается.
+  final VoidCallback? onOverlay;
 
   @override
   Widget build(BuildContext context) {
@@ -281,6 +291,12 @@ class EvGameSheet extends StatelessWidget {
                       : () {
                           Navigator.of(context).pop();
                           onQuit!();
+                        },
+                  onOverlay: onOverlay == null
+                      ? null
+                      : () {
+                          Navigator.of(context).pop();
+                          onOverlay!();
                         },
                 ),
                 // 12 + 46 + 12 и кромка снизу
@@ -459,7 +475,7 @@ class _SheetArtState extends State<_SheetArt> {
     EvGameFacts facts,
     EvHeroState? state,
   ) => switch (state) {
-    EvHeroState.running => 'Идёт игра · запущена 1 ч 04 мин назад',
+    EvHeroState.running => 'Идёт игра · запущена ${sampleSession.length} назад',
     EvHeroState.installing => 'Установка · осталось 12 мин',
     EvHeroState.update => 'Установлена · доступно обновление',
     EvHeroState.notInstalled => 'В библиотеке · на диске нет',
@@ -647,6 +663,7 @@ class _SheetBar extends StatelessWidget {
     required this.onLaunch,
     required this.onInstall,
     required this.onQuit,
+    required this.onOverlay,
   });
 
   final SampleGame game;
@@ -656,6 +673,7 @@ class _SheetBar extends StatelessWidget {
   final VoidCallback onLaunch;
   final VoidCallback? onInstall;
   final VoidCallback? onQuit;
+  final VoidCallback? onOverlay;
 
   @override
   Widget build(BuildContext context) {
@@ -688,12 +706,12 @@ class _SheetBar extends StatelessWidget {
     switch (state) {
       case EvHeroState.running:
         actions.addAll([
-          const EvRunningPill('01:04:12', height: 46),
+          EvRunningPill(sampleSession.clock, height: 46),
           EvGhostButton(
             label: 'Оверлей',
             icon: EvIcons.library,
             height: 46,
-            onPressed: null,
+            onPressed: onOverlay,
           ),
           EvGhostButton(
             label: 'Завершить',
@@ -703,7 +721,10 @@ class _SheetBar extends StatelessWidget {
             onPressed: onQuit,
           ),
           const Spacer(),
-          hint([('Глава 5 · ', false), ('Кузня Сумерек', true)]),
+          hint([
+            ('${sampleSession.chapter} · ', false),
+            (sampleSession.place, true),
+          ]),
         ]);
         return _wrap(context, c, actions, null);
       case EvHeroState.installing:

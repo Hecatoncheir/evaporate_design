@@ -1,10 +1,12 @@
 import '../art/key_art.dart';
 import '../library/hero_state.dart';
 import '../returning/return_data.dart';
+import '../settings/settings_data.dart';
 import '../launch/ev_launch_ritual.dart';
 import '../widgets/ev_icon.dart';
 import '../util/units.dart';
 import '../widgets/ev_game_card.dart';
+import 'sample_session.dart';
 
 // Пример содержимого. Движка раздач в приложении ещё нет, а пустой каркас
 // не показывает, как он работает. Каталог — тот же, что в прототипе:
@@ -370,17 +372,18 @@ final sampleHeroStates = <EvHeroState, EvHeroContent>{
     ),
   ),
   EvHeroState.running: EvHeroContent(
-    eyebrow: 'Идёт игра · запущена 1 ч 04 мин назад',
+    eyebrow: 'Идёт игра · запущена ${sampleSession.length} назад',
     blurb:
-        'Глава 5, Кузня Сумерек. Сохранение выгружается в облако каждые '
-        'пять минут, загрузки ограничены до 1 МБ/с.',
+        '${sampleSession.chapter}, ${sampleSession.place}. Сохранение '
+        'выгружается в облако каждые пять минут, загрузки ограничены '
+        'до ${EvSettings.inGameDownloadMb} МБ/с.',
     chips: [
       ('Идёт игра', true),
       ('v2.4.1', false),
-      ('PID 8842', false),
-      ('144 к/с', false),
+      ('PID ${sampleSession.pid}', false),
+      ('${sampleSession.fps} к/с', false),
     ],
-    runningFor: '01:04:12',
+    runningFor: sampleSession.clock,
   ),
   EvHeroState.offline: EvHeroContent(
     eyebrow: 'Нет сети · играть можно',

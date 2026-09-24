@@ -7,6 +7,7 @@ import 'data/sample_friend_profiles.dart';
 import 'data/sample_profile.dart';
 import 'data/sample_downloads.dart';
 import 'data/sample_saves.dart';
+import 'data/sample_session.dart';
 import 'design/appearance.dart';
 import 'design/effects.dart';
 import 'design/theme.dart';
@@ -16,6 +17,7 @@ import 'first_run/ev_first_run_widgets.dart';
 import 'first_run/first_run_controller.dart';
 import 'first_run/first_run_data.dart';
 import 'first_run/scenario.dart';
+import 'overlay/ev_overlay.dart';
 import 'returning/ev_return_widgets.dart';
 import 'returning/return_data.dart';
 import 'downloads/download_data.dart';
@@ -382,7 +384,37 @@ class _Home extends StatelessWidget {
     onLaunch: () => _launch(context, game),
     onInstall: () => onState(EvHeroState.installing),
     onQuit: () => onState(EvHeroState.ready),
+    onOverlay: () => _overlay(context, running: true),
   );
+
+  /// Очередь раздач. Пока идёт игра, приём и отдача ужаты до предела
+  /// из настроек — и верхняя полоса, и раздачи говорят про одни байты.
+  EvDownloads _queue({required bool running}) {
+    final queue = sampleDownloadsFor(downloads).withSlots(settings.slots);
+    if (!running) return queue;
+    return queue.capped(
+      downKb: EvSettings.inGameDownloadMb * 1000,
+      upKb: EvSettings.inGameUploadMb * 1000,
+    );
+  }
+
+  /// Оверлей поверх идущей игры. Друзья — те же, что в правой колонке;
+  /// фоном — та раздача, что принимает.
+  void _overlay(BuildContext context, {required bool running}) {
+    final queue = _queue(running: running);
+    final friends = sampleFriendsFor(friendsState, offline: false);
+    showEvOverlay(
+      context,
+      session: sampleSession,
+      friends: friends.people
+          .where((p) => p.status != EvPersonStatus.offline)
+          .take(4)
+          .toList(),
+      online: friends.online,
+      background: queue.torrents.where((t) => t.active).firstOrNull,
+      onQuit: () => onState(EvHeroState.ready),
+    );
+  }
 
   /// Единственное действие события дайджеста. Уводит на другой экран —
   /// дайджест сворачивается; открывает карточку — остаётся.
@@ -455,9 +487,10 @@ class _Home extends StatelessWidget {
       EvPill('Нет сети', status: EvStatus.idle),
       EvPill('Движок на паузе', status: EvStatus.idle),
     ],
-    // Пока игра идёт, приём ограничен, чтобы не отнимать у неё сеть.
+    // Пока игра идёт, приём ограничен, чтобы не отнимать у неё сеть:
+    // очередь уже ужата, плашка складывает её раздачи, как всегда.
     EvHeroState.running => [
-      EvPill(formatRate(1024, digits: 1), status: EvStatus.busy),
+      EvPill(formatRate(queue.downKb, digits: 1), status: EvStatus.busy),
       const EvPill('Игра запущена'),
     ],
     _ => [
@@ -503,7 +536,7 @@ class _Home extends StatelessWidget {
     // в очереди, и друзья по ним не раздают.
     final run = firstRun.run;
     final queue = run == null
-        ? sampleDownloadsFor(downloads).withSlots(settings.slots)
+        ? _queue(running: state == EvHeroState.running)
         : _firstQueue(run);
     final offline = state == EvHeroState.offline;
     final friends = sampleFriendsFor(
@@ -587,6 +620,7 @@ class _Home extends StatelessWidget {
           onOtherSave: () => shell.go(EvSection.saves),
           onInstall: () => onState(EvHeroState.installing),
           onQuit: () => onState(EvHeroState.ready),
+          onOverlay: () => _overlay(context, running: true),
           games: run?.library ?? sampleLibrary,
           hero: run?.library.firstOrNull ?? sampleHero,
           sessions: run == null ? sampleSessions : const [],
@@ -642,6 +676,10 @@ class _Home extends StatelessWidget {
           onCatalog: (c) => firstRun.catalog = c,
           onFirstRun: () => firstRun.go(EvFirstRunStep.installed),
           onReturn: onReturn,
+          onOverlay: () {
+            onState(EvHeroState.running);
+            _overlay(context, running: true);
+          },
           onFriendPage: (p) => shell.open(EvSection.friends, p, crumb: p.name),
         ),
         EvSection.profile => ProfilePage(

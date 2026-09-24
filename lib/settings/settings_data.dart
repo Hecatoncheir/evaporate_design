@@ -125,6 +125,9 @@ class EvSettings extends ChangeNotifier {
   /// Предел отдачи, пока идёт игра, МБ/с.
   static const inGameUploadMb = 1;
 
+  /// Предел приёма, пока идёт игра, МБ/с: загрузки не отнимают у неё сеть.
+  static const inGameDownloadMb = 1;
+
   /// Порт входящих соединений.
   static const port = 51413;
 

@@ -209,6 +209,30 @@ void main() {
       expect(tester.widget<EvPeerHeat>(find.byType(EvPeerHeat)).live, isFalse);
     });
 
+    testWidgets('после «меньше движения» приборы идут сразу, а не догоняют', (
+      tester,
+    ) async {
+      _window(tester, 1440, 1200);
+      await _page(tester, EvDownloadsState.active);
+      List<double> series() =>
+          tester.widget<EvRateGraph>(find.byType(EvRateGraph)).series;
+      // Приборы прошли полминуты, потом движение выключили и включили.
+      await tester.pump(const Duration(seconds: 30));
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      await tester.pump();
+      final still = series();
+      await tester.pump(const Duration(seconds: 3));
+      expect(series(), still, reason: 'стоят');
+      tester.platformDispatcher.clearAccessibilityFeaturesTestValue();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 3));
+      expect(series(), isNot(still), reason: 'снова идут');
+    });
+
     testWidgets('на узком окне приборы встают друг под друга', (tester) async {
       _window(tester, 860, 1200);
       await _page(tester, EvDownloadsState.active);

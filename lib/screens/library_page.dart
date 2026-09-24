@@ -40,6 +40,7 @@ class LibraryPage extends StatelessWidget {
     this.onOpen,
     this.onInstall,
     this.onQuit,
+    this.onOverlay,
   });
 
   final List<SampleGame> games;
@@ -84,6 +85,9 @@ class LibraryPage extends StatelessWidget {
 
   /// «Завершить» — игра закончилась.
   final VoidCallback? onQuit;
+
+  /// «Оверлей» поверх идущей игры.
+  final VoidCallback? onOverlay;
 
   /// Открыть карточку игры: «Подробнее», строка «Продолжить», обложка.
   final ValueChanged<SampleGame>? onOpen;
@@ -139,6 +143,7 @@ class LibraryPage extends StatelessWidget {
           onDetails: onOpen == null ? null : () => onOpen!(hero),
           onInstall: onInstall,
           onQuit: onQuit,
+          onOverlay: onOverlay,
           onOtherSave: onOtherSave,
         ),
         if (layout.showSessions && sessions.isNotEmpty)

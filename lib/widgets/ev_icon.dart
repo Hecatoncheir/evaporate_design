@@ -102,4 +102,10 @@ abstract final class EvIcons {
 
   /// Скрыто: друг выключил это в своём профиле.
   static const lock = 'lock';
+
+  /// Скриншот из оверлея.
+  static const camera = 'camera';
+
+  /// Записать последние 30 секунд.
+  static const rec = 'rec';
 }

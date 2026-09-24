@@ -74,7 +74,7 @@ class EvHero extends StatefulWidget {
   /// «Завершить» — игра закончилась.
   final VoidCallback? onQuit;
 
-  /// «Оверлей» поверх игры. `null` — оверлея ещё нет.
+  /// «Оверлей» поверх игры.
   final VoidCallback? onOverlay;
 
   /// «Другое» у точки сохранения — выбрать другую.

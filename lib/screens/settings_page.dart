@@ -48,6 +48,7 @@ class SettingsPage extends StatefulWidget {
     this.onCatalog,
     this.onFirstRun,
     this.onReturn,
+    this.onOverlay,
   });
 
   final EvSettings settings;
@@ -98,6 +99,9 @@ class SettingsPage extends StatefulWidget {
 
   /// Пройти «Возвращение» с начала.
   final VoidCallback? onReturn;
+
+  /// Запустить игру и открыть поверх неё оверлей.
+  final VoidCallback? onOverlay;
 
   /// Уже этого окна колонка разделов встаёт над ними и перестаёт
   /// быть липкой — `max-width:880px` в прототипе.
@@ -344,6 +348,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final friendPage = w.onFriendPage;
     final onCatalog = w.onCatalog;
     final onFirstRun = w.onFirstRun;
+    final onOverlay = w.onOverlay;
     return EvSettingSection(
       id: 'dev',
       title: 'Разработка',
@@ -372,6 +377,19 @@ class _SettingsPageState extends State<SettingsPage> {
                     onTap: w.onReturn!,
                   ),
               ],
+            ),
+          ),
+        if (onOverlay != null)
+          EvSettingPanel(
+            label: 'В игре',
+            note:
+                'Поверх игры оверлей открывается по Shift+Tab. Здесь игры '
+                'нет — отсюда он открывается вместе с запуском',
+            body: (_) => _StateRow(
+              name: 'Оверлей в игре',
+              hint: 'кадры · друзья · фоновая загрузка',
+              selected: false,
+              onTap: onOverlay,
             ),
           ),
         if (onCatalog != null)

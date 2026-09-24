@@ -381,6 +381,8 @@ class _Nearest extends StatelessWidget {
   Widget build(BuildContext context) {
     final ev = context.ev;
     final c = ev.colors;
+    const found = EvGameFacts.relicsFound, total = EvGameFacts.relicsTotal;
+    final name = EvGameFacts.achievements[EvGameFacts.collector].$1;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
       decoration: BoxDecoration(
@@ -398,7 +400,7 @@ class _Nearest extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Ближе всего: Собиратель',
+                  'Ближе всего: $name',
                   style: ev.text.ui(
                     ev.text.body,
                     weight: FontWeight.w500,
@@ -408,7 +410,7 @@ class _Nearest extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '37 из 60 реликвий · осталось 23',
+                  '$found из $total реликвий · осталось ${total - found}',
                   style: ev.text.data.copyWith(fontSize: 10, color: c.ink3),
                 ),
               ],
@@ -416,7 +418,7 @@ class _Nearest extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            '62 %',
+            '${percent(found / total)} %',
             style: ev.text.data.copyWith(fontSize: 15, color: c.hot2),
           ),
         ],

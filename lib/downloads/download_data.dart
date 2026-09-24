@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../data/sample_data.dart';
+import '../util/units.dart';
 import '../widgets/ev_surfaces.dart';
 
 /// Состояние раздела «Загрузки» — те же шесть, что `DL` в прототипе.
@@ -244,6 +245,34 @@ class EvDownloads {
       torrents: kept,
       queue: [...waiting, ...queue],
       slots: limit,
+      peakKb: peakKb,
+      toDiskShare: toDiskShare,
+    );
+  }
+
+  /// Очередь, пока идёт игра: приём и отдача ужаты до предела, каждая
+  /// раздача — в своей доле, а время до конца — от новой скорости.
+  /// Иначе верхняя полоса писала бы «1.0 МБ/с», а раздачи под ней —
+  /// 592 КБ/с и 1.03 МБ/с, как в оверлее прототипа.
+  EvDownloads capped({required int downKb, required int upKb}) {
+    final down = this.downKb, up = this.upKb;
+    if (down <= downKb && up <= upKb) return this;
+    int share(int? kb, int sum, int cap) =>
+        sum <= cap ? kb ?? 0 : ((kb ?? 0) * cap / sum).round();
+    EvTorrent cap(EvTorrent t) {
+      if (!t.active || t.downKb == null) return t;
+      final kb = share(t.downKb, down, downKb);
+      return t.copyWith(
+        downKb: kb,
+        upKb: share(t.upKb, up, upKb),
+        eta: formatEta(t.parts.total - t.parts.received, kb),
+      );
+    }
+
+    return EvDownloads(
+      torrents: [for (final t in torrents) cap(t)],
+      queue: queue,
+      slots: slots,
       peakKb: peakKb,
       toDiskShare: toDiskShare,
     );
