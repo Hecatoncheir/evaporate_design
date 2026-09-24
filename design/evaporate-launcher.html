@@ -4423,8 +4423,9 @@ function applyState(id){
   if(id !== "ovl") go(target);
   if(scope === "fp") $("#crumb").textContent = PEOPLE[fpI].n;
   const cue = {"dl-nospace":"err", "dl-noseeds":"warn", "dl-hash":"warn", "dl-offline":"warn",
-               "lib-offline":"warn", "fr-offline":"warn", "sv-conflict":"warn", "sv-nocloud":"warn",
-               "lib-running":"ok"}[id];
+               "lib-offline":"warn", "fr-offline":"warn", "sv-conflict":"warn", "sv-nocloud":"warn"}[id];
+  /* «Игра запущена» своего голоса нет: запуск уже прозвучал ритуалом или
+     «Готово», и второе «Готово» при уходе ритуала было лишним */
   if(cue) Snd.play(cue);
   $$(".demo-i").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.st === id)));
   $("#demoC").textContent = STATES.find(s => s.id === id)?.n ?? "";

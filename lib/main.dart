@@ -39,6 +39,7 @@ import 'screens/profile_page.dart';
 import 'screens/settings_page.dart';
 import 'screens/term_page.dart';
 import 'screens/wall_page.dart';
+import 'sound/cues.dart';
 import 'sound/ev_sound.dart';
 import 'sound/soloud_out.dart';
 import 'sound/voices.dart';
@@ -244,7 +245,16 @@ class _EvaporateAppState extends State<EvaporateApp> {
   /// Состояние игры и состояние очереди — разные вещи, но «нет сети» —
   /// свойство окна, и его видят оба. Поэтому офлайн ходит парой: включить
   /// его с одной стороны — значит включить с обеих.
+  /// Событие движка звучит, когда состояние сменилось, а не когда то же
+  /// выбрали ещё раз.
+  void _cue<T>(T before, T after, EvVoice? Function(T) voiceOf) {
+    if (before == after) return;
+    final voice = voiceOf(after);
+    if (voice != null) _sound.play(voice);
+  }
+
   void _setHero(EvHeroState next) {
+    _cue(_state.value, next, evHeroCue);
     // Второй запуск открывается новостями.
     if (next == EvHeroState.returned && _state.value != next) {
       _digest.value = EvDigestState.open;
@@ -258,12 +268,19 @@ class _EvaporateAppState extends State<EvaporateApp> {
   }
 
   void _setDownloads(EvDownloadsState next) {
+    // «Нет сети» с этой стороны звучит один раз: пару меняют без голоса.
+    _cue(_downloads.value, next, evDownloadsCue);
     _downloads.value = next;
     if (next == EvDownloadsState.offline) {
       _state.value = EvHeroState.offline;
     } else if (_state.value == EvHeroState.offline) {
       _state.value = EvHeroState.ready;
     }
+  }
+
+  void _setSaves(EvSavesState next) {
+    _cue(_saves.value, next, evSavesCue);
+    _saves.value = next;
   }
 
   @override
@@ -333,7 +350,7 @@ class _EvaporateAppState extends State<EvaporateApp> {
                   downloads: _downloads.value,
                   onDownloads: _setDownloads,
                   saves: _saves.value,
-                  onSaves: (next) => _saves.value = next,
+                  onSaves: _setSaves,
                   friendsState: _friendsState.value,
                   onFriends: (next) => _friendsState.value = next,
                   settings: _settings,

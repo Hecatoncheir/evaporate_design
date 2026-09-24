@@ -362,6 +362,40 @@ void main() {
       await tester.pump();
     });
 
+    testWidgets('события движка звучат голосом своей причины', (tester) async {
+      final out = await _app(tester);
+      Future<void> pick(String name) async {
+        await tester.sendKeyEvent(LogicalKeyboardKey.digit4);
+        await _settle(tester);
+        // Строка в настройках — первая: та же подпись бывает в плашке.
+        final row = find.text(name).first;
+        await tester.ensureVisible(row);
+        await _settle(tester);
+        out.log.clear();
+        await tester.tap(row);
+        await _settle(tester);
+      }
+
+      await pick('Нет места на диске');
+      expect(out.log, ['err']);
+      await pick('Нет раздающих');
+      expect(out.log, ['warn']);
+      await pick('Нет раздающих');
+      expect(out.log, isEmpty, reason: 'то же ещё раз — не событие');
+      await pick('Конфликт версий');
+      expect(out.log, ['warn']);
+      await pick('Всё синхронизировано');
+      expect(out.log, isEmpty, reason: 'всё хорошо — тишина');
+      // «Нет сети» — состояние окна: пара меняется одним голосом.
+      await pick('Сеть пропала');
+      expect(out.log, ['warn']);
+      await pick('Две активные');
+      await pick('Нет сети');
+      expect(out.log, ['warn']);
+      await pick('Игра запущена');
+      expect(out.log, isEmpty, reason: 'запуск уже прозвучал');
+    });
+
     testWidgets('настройки: слой, класс, отдушина и каталог голосов', (
       tester,
     ) async {

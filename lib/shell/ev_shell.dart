@@ -310,9 +310,10 @@ class _EvShellState extends State<EvShell> {
                                 onSearch: _openPalette,
                                 trailing: narrow ? const [] : widget.status,
                                 // На узком окне ему, как и плашкам,
-                                // нет места.
+                                // нет места; до 1080 px — тоже: он
+                                // наезжал бы на поиск.
                                 tools:
-                                    !narrow &&
+                                    box.maxWidth >= EvTopBar.toolsFrom &&
                                         section == EvSection.library &&
                                         _controller.detail == null
                                     ? widget.libraryTools

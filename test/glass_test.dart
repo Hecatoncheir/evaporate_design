@@ -8,6 +8,7 @@ import 'package:evaporate_design/design/theme.dart';
 import 'package:evaporate_design/design/tokens.dart';
 import 'package:evaporate_design/glass/ev_droplet.dart';
 import 'package:evaporate_design/glass/ev_glass.dart';
+import 'package:evaporate_design/glass/ev_scroll_edge.dart';
 import 'package:evaporate_design/glass/glass_lens.dart';
 import 'package:evaporate_design/glass/glass_surface.dart';
 import 'package:evaporate_design/library/ev_hero.dart';
@@ -220,6 +221,24 @@ void main() {
   });
 
   group('каркас', () {
+    test(
+      'край полосы: размытие продолжает иней и сходит на нет без ступенек',
+      () {
+        final blur = EvGlassStyle.frost.blur;
+        final s = EvScrollEdge.sigmas(blur);
+        expect(s.length, greaterThanOrEqualTo(8));
+        // У полосы — почти её размытие, а не треть, как было.
+        expect(s.first, greaterThan(blur * .8));
+        expect(s.last, lessThan(.5));
+        for (var i = 1; i < s.length; i++) {
+          expect(s[i], lessThan(s[i - 1]));
+          // Соседние ступени отличаются не больше чем на пятую часть
+          // размытия полосы — шов между ними не виден.
+          expect(s[i - 1] - s[i], lessThan(blur * .22));
+        }
+      },
+    );
+
     testWidgets('экран уходит под полосы, а не упирается в них', (
       tester,
     ) async {

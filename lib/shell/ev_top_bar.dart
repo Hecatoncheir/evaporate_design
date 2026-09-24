@@ -26,6 +26,10 @@ class EvTopBar extends StatelessWidget {
   /// То, что стоит сразу за крошкой: переключатель видов библиотеки.
   final Widget? tools;
 
+  /// С какой ширины окна за крошкой хватает места переключателю видов
+  /// вместе с поиском и плашками.
+  static const toolsFrom = 1080.0;
+
   final VoidCallback? onSearch;
 
   /// Показатели: скорость, состояние движка.

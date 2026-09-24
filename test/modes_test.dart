@@ -15,6 +15,7 @@ import 'package:evaporate_design/screens/downloads_page.dart';
 import 'package:evaporate_design/screens/term_page.dart';
 import 'package:evaporate_design/screens/wall_page.dart';
 import 'package:evaporate_design/sheet/ev_game_sheet.dart';
+import 'package:evaporate_design/shell/ev_top_bar.dart';
 import 'package:evaporate_design/util/units.dart';
 import 'package:evaporate_design/widgets/ev_controls.dart';
 import 'package:evaporate_design/widgets/ev_game_card.dart';
@@ -142,11 +143,18 @@ void main() {
       await _settle(tester);
       expect(find.bySemanticsLabel('Стена'), findsNothing);
 
-      _window(tester, 700, 900);
-      await tester.sendKeyEvent(LogicalKeyboardKey.digit1);
+      // Уже 1080 px переключатель наезжал бы на поиск — его нет.
+      for (final width in [700.0, 1040.0]) {
+        _window(tester, width, 900);
+        await tester.sendKeyEvent(LogicalKeyboardKey.digit1);
+        await _settle(tester);
+        expect(find.bySemanticsLabel('Стена'), findsNothing);
+        expect(tester.takeException(), isNull);
+      }
+      _window(tester, EvTopBar.toolsFrom, 900);
       await _settle(tester);
-      expect(find.bySemanticsLabel('Стена'), findsNothing);
-      expect(tester.takeException(), isNull);
+      expect(find.bySemanticsLabel('Стена'), findsOneWidget);
+      expect(tester.takeException(), isNull, reason: 'с порога — влезает');
     });
 
     testWidgets('«Стена»: выбор встаёт первым, фильтр считает, кнопка ведёт', (
